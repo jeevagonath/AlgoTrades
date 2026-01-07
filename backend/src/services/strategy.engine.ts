@@ -342,7 +342,7 @@ class StrategyEngine {
                 try {
                     const q: any = await shoonya.getQuotes('NFO', item.token);
                     if (q && q.lp) {
-                        quotes.push({ ...item, lp: parseFloat(q.lp) });
+                        quotes.push({ ...item, lp: parseFloat(q.lp), ls: q.ls });
                     }
                 } catch (e) {
                     console.warn(`[Strategy] Failed to fetch quote for ${item.tsym}`);
@@ -438,7 +438,7 @@ class StrategyEngine {
             strike: picked.strprc,
             entryPrice: targetPrice,
             ltp: targetPrice,
-            quantity: 50,
+            quantity: picked.ls ? parseFloat(picked.ls) : 50,
             tier
         };
     }
@@ -553,6 +553,19 @@ class StrategyEngine {
             throw new Error('No strikes selected.');
         }
 
+        // Refresh quantities from live quotes to ensure test uses current lot sizes
+        this.addLog('🔄 Refreshing quantities from live quotes...');
+        for (const leg of this.state.selectedStrikes) {
+            try {
+                const q: any = await shoonya.getQuotes('NFO', leg.token);
+                if (q && q.ls) {
+                    leg.quantity = parseFloat(q.ls);
+                }
+            } catch (e) {
+                console.warn(`Failed to refresh quote for ${leg.symbol}`);
+            }
+        }
+
         try {
             await this.placeOrder(true);
             this.addLog('✅ PLACE ORDER TEST COMPLETED. Check test_orders.log');
@@ -578,22 +591,44 @@ class StrategyEngine {
                 exchange: 'NFO',
                 tradingsymbol: leg.symbol,
                 quantity: leg.quantity.toString(),
+                discloseqty: '0',
                 price: '0',
-                product: 'M',
-                trantype: leg.side === 'BUY' ? 'S' : 'B', // Reverse side
-                pricetype: 'MKT',
+                product_type: 'M',
+                buy_or_sell: leg.side === 'BUY' ? 'S' : 'B', // Reverse
+                price_type: 'MKT',
                 retention: 'DAY',
                 remarks: 'TEST_EXIT_ORDER'
             };
 
-            const jData = JSON.stringify(exitOrder);
             let jKey = '';
-            try { jKey = await shoonya.getAuthToken(); } catch (e) { }
+            let session: any = {};
+            try {
+                session = await shoonya.getSessionDetails() || {};
+                jKey = await shoonya.getAuthToken();
+            } catch (e) { }
+
+            const jData = JSON.stringify({
+                ordersource: 'API',
+                uid: session.uid || session.actid,
+                actid: session.actid,
+                trantype: exitOrder.buy_or_sell,
+                prd: exitOrder.product_type,
+                exch: exitOrder.exchange,
+                tsym: exitOrder.tradingsymbol,
+                qty: exitOrder.quantity,
+                dscqty: exitOrder.discloseqty,
+                prctyp: exitOrder.price_type,
+                prc: exitOrder.price,
+                trgprc: '0',
+                ret: exitOrder.retention,
+                remarks: exitOrder.remarks
+            });
+
             const payload = `jData=${jData}&jKey=${jKey}`;
 
             const logEntry = `[${timestamp}] [TEST EXIT REQUEST]\nPayload: ${payload}\n---\n`;
             fs.appendFileSync(logFile, logEntry);
-            this.addLog(`📝 Logged Exit: ${leg.symbol} (${exitOrder.trantype})`);
+            this.addLog(`📝 Logged Exit: ${leg.symbol} (${exitOrder.buy_or_sell})`);
         }
 
         this.addLog('✅ EXIT ORDER TEST COMPLETED. Check test_orders.log');
@@ -602,24 +637,51 @@ class StrategyEngine {
 
 
     private async executeLeg(leg: LegState, isDryRun: boolean = false) {
+
+        // Construct Order Params - Compatible with RestApi.place_order wrapper
+        const orderParams = {
+            exchange: 'NFO',
+            tradingsymbol: leg.symbol,
+            quantity: leg.quantity.toString(),
+            discloseqty: '0',
+            price: '0',
+            product_type: 'M',
+            buy_or_sell: leg.side === 'BUY' ? 'B' : 'S',
+            price_type: 'MKT',
+            trigger_price: '0',
+            retention: 'DAY',
+            remarks: isDryRun ? 'TEST_PLACE_ORDER' : 'STRATEGY_ENTRY'
+        };
+
         if (isDryRun) {
-            const orderParams = {
-                exchange: 'NFO',
-                tradingsymbol: leg.symbol,
-                quantity: leg.quantity.toString(),
-                price: '0',
-                product: 'M',
-                trantype: leg.side === 'BUY' ? 'B' : 'S',
-                pricetype: 'MKT',
-                retention: 'DAY',
-                remarks: 'TEST_PLACE_ORDER'
-            };
             const logFile = path.join(process.cwd(), 'test_orders.log');
             const timestamp = new Date().toISOString();
 
-            const jData = JSON.stringify(orderParams);
             let jKey = '';
-            try { jKey = await shoonya.getAuthToken(); } catch (e) { }
+            let session: any = {};
+            try {
+                session = await shoonya.getSessionDetails() || {};
+                jKey = await shoonya.getAuthToken();
+            } catch (e) { }
+
+            // Manual mapping to match RestApi.js payload construction
+            const jData = JSON.stringify({
+                ordersource: 'API',
+                uid: session.uid || session.actid,
+                actid: session.actid,
+                trantype: orderParams.buy_or_sell,
+                prd: orderParams.product_type,
+                exch: orderParams.exchange,
+                tsym: orderParams.tradingsymbol,
+                qty: orderParams.quantity,
+                dscqty: orderParams.discloseqty,
+                prctyp: orderParams.price_type,
+                prc: orderParams.price,
+                trgprc: orderParams.trigger_price,
+                ret: orderParams.retention,
+                remarks: orderParams.remarks
+            });
+
             const payload = `jData=${jData}&jKey=${jKey}`;
 
             const logEntry = `[${timestamp}] [TEST PLACE REQUEST]\nPayload: ${payload}\n---\n`;
@@ -636,17 +698,7 @@ class StrategyEngine {
         } else {
             // Real order execution
             try {
-                const orderParams = {
-                    exchange: 'NFO',
-                    tradingsymbol: leg.symbol,
-                    quantity: leg.quantity.toString(),
-                    price: '0', // Market order
-                    product: 'M', // NRML for options
-                    trantype: leg.side === 'BUY' ? 'B' : 'S',
-                    pricetype: 'MKT',
-                    retention: 'DAY'
-                };
-
+                // Now using updated orderParams with correct keys for wrapper
                 const result: any = await shoonya.placeOrder(orderParams);
 
                 if (result.stat === 'Ok') {

@@ -142,14 +142,23 @@ class ShoonyaService {
 
     async placeOrder(orderParams: any) {
         return new Promise((resolve, reject) => {
-            this.api.placeorder(orderParams)
-                .then((res: any) => {
-                    resolve(res);
-                })
-                .catch((err: any) => {
-                    reject(err);
-                });
+            // Use the correct wrapper method 'place_order' (snake_case) defined in RestApi.js
+            if (this.api.place_order) {
+                try {
+                    const res = this.api.place_order(orderParams);
+                    // RestApi wrapper returns a promise directly in some versions, or we handle the result
+                    Promise.resolve(res).then(resolve).catch(reject);
+                } catch (e) {
+                    reject(e);
+                }
+            } else {
+                reject(new Error('API place_order method not found'));
+            }
         });
+    }
+
+    getSessionDetails() {
+        return this.session;
     }
 
     async getOrderBook() {
