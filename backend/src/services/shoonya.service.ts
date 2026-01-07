@@ -31,6 +31,10 @@ class ShoonyaService {
         }
     }
 
+    async getAuthToken() {
+        return this.api.__susertoken;
+    }
+
     async login(credentials: any) {
         return new Promise((resolve, reject) => {
             this.api.login(credentials)

@@ -586,7 +586,12 @@ class StrategyEngine {
                 remarks: 'TEST_EXIT_ORDER'
             };
 
-            const logEntry = `[${timestamp}] [TEST EXIT REQUEST] ${JSON.stringify(exitOrder)}\n`;
+            const jData = JSON.stringify(exitOrder);
+            let jKey = '';
+            try { jKey = await shoonya.getAuthToken(); } catch (e) { }
+            const payload = `jData=${jData}&jKey=${jKey}`;
+
+            const logEntry = `[${timestamp}] [TEST EXIT REQUEST]\nPayload: ${payload}\n---\n`;
             fs.appendFileSync(logFile, logEntry);
             this.addLog(`📝 Logged Exit: ${leg.symbol} (${exitOrder.trantype})`);
         }
@@ -611,7 +616,13 @@ class StrategyEngine {
             };
             const logFile = path.join(process.cwd(), 'test_orders.log');
             const timestamp = new Date().toISOString();
-            const logEntry = `[${timestamp}] [TEST PLACE REQUEST] ${JSON.stringify(orderParams)}\n`;
+
+            const jData = JSON.stringify(orderParams);
+            let jKey = '';
+            try { jKey = await shoonya.getAuthToken(); } catch (e) { }
+            const payload = `jData=${jData}&jKey=${jKey}`;
+
+            const logEntry = `[${timestamp}] [TEST PLACE REQUEST]\nPayload: ${payload}\n---\n`;
             fs.appendFileSync(logFile, logEntry);
             this.addLog(`📝 Logged Place: ${leg.symbol} (${leg.side})`);
             return;
