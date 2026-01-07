@@ -312,54 +312,11 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                         </div>
 
                         {/* NIFTY 50 Ticker */}
-                        {niftyData && (
-                            <div className="hidden md:flex items-center gap-3 ml-6 animate-in slide-in-from-left-4 duration-500">
-                                {/* Market Status Badge */}
-                                {(() => {
-                                    const now = new Date();
-                                    const hours = now.getHours();
-                                    const minutes = now.getMinutes();
-                                    const currentTime = hours * 60 + minutes;
-                                    const marketOpen = 9 * 60 + 15; // 09:15
-                                    const marketClose = 15 * 60 + 30; // 15:30
-                                    const isOpen = currentTime >= marketOpen && currentTime <= marketClose;
 
-                                    return (
-                                        <div className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${isOpen
-                                            ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
-                                            : 'bg-rose-500/10 text-rose-500 border-rose-500/20'
-                                            }`}>
-                                            {isOpen ? 'Open' : 'Closed'}
-                                        </div>
-                                    );
-                                })()}
-
-                                {/* Price Card */}
-                                {/* Price Card */}
-                                <div className="flex items-center gap-3 px-0 py-0 text-white">
-                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-tight">NIFTY</span>
-                                    <div className="w-px h-3 bg-slate-700" />
-                                    <span className="text-base font-bold text-white font-mono tracking-tight">
-                                        {niftyData.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                    </span>
-
-                                    {/* Change Value (e.g. -37.95) */}
-                                    <span className={`text-sm font-bold font-mono tracking-tight ${niftyData.change >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                                        {niftyData.change > 0 ? '+' : ''}{niftyData.change.toFixed(2)}
-                                    </span>
-
-                                    {/* % Change Pill (e.g. -0.14%) */}
-                                    <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded ${niftyData.change >= 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
-                                        {niftyData.change >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                                        <span className="text-[10px] font-bold">{Math.abs(niftyData.changePercent).toFixed(2)}%</span>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
                     </div>
-                    <div className="flex items-center gap-8">
+                    <div className="flex items-center gap-6">
                         {/* Control Center */}
-                        <div className="flex items-center gap-2 mr-4 border-r border-slate-800 pr-4">
+                        <div className="flex items-center gap-3 mr-2 bg-slate-900/50 p-1.5 rounded-xl border border-slate-800/50 backdrop-blur-sm shadow-inner group transition-all hover:bg-slate-900/80 hover:border-slate-700/50">
                             {/* Pause/Resume */}
                             <button
                                 onClick={async () => {
@@ -375,14 +332,14 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                         }
                                     } catch (e: any) { addLog(`Error: ${e.message}`); }
                                 }}
-                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-bold transition-all ${isPaused
-                                        ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20 hover:bg-yellow-500/20'
-                                        : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white hover:border-slate-600'
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all duration-300 relative overflow-hidden ${isPaused
+                                    ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-400 border border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.15)] hover:shadow-[0_0_20px_rgba(245,158,11,0.25)]'
+                                    : 'bg-slate-800/50 border border-slate-700/50 text-slate-400 hover:text-white hover:bg-slate-700 hover:border-slate-600'
                                     }`}
                                 title={isPaused ? "Resume Strategy" : "Pause Strategy"}
                             >
-                                {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
-                                {isPaused ? 'RESUME' : 'PAUSE'}
+                                {isPaused ? <Play className="w-4 h-4 fill-current animate-pulse" /> : <Pause className="w-4 h-4" />}
+                                <span className="tracking-wide">{isPaused ? 'RESUME' : 'PAUSE'}</span>
                             </button>
 
                             {/* Kill Switch */}
@@ -399,49 +356,60 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                         addLog(`❌ Exit Failed: ${e.message}`);
                                     }
                                 }}
-                                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500/20 hover:text-red-400 transition-all text-xs font-bold"
+                                className="group/kill flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-red-600/10 to-rose-600/10 text-red-500 border border-red-500/20 hover:from-red-600/20 hover:to-rose-600/20 hover:border-red-500/40 hover:text-red-400 transition-all duration-300 text-xs font-bold relative overflow-hidden"
                                 title="Emergency Exit (Kill Switch)"
                             >
-                                <Octagon className="w-4 h-4" />
-                                KILL SWITCH
+                                <div className="absolute inset-0 bg-red-500/5 opacity-0 group-hover/kill:opacity-100 transition-opacity" />
+                                <Octagon className="w-4 h-4 group-hover/kill:scale-110 transition-transform duration-300" />
+                                <span className="tracking-wide group-hover/kill:tracking-wider transition-all">KILL SWITCH</span>
                             </button>
                         </div>
 
-                        <div className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-400">
+                        <div className="hidden md:flex items-center gap-1 bg-slate-800/20 p-1 rounded-xl border border-slate-800/50">
+                            {[
+                                { id: 'positions', label: 'POSITIONS' },
+                                { id: 'orders', label: 'ORDERS' },
+                                { id: 'alerts', label: 'ALERTS', icon: Bell }
+                            ].map((tab) => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setActiveTab(tab.id as any)}
+                                    className={`relative px-4 py-2 rounded-lg text-[10px] font-black tracking-widest transition-all duration-300 ${activeTab === tab.id
+                                        ? 'text-blue-400 bg-slate-800 shadow-sm'
+                                        : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/50'
+                                        }`}
+                                >
+                                    <div className="flex items-center gap-2">
+                                        {tab.icon && <tab.icon className="w-3 h-3" />}
+                                        {tab.label}
+                                    </div>
+                                    {activeTab === tab.id && (
+                                        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 bg-blue-500 rounded-full mb-1" />
+                                    )}
+                                </button>
+                            ))}
+                        </div>
+
+                        <div className="w-px h-8 bg-slate-800/80" />
+
+                        <div className="flex items-center gap-3">
                             <button
-                                onClick={() => setActiveTab('positions')}
-                                className={`transition-colors uppercase tracking-widest text-[10px] font-black ${activeTab === 'positions' ? 'text-blue-400' : 'hover:text-white'}`}
+                                onClick={() => setShowSettings(!showSettings)}
+                                className={`p-2.5 rounded-xl border transition-all duration-300 ${showSettings
+                                    ? 'bg-blue-600/20 border-blue-500/50 text-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.2)]'
+                                    : 'bg-slate-800/40 border-slate-700/50 text-slate-400 hover:text-white hover:bg-slate-700/60 hover:border-slate-600'
+                                    }`}
                             >
-                                Positions
+                                <Settings className="w-5 h-5" />
                             </button>
                             <button
-                                onClick={() => setActiveTab('orders')}
-                                className={`transition-colors uppercase tracking-widest text-[10px] font-black ${activeTab === 'orders' ? 'text-blue-400' : 'hover:text-white'}`}
+                                onClick={handleLogout}
+                                className="group flex items-center gap-2 px-4 py-2 bg-slate-800/40 text-rose-400/80 rounded-xl border border-transparent hover:border-rose-500/30 hover:bg-rose-500/10 hover:text-rose-400 transition-all duration-300 text-[10px] font-black tracking-widest uppercase"
                             >
-                                Orders
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('alerts')}
-                                className={`transition-colors flex items-center gap-2 uppercase tracking-widest text-[10px] font-black ${activeTab === 'alerts' ? 'text-blue-400' : 'hover:text-white'}`}
-                            >
-                                <Bell className="w-3 h-3" />
-                                Alerts
+                                <LogOut className="w-3 h-3 group-hover:-translate-x-0.5 transition-transform" />
+                                Logout
                             </button>
                         </div>
-                        <div className="h-6 w-px bg-slate-800 hidden md:block" />
-                        <button
-                            onClick={() => setShowSettings(!showSettings)}
-                            className={`p-2 rounded-xl border transition-all ${showSettings ? 'bg-blue-600/20 border-blue-500/50 text-blue-400' : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:text-white'}`}
-                        >
-                            <Settings className="w-5 h-5" />
-                        </button>
-                        <button
-                            onClick={handleLogout}
-                            className="text-rose-400 hover:text-rose-300 transition-colors flex items-center gap-2 text-[10px] font-black uppercase py-2 px-4 rounded-xl bg-rose-500/5 border border-rose-500/10 hover:border-rose-500/30 tracking-widest"
-                        >
-                            <LogOut className="w-3 h-3" />
-                            Logout
-                        </button>
                     </div>
                 </div>
             </nav >
@@ -615,6 +583,43 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                     <span className="text-slate-500">Trading Week:</span>
                                     <span className="text-emerald-400">{nextWeekExpiry}</span>
                                 </div>
+
+                                {/* NIFTY Ticker Moved Here */}
+                                {niftyData && (
+                                    <div className="flex items-center gap-3 ml-4 pl-4 border-l border-slate-800 animate-in fade-in slide-in-from-left-4 duration-500">
+                                        {/* Market Status Badge */}
+                                        {(() => {
+                                            const now = new Date();
+                                            const hours = now.getHours();
+                                            const minutes = now.getMinutes();
+                                            const currentTime = hours * 60 + minutes;
+                                            const marketOpen = 9 * 60 + 15;
+                                            const marketClose = 15 * 60 + 30;
+                                            const isOpen = currentTime >= marketOpen && currentTime <= marketClose;
+
+                                            return (
+                                                <div className={`px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider border ${isOpen
+                                                    ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+                                                    : 'bg-rose-500/10 text-rose-500 border-rose-500/20'
+                                                    }`}>
+                                                    {isOpen ? 'Open' : 'Closed'}
+                                                </div>
+                                            );
+                                        })()}
+
+                                        <span className="text-xs font-bold text-slate-500 uppercase tracking-tight">NIFTY</span>
+                                        <span className="text-sm font-bold text-white font-mono tracking-tight">
+                                            {niftyData.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        </span>
+                                        <span className={`text-xs font-bold font-mono tracking-tight ${niftyData.change >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                            {niftyData.change > 0 ? '+' : ''}{niftyData.change.toFixed(2)}
+                                        </span>
+                                        <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded ${niftyData.change >= 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
+                                            {niftyData.change >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                                            <span className="text-[9px] font-bold">{Math.abs(niftyData.changePercent).toFixed(2)}%</span>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>

@@ -992,3 +992,115 @@ Payload: [object Object]
 Status: 200
 Data: {"ok":true,"result":{"message_id":93,"from":{"id":8494833053,"is_bot":true,"first_name":"OptionSellingVercel","username":"Option_Selling_Vercel_Bot"},"chat":{"id":5177480141,"first_name":"Gonath","username":"itsmegonath","type":"private"},"date":1767789927,"text":"▶️ Strategy Resumed","entities":[{"offset":3,"length":16,"type":"bold"}]}}
 ---
+[2026-01-07T12:58:49.275Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"uid":"FA22136","exch":"NSE","token":"26000"}&jKey=1012c734802f8725b8aa74954f99165d9253cd8e63abf9d05e7fdb362ef69b5b
+---
+[2026-01-07T12:58:49.591Z] RESPONSE: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Status: 200
+Data: {"request_time":"18:28:49 07-01-2026","stat":"Ok","exch":"NSE","tsym":"Nifty 50","cname":"NIFTY INDEX","symname":"NIFTY","seg":"EQT","instname":"UNDIND","pp":"2","ls":"1","ti":"0.05","mult":"1","lut":"1767785957","wk52_h":"26373.20","wk52_l":"21743.65","toi":"57178400","cutof_all":"false","prcftr_d":"(1 / 1 ) * (1 / 1)","token":"26000","lp":"26140.75","c":"26178.70","h":"26187.15","l":"26067.90","o":"26143.10"}
+---
+[2026-01-07T12:58:49.592Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"uid":"FA22136","exch":"NSE","token":"26000"}&jKey=1012c734802f8725b8aa74954f99165d9253cd8e63abf9d05e7fdb362ef69b5b
+---
+[2026-01-07T12:58:49.658Z] RESPONSE: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Status: 200
+Data: {"request_time":"18:28:49 07-01-2026","stat":"Ok","exch":"NSE","tsym":"Nifty 50","cname":"NIFTY INDEX","symname":"NIFTY","seg":"EQT","instname":"UNDIND","pp":"2","ls":"1","ti":"0.05","mult":"1","lut":"1767785957","wk52_h":"26373.20","wk52_l":"21743.65","toi":"57178400","cutof_all":"false","prcftr_d":"(1 / 1 ) * (1 / 1)","token":"26000","lp":"26140.75","c":"26178.70","h":"26187.15","l":"26067.90","o":"26143.10"}
+---
+[2026-01-07T13:01:21.639Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"uid":"FA22136","exch":"NSE","token":"26000"}&jKey=1012c734802f8725b8aa74954f99165d9253cd8e63abf9d05e7fdb362ef69b5b
+---
+[2026-01-07T13:01:21.891Z] RESPONSE: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Status: 200
+Data: {"request_time":"18:31:22 07-01-2026","stat":"Ok","exch":"NSE","tsym":"Nifty 50","cname":"NIFTY INDEX","symname":"NIFTY","seg":"EQT","instname":"UNDIND","pp":"2","ls":"1","ti":"0.05","mult":"1","lut":"1767785957","wk52_h":"26373.20","wk52_l":"21743.65","toi":"57178400","cutof_all":"false","prcftr_d":"(1 / 1 ) * (1 / 1)","token":"26000","lp":"26140.75","c":"26178.70","h":"26187.15","l":"26067.90","o":"26143.10"}
+---
+[2026-01-07T13:01:21.892Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"uid":"FA22136","exch":"NSE","token":"26000"}&jKey=1012c734802f8725b8aa74954f99165d9253cd8e63abf9d05e7fdb362ef69b5b
+---
+[2026-01-07T13:01:21.970Z] RESPONSE: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Status: 200
+Data: {"request_time":"18:31:22 07-01-2026","stat":"Ok","exch":"NSE","tsym":"Nifty 50","cname":"NIFTY INDEX","symname":"NIFTY","seg":"EQT","instname":"UNDIND","pp":"2","ls":"1","ti":"0.05","mult":"1","lut":"1767785957","wk52_h":"26373.20","wk52_l":"21743.65","toi":"57178400","cutof_all":"false","prcftr_d":"(1 / 1 ) * (1 / 1)","token":"26000","lp":"26140.75","c":"26178.70","h":"26187.15","l":"26067.90","o":"26143.10"}
+---
+[2026-01-07T13:01:46.303Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"uid":"FA22136","exch":"NSE","token":"26000"}&jKey=1012c734802f8725b8aa74954f99165d9253cd8e63abf9d05e7fdb362ef69b5b
+---
+[2026-01-07T13:01:46.588Z] RESPONSE: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Status: 200
+Data: {"request_time":"18:31:46 07-01-2026","stat":"Ok","exch":"NSE","tsym":"Nifty 50","cname":"NIFTY INDEX","symname":"NIFTY","seg":"EQT","instname":"UNDIND","pp":"2","ls":"1","ti":"0.05","mult":"1","lut":"1767785957","wk52_h":"26373.20","wk52_l":"21743.65","toi":"57178400","cutof_all":"false","prcftr_d":"(1 / 1 ) * (1 / 1)","token":"26000","lp":"26140.75","c":"26178.70","h":"26187.15","l":"26067.90","o":"26143.10"}
+---
+[2026-01-07T13:01:46.590Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"uid":"FA22136","exch":"NSE","token":"26000"}&jKey=1012c734802f8725b8aa74954f99165d9253cd8e63abf9d05e7fdb362ef69b5b
+---
+[2026-01-07T13:01:46.646Z] RESPONSE: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Status: 200
+Data: {"request_time":"18:31:46 07-01-2026","stat":"Ok","exch":"NSE","tsym":"Nifty 50","cname":"NIFTY INDEX","symname":"NIFTY","seg":"EQT","instname":"UNDIND","pp":"2","ls":"1","ti":"0.05","mult":"1","lut":"1767785957","wk52_h":"26373.20","wk52_l":"21743.65","toi":"57178400","cutof_all":"false","prcftr_d":"(1 / 1 ) * (1 / 1)","token":"26000","lp":"26140.75","c":"26178.70","h":"26187.15","l":"26067.90","o":"26143.10"}
+---
+[2026-01-07T13:02:12.057Z] REQUEST: post https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Payload: [object Object]
+---
+[2026-01-07T13:02:13.601Z] REQUEST: post https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Payload: [object Object]
+---
+[2026-01-07T13:02:19.093Z] ERROR: https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Message: timeout of 7000ms exceeded
+Detail: {}
+---
+[2026-01-07T13:02:20.620Z] ERROR: https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Message: timeout of 7000ms exceeded
+Detail: {}
+---
+[2026-01-07T13:26:09.682Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"uid":"FA22136","exch":"NSE","token":"26000"}&jKey=1012c734802f8725b8aa74954f99165d9253cd8e63abf9d05e7fdb362ef69b5b
+---
+[2026-01-07T13:26:10.401Z] RESPONSE: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Status: 200
+Data: {"request_time":"18:56:10 07-01-2026","stat":"Ok","exch":"NSE","tsym":"Nifty 50","cname":"NIFTY INDEX","symname":"NIFTY","seg":"EQT","instname":"UNDIND","pp":"2","ls":"1","ti":"0.05","mult":"1","lut":"1767785957","wk52_h":"26373.20","wk52_l":"21743.65","toi":"57178400","cutof_all":"false","prcftr_d":"(1 / 1 ) * (1 / 1)","token":"26000","lp":"26140.75","c":"26178.70","h":"26187.15","l":"26067.90","o":"26143.10"}
+---
+[2026-01-07T13:26:10.403Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"uid":"FA22136","exch":"NSE","token":"26000"}&jKey=1012c734802f8725b8aa74954f99165d9253cd8e63abf9d05e7fdb362ef69b5b
+---
+[2026-01-07T13:26:10.511Z] RESPONSE: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Status: 200
+Data: {"request_time":"18:56:10 07-01-2026","stat":"Ok","exch":"NSE","tsym":"Nifty 50","cname":"NIFTY INDEX","symname":"NIFTY","seg":"EQT","instname":"UNDIND","pp":"2","ls":"1","ti":"0.05","mult":"1","lut":"1767785957","wk52_h":"26373.20","wk52_l":"21743.65","toi":"57178400","cutof_all":"false","prcftr_d":"(1 / 1 ) * (1 / 1)","token":"26000","lp":"26140.75","c":"26178.70","h":"26187.15","l":"26067.90","o":"26143.10"}
+---
+[2026-01-07T13:26:13.002Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"uid":"FA22136","exch":"NSE","token":"26000"}&jKey=1012c734802f8725b8aa74954f99165d9253cd8e63abf9d05e7fdb362ef69b5b
+---
+[2026-01-07T13:26:13.061Z] RESPONSE: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Status: 200
+Data: {"request_time":"18:56:13 07-01-2026","stat":"Ok","exch":"NSE","tsym":"Nifty 50","cname":"NIFTY INDEX","symname":"NIFTY","seg":"EQT","instname":"UNDIND","pp":"2","ls":"1","ti":"0.05","mult":"1","lut":"1767785957","wk52_h":"26373.20","wk52_l":"21743.65","toi":"57178400","cutof_all":"false","prcftr_d":"(1 / 1 ) * (1 / 1)","token":"26000","lp":"26140.75","c":"26178.70","h":"26187.15","l":"26067.90","o":"26143.10"}
+---
+[2026-01-07T13:26:13.124Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"uid":"FA22136","exch":"NSE","token":"26000"}&jKey=1012c734802f8725b8aa74954f99165d9253cd8e63abf9d05e7fdb362ef69b5b
+---
+[2026-01-07T13:26:13.189Z] RESPONSE: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Status: 200
+Data: {"request_time":"18:56:13 07-01-2026","stat":"Ok","exch":"NSE","tsym":"Nifty 50","cname":"NIFTY INDEX","symname":"NIFTY","seg":"EQT","instname":"UNDIND","pp":"2","ls":"1","ti":"0.05","mult":"1","lut":"1767785957","wk52_h":"26373.20","wk52_l":"21743.65","toi":"57178400","cutof_all":"false","prcftr_d":"(1 / 1 ) * (1 / 1)","token":"26000","lp":"26140.75","c":"26178.70","h":"26187.15","l":"26067.90","o":"26143.10"}
+---
+[2026-01-07T13:26:16.193Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"uid":"FA22136","exch":"NSE","token":"26000"}&jKey=1012c734802f8725b8aa74954f99165d9253cd8e63abf9d05e7fdb362ef69b5b
+---
+[2026-01-07T13:26:16.268Z] RESPONSE: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Status: 200
+Data: {"request_time":"18:56:16 07-01-2026","stat":"Ok","exch":"NSE","tsym":"Nifty 50","cname":"NIFTY INDEX","symname":"NIFTY","seg":"EQT","instname":"UNDIND","pp":"2","ls":"1","ti":"0.05","mult":"1","lut":"1767785957","wk52_h":"26373.20","wk52_l":"21743.65","toi":"57178400","cutof_all":"false","prcftr_d":"(1 / 1 ) * (1 / 1)","token":"26000","lp":"26140.75","c":"26178.70","h":"26187.15","l":"26067.90","o":"26143.10"}
+---
+[2026-01-07T13:26:16.326Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"uid":"FA22136","exch":"NSE","token":"26000"}&jKey=1012c734802f8725b8aa74954f99165d9253cd8e63abf9d05e7fdb362ef69b5b
+---
+[2026-01-07T13:26:16.404Z] RESPONSE: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Status: 200
+Data: {"request_time":"18:56:16 07-01-2026","stat":"Ok","exch":"NSE","tsym":"Nifty 50","cname":"NIFTY INDEX","symname":"NIFTY","seg":"EQT","instname":"UNDIND","pp":"2","ls":"1","ti":"0.05","mult":"1","lut":"1767785957","wk52_h":"26373.20","wk52_l":"21743.65","toi":"57178400","cutof_all":"false","prcftr_d":"(1 / 1 ) * (1 / 1)","token":"26000","lp":"26140.75","c":"26178.70","h":"26187.15","l":"26067.90","o":"26143.10"}
+---
+[2026-01-07T13:27:15.717Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"uid":"FA22136","exch":"NSE","token":"26000"}&jKey=1012c734802f8725b8aa74954f99165d9253cd8e63abf9d05e7fdb362ef69b5b
+---
+[2026-01-07T13:27:15.960Z] RESPONSE: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Status: 200
+Data: {"request_time":"18:57:16 07-01-2026","stat":"Ok","exch":"NSE","tsym":"Nifty 50","cname":"NIFTY INDEX","symname":"NIFTY","seg":"EQT","instname":"UNDIND","pp":"2","ls":"1","ti":"0.05","mult":"1","lut":"1767785957","wk52_h":"26373.20","wk52_l":"21743.65","toi":"57178400","cutof_all":"false","prcftr_d":"(1 / 1 ) * (1 / 1)","token":"26000","lp":"26140.75","c":"26178.70","h":"26187.15","l":"26067.90","o":"26143.10"}
+---
+[2026-01-07T13:27:15.961Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"uid":"FA22136","exch":"NSE","token":"26000"}&jKey=1012c734802f8725b8aa74954f99165d9253cd8e63abf9d05e7fdb362ef69b5b
+---
+[2026-01-07T13:27:16.022Z] RESPONSE: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Status: 200
+Data: {"request_time":"18:57:16 07-01-2026","stat":"Ok","exch":"NSE","tsym":"Nifty 50","cname":"NIFTY INDEX","symname":"NIFTY","seg":"EQT","instname":"UNDIND","pp":"2","ls":"1","ti":"0.05","mult":"1","lut":"1767785957","wk52_h":"26373.20","wk52_l":"21743.65","toi":"57178400","cutof_all":"false","prcftr_d":"(1 / 1 ) * (1 / 1)","token":"26000","lp":"26140.75","c":"26178.70","h":"26187.15","l":"26067.90","o":"26143.10"}
+---
