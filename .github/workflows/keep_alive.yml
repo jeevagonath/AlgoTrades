@@ -5,7 +5,9 @@ on:
     # Run every 14 minutes, Monday through Friday (UTC)
     # Cron format: min hour day month day-of-week
     # 1-5 = Monday to Friday
-    - cron: '*/14 * * * 1-5'
+    # Time: 03:00 UTC (8:30 AM IST) to 10:30 UTC (4:00 PM IST)
+    # Hours 3-10 covers this range.
+    - cron: '*/14 3-10 * * 1-5'
   workflow_dispatch: # Allows manual trigger
 
 jobs:
