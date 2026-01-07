@@ -1,56 +1,24 @@
-[2026-01-07T14:14:11.233Z] [TEST PLACE REQUEST] {"exchange":"NFO","tradingsymbol":"NIFTY13JAN26C26050","quantity":"50","price":"0","product":"M","trantype":"B","pricetype":"MKT","retention":"DAY","remarks":"TEST_PLACE_ORDER"}
-[2026-01-07T14:14:11.234Z] [TEST PLACE REQUEST] {"exchange":"NFO","tradingsymbol":"NIFTY13JAN26P26250","quantity":"50","price":"0","product":"M","trantype":"B","pricetype":"MKT","retention":"DAY","remarks":"TEST_PLACE_ORDER"}
-[2026-01-07T14:14:11.235Z] [TEST PLACE REQUEST] {"exchange":"NFO","tradingsymbol":"NIFTY13JAN26C26550","quantity":"50","price":"0","product":"M","trantype":"B","pricetype":"MKT","retention":"DAY","remarks":"TEST_PLACE_ORDER"}
-[2026-01-07T14:14:11.236Z] [TEST PLACE REQUEST] {"exchange":"NFO","tradingsymbol":"NIFTY13JAN26P25650","quantity":"50","price":"0","product":"M","trantype":"B","pricetype":"MKT","retention":"DAY","remarks":"TEST_PLACE_ORDER"}
-[2026-01-07T14:14:11.237Z] [TEST PLACE REQUEST] {"exchange":"NFO","tradingsymbol":"NIFTY13JAN26C26100","quantity":"50","price":"0","product":"M","trantype":"S","pricetype":"MKT","retention":"DAY","remarks":"TEST_PLACE_ORDER"}
-[2026-01-07T14:14:11.237Z] [TEST PLACE REQUEST] {"exchange":"NFO","tradingsymbol":"NIFTY13JAN26P26200","quantity":"50","price":"0","product":"M","trantype":"S","pricetype":"MKT","retention":"DAY","remarks":"TEST_PLACE_ORDER"}
-[2026-01-07T14:14:11.238Z] [TEST PLACE REQUEST] {"exchange":"NFO","tradingsymbol":"NIFTY13JAN26C26150","quantity":"50","price":"0","product":"M","trantype":"S","pricetype":"MKT","retention":"DAY","remarks":"TEST_PLACE_ORDER"}
-[2026-01-07T14:14:11.238Z] [TEST PLACE REQUEST] {"exchange":"NFO","tradingsymbol":"NIFTY13JAN26P26100","quantity":"50","price":"0","product":"M","trantype":"S","pricetype":"MKT","retention":"DAY","remarks":"TEST_PLACE_ORDER"}
-[2026-01-07T14:18:50.054Z] [TEST PLACE REQUEST]
-Payload: jData={"exchange":"NFO","tradingsymbol":"NIFTY13JAN26C26050","quantity":"50","price":"0","product":"M","trantype":"B","pricetype":"MKT","retention":"DAY","remarks":"TEST_PLACE_ORDER"}&jKey=82fafcd6d07a1c46097d0cc84a789c684958f3880a51cdedc16e79529454d931
+[2026-01-07T14:33:47.614Z] [TEST EXIT REQUEST]
+Payload: jData={"ordersource":"API","uid":"FA22136","actid":"FA22136","trantype":"S","prd":"M","exch":"NFO","tsym":"NIFTY13JAN26C26050","qty":"65","dscqty":"0","prctyp":"MKT","prc":"0","trgprc":"0","ret":"DAY","remarks":"TEST_EXIT_ORDER"}&jKey=82fafcd6d07a1c46097d0cc84a789c684958f3880a51cdedc16e79529454d931
 ---
-[2026-01-07T14:18:50.055Z] [TEST PLACE REQUEST]
-Payload: jData={"exchange":"NFO","tradingsymbol":"NIFTY13JAN26P26250","quantity":"50","price":"0","product":"M","trantype":"B","pricetype":"MKT","retention":"DAY","remarks":"TEST_PLACE_ORDER"}&jKey=82fafcd6d07a1c46097d0cc84a789c684958f3880a51cdedc16e79529454d931
+[2026-01-07T14:33:47.614Z] [TEST EXIT REQUEST]
+Payload: jData={"ordersource":"API","uid":"FA22136","actid":"FA22136","trantype":"B","prd":"M","exch":"NFO","tsym":"NIFTY13JAN26C26100","qty":"65","dscqty":"0","prctyp":"MKT","prc":"0","trgprc":"0","ret":"DAY","remarks":"TEST_EXIT_ORDER"}&jKey=82fafcd6d07a1c46097d0cc84a789c684958f3880a51cdedc16e79529454d931
 ---
-[2026-01-07T14:18:50.056Z] [TEST PLACE REQUEST]
-Payload: jData={"exchange":"NFO","tradingsymbol":"NIFTY13JAN26C26550","quantity":"50","price":"0","product":"M","trantype":"B","pricetype":"MKT","retention":"DAY","remarks":"TEST_PLACE_ORDER"}&jKey=82fafcd6d07a1c46097d0cc84a789c684958f3880a51cdedc16e79529454d931
+[2026-01-07T14:33:47.614Z] [TEST EXIT REQUEST]
+Payload: jData={"ordersource":"API","uid":"FA22136","actid":"FA22136","trantype":"S","prd":"M","exch":"NFO","tsym":"NIFTY13JAN26P26250","qty":"65","dscqty":"0","prctyp":"MKT","prc":"0","trgprc":"0","ret":"DAY","remarks":"TEST_EXIT_ORDER"}&jKey=82fafcd6d07a1c46097d0cc84a789c684958f3880a51cdedc16e79529454d931
 ---
-[2026-01-07T14:18:50.056Z] [TEST PLACE REQUEST]
-Payload: jData={"exchange":"NFO","tradingsymbol":"NIFTY13JAN26P25650","quantity":"50","price":"0","product":"M","trantype":"B","pricetype":"MKT","retention":"DAY","remarks":"TEST_PLACE_ORDER"}&jKey=82fafcd6d07a1c46097d0cc84a789c684958f3880a51cdedc16e79529454d931
+[2026-01-07T14:33:47.614Z] [TEST EXIT REQUEST]
+Payload: jData={"ordersource":"API","uid":"FA22136","actid":"FA22136","trantype":"B","prd":"M","exch":"NFO","tsym":"NIFTY13JAN26P26200","qty":"65","dscqty":"0","prctyp":"MKT","prc":"0","trgprc":"0","ret":"DAY","remarks":"TEST_EXIT_ORDER"}&jKey=82fafcd6d07a1c46097d0cc84a789c684958f3880a51cdedc16e79529454d931
 ---
-[2026-01-07T14:18:50.057Z] [TEST PLACE REQUEST]
-Payload: jData={"exchange":"NFO","tradingsymbol":"NIFTY13JAN26C26100","quantity":"50","price":"0","product":"M","trantype":"S","pricetype":"MKT","retention":"DAY","remarks":"TEST_PLACE_ORDER"}&jKey=82fafcd6d07a1c46097d0cc84a789c684958f3880a51cdedc16e79529454d931
+[2026-01-07T14:33:47.614Z] [TEST EXIT REQUEST]
+Payload: jData={"ordersource":"API","uid":"FA22136","actid":"FA22136","trantype":"B","prd":"M","exch":"NFO","tsym":"NIFTY13JAN26C26150","qty":"65","dscqty":"0","prctyp":"MKT","prc":"0","trgprc":"0","ret":"DAY","remarks":"TEST_EXIT_ORDER"}&jKey=82fafcd6d07a1c46097d0cc84a789c684958f3880a51cdedc16e79529454d931
 ---
-[2026-01-07T14:18:50.057Z] [TEST PLACE REQUEST]
-Payload: jData={"exchange":"NFO","tradingsymbol":"NIFTY13JAN26P26200","quantity":"50","price":"0","product":"M","trantype":"S","pricetype":"MKT","retention":"DAY","remarks":"TEST_PLACE_ORDER"}&jKey=82fafcd6d07a1c46097d0cc84a789c684958f3880a51cdedc16e79529454d931
+[2026-01-07T14:33:47.614Z] [TEST EXIT REQUEST]
+Payload: jData={"ordersource":"API","uid":"FA22136","actid":"FA22136","trantype":"S","prd":"M","exch":"NFO","tsym":"NIFTY13JAN26C26550","qty":"65","dscqty":"0","prctyp":"MKT","prc":"0","trgprc":"0","ret":"DAY","remarks":"TEST_EXIT_ORDER"}&jKey=82fafcd6d07a1c46097d0cc84a789c684958f3880a51cdedc16e79529454d931
 ---
-[2026-01-07T14:18:50.058Z] [TEST PLACE REQUEST]
-Payload: jData={"exchange":"NFO","tradingsymbol":"NIFTY13JAN26C26150","quantity":"50","price":"0","product":"M","trantype":"S","pricetype":"MKT","retention":"DAY","remarks":"TEST_PLACE_ORDER"}&jKey=82fafcd6d07a1c46097d0cc84a789c684958f3880a51cdedc16e79529454d931
+[2026-01-07T14:33:47.614Z] [TEST EXIT REQUEST]
+Payload: jData={"ordersource":"API","uid":"FA22136","actid":"FA22136","trantype":"B","prd":"M","exch":"NFO","tsym":"NIFTY13JAN26P26100","qty":"65","dscqty":"0","prctyp":"MKT","prc":"0","trgprc":"0","ret":"DAY","remarks":"TEST_EXIT_ORDER"}&jKey=82fafcd6d07a1c46097d0cc84a789c684958f3880a51cdedc16e79529454d931
 ---
-[2026-01-07T14:18:50.058Z] [TEST PLACE REQUEST]
-Payload: jData={"exchange":"NFO","tradingsymbol":"NIFTY13JAN26P26100","quantity":"50","price":"0","product":"M","trantype":"S","pricetype":"MKT","retention":"DAY","remarks":"TEST_PLACE_ORDER"}&jKey=82fafcd6d07a1c46097d0cc84a789c684958f3880a51cdedc16e79529454d931
----
-[2026-01-07T14:27:16.160Z] [TEST PLACE REQUEST]
-Payload: jData={"ordersource":"API","uid":"FA22136","actid":"FA22136","trantype":"B","prd":"M","exch":"NFO","tsym":"NIFTY13JAN26C26050","qty":"50","dscqty":"0","prctyp":"MKT","prc":"0","trgprc":"0","ret":"DAY","remarks":"TEST_PLACE_ORDER"}&jKey=82fafcd6d07a1c46097d0cc84a789c684958f3880a51cdedc16e79529454d931
----
-[2026-01-07T14:27:16.161Z] [TEST PLACE REQUEST]
-Payload: jData={"ordersource":"API","uid":"FA22136","actid":"FA22136","trantype":"B","prd":"M","exch":"NFO","tsym":"NIFTY13JAN26P26250","qty":"50","dscqty":"0","prctyp":"MKT","prc":"0","trgprc":"0","ret":"DAY","remarks":"TEST_PLACE_ORDER"}&jKey=82fafcd6d07a1c46097d0cc84a789c684958f3880a51cdedc16e79529454d931
----
-[2026-01-07T14:27:16.162Z] [TEST PLACE REQUEST]
-Payload: jData={"ordersource":"API","uid":"FA22136","actid":"FA22136","trantype":"B","prd":"M","exch":"NFO","tsym":"NIFTY13JAN26C26550","qty":"50","dscqty":"0","prctyp":"MKT","prc":"0","trgprc":"0","ret":"DAY","remarks":"TEST_PLACE_ORDER"}&jKey=82fafcd6d07a1c46097d0cc84a789c684958f3880a51cdedc16e79529454d931
----
-[2026-01-07T14:27:16.162Z] [TEST PLACE REQUEST]
-Payload: jData={"ordersource":"API","uid":"FA22136","actid":"FA22136","trantype":"B","prd":"M","exch":"NFO","tsym":"NIFTY13JAN26P25650","qty":"50","dscqty":"0","prctyp":"MKT","prc":"0","trgprc":"0","ret":"DAY","remarks":"TEST_PLACE_ORDER"}&jKey=82fafcd6d07a1c46097d0cc84a789c684958f3880a51cdedc16e79529454d931
----
-[2026-01-07T14:27:16.163Z] [TEST PLACE REQUEST]
-Payload: jData={"ordersource":"API","uid":"FA22136","actid":"FA22136","trantype":"S","prd":"M","exch":"NFO","tsym":"NIFTY13JAN26C26100","qty":"50","dscqty":"0","prctyp":"MKT","prc":"0","trgprc":"0","ret":"DAY","remarks":"TEST_PLACE_ORDER"}&jKey=82fafcd6d07a1c46097d0cc84a789c684958f3880a51cdedc16e79529454d931
----
-[2026-01-07T14:27:16.163Z] [TEST PLACE REQUEST]
-Payload: jData={"ordersource":"API","uid":"FA22136","actid":"FA22136","trantype":"S","prd":"M","exch":"NFO","tsym":"NIFTY13JAN26P26200","qty":"50","dscqty":"0","prctyp":"MKT","prc":"0","trgprc":"0","ret":"DAY","remarks":"TEST_PLACE_ORDER"}&jKey=82fafcd6d07a1c46097d0cc84a789c684958f3880a51cdedc16e79529454d931
----
-[2026-01-07T14:27:16.164Z] [TEST PLACE REQUEST]
-Payload: jData={"ordersource":"API","uid":"FA22136","actid":"FA22136","trantype":"S","prd":"M","exch":"NFO","tsym":"NIFTY13JAN26C26150","qty":"50","dscqty":"0","prctyp":"MKT","prc":"0","trgprc":"0","ret":"DAY","remarks":"TEST_PLACE_ORDER"}&jKey=82fafcd6d07a1c46097d0cc84a789c684958f3880a51cdedc16e79529454d931
----
-[2026-01-07T14:27:16.165Z] [TEST PLACE REQUEST]
-Payload: jData={"ordersource":"API","uid":"FA22136","actid":"FA22136","trantype":"S","prd":"M","exch":"NFO","tsym":"NIFTY13JAN26P26100","qty":"50","dscqty":"0","prctyp":"MKT","prc":"0","trgprc":"0","ret":"DAY","remarks":"TEST_PLACE_ORDER"}&jKey=82fafcd6d07a1c46097d0cc84a789c684958f3880a51cdedc16e79529454d931
+[2026-01-07T14:33:47.614Z] [TEST EXIT REQUEST]
+Payload: jData={"ordersource":"API","uid":"FA22136","actid":"FA22136","trantype":"S","prd":"M","exch":"NFO","tsym":"NIFTY13JAN26P25650","qty":"65","dscqty":"0","prctyp":"MKT","prc":"0","trgprc":"0","ret":"DAY","remarks":"TEST_EXIT_ORDER"}&jKey=82fafcd6d07a1c46097d0cc84a789c684958f3880a51cdedc16e79529454d931
 ---

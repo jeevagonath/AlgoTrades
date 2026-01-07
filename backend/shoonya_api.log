@@ -1230,3 +1230,73 @@ Payload: jData={"uid":"FA22136","exch":"NSE","token":"26000"}&jKey=82fafcd6d07a1
 Status: 200
 Data: {"request_time":"19:57:12 07-01-2026","stat":"Ok","exch":"NSE","tsym":"Nifty 50","cname":"NIFTY INDEX","symname":"NIFTY","seg":"EQT","instname":"UNDIND","pp":"2","ls":"1","ti":"0.05","mult":"1","lut":"1767785957","wk52_h":"26373.20","wk52_l":"21743.65","toi":"57178400","cutof_all":"false","prcftr_d":"(1 / 1 ) * (1 / 1)","token":"26000","lp":"26140.75","c":"26178.70","h":"26187.15","l":"26067.90","o":"26143.10"}
 ---
+[2026-01-07T14:32:34.240Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"uid":"FA22136","exch":"NSE","token":"26000"}&jKey=82fafcd6d07a1c46097d0cc84a789c684958f3880a51cdedc16e79529454d931
+---
+[2026-01-07T14:32:34.569Z] RESPONSE: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Status: 200
+Data: {"request_time":"20:02:34 07-01-2026","stat":"Ok","exch":"NSE","tsym":"Nifty 50","cname":"NIFTY INDEX","symname":"NIFTY","seg":"EQT","instname":"UNDIND","pp":"2","ls":"1","ti":"0.05","mult":"1","lut":"1767785957","wk52_h":"26373.20","wk52_l":"21743.65","toi":"57178400","cutof_all":"false","prcftr_d":"(1 / 1 ) * (1 / 1)","token":"26000","lp":"26140.75","c":"26178.70","h":"26187.15","l":"26067.90","o":"26143.10"}
+---
+[2026-01-07T14:32:34.571Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"uid":"FA22136","exch":"NSE","token":"26000"}&jKey=82fafcd6d07a1c46097d0cc84a789c684958f3880a51cdedc16e79529454d931
+---
+[2026-01-07T14:32:34.652Z] RESPONSE: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Status: 200
+Data: {"request_time":"20:02:34 07-01-2026","stat":"Ok","exch":"NSE","tsym":"Nifty 50","cname":"NIFTY INDEX","symname":"NIFTY","seg":"EQT","instname":"UNDIND","pp":"2","ls":"1","ti":"0.05","mult":"1","lut":"1767785957","wk52_h":"26373.20","wk52_l":"21743.65","toi":"57178400","cutof_all":"false","prcftr_d":"(1 / 1 ) * (1 / 1)","token":"26000","lp":"26140.75","c":"26178.70","h":"26187.15","l":"26067.90","o":"26143.10"}
+---
+[2026-01-07T14:32:38.710Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"uid":"FA22136","exch":"NFO","token":"46179"}&jKey=82fafcd6d07a1c46097d0cc84a789c684958f3880a51cdedc16e79529454d931
+---
+[2026-01-07T14:32:38.778Z] RESPONSE: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Status: 200
+Data: {"request_time":"20:02:38 07-01-2026","stat":"Ok","exch":"NFO","tsym":"NIFTY13JAN26C26050","cname":"NIFTY 13JAN26 26050 CE ","symname":"NIFTY","seg":"DER","exd":"13-JAN-2026","instname":"OPTIDX","optt":"CE","pp":"2","ls":"65","ti":"0.05","mult":"1","lut":"1767785067","uc":"503.45","lc":"0.05","oi":"975195","cutof_all":"false","strprc":"26050.00","prcftr_d":"(1 / 1 ) * (1 / 1)","token":"46179","lp":"163.10","c":"210.10","h":"214.30","l":"129.70","ap":"160.81","o":"195.00","v":"54510560","ltq":"65","ltt":"15:29:59","ltd":"07-01-2026","tbq":"105235","tsq":"87620","bp1":"163.25","sp1":"163.55","bp2":"163.10","sp2":"163.60","bp3":"163.00","sp3":"163.65","bp4":"162.85","sp4":"163.70","bp5":"162.75","sp5":"163.80","bq1":"130","sq1":"780","bq2":"390","sq2":"780","bq3":"130","sq3":"585","bq4":"455","sq4":"325","bq5":"195","sq5":"195","bo1":"2","so1":"3","bo2":"2","so2":"3","bo3":"2","so3":"2","bo4":"2","so4":"1","bo5":"1","so5":"1","und_exch":"NSE","und_tk":"26000"}
+---
+[2026-01-07T14:32:38.779Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"uid":"FA22136","exch":"NFO","token":"46181"}&jKey=82fafcd6d07a1c46097d0cc84a789c684958f3880a51cdedc16e79529454d931
+---
+[2026-01-07T14:32:38.864Z] RESPONSE: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Status: 200
+Data: {"request_time":"20:02:38 07-01-2026","stat":"Ok","exch":"NFO","tsym":"NIFTY13JAN26C26100","cname":"NIFTY 13JAN26 26100 CE ","symname":"NIFTY","seg":"DER","exd":"13-JAN-2026","instname":"OPTIDX","optt":"CE","pp":"2","ls":"65","ti":"0.05","mult":"1","lut":"1767785067","uc":"446.45","lc":"0.05","oi":"4918615","cutof_all":"false","strprc":"26100.00","prcftr_d":"(1 / 1 ) * (1 / 1)","token":"46181","lp":"129.80","c":"174.50","h":"178.25","l":"101.20","ap":"131.09","o":"159.00","v":"225571320","ltq":"130","ltt":"15:29:59","ltd":"07-01-2026","tbq":"362115","tsq":"614835","bp1":"129.85","sp1":"130.40","bp2":"129.80","sp2":"130.45","bp3":"129.75","sp3":"130.50","bp4":"129.70","sp4":"130.55","bp5":"129.65","sp5":"130.65","bq1":"520","sq1":"130","bq2":"650","sq2":"585","bq3":"650","sq3":"780","bq4":"845","sq4":"780","bq5":"65","sq5":"65","bo1":"1","so1":"1","bo2":"2","so2":"2","bo3":"5","so3":"3","bo4":"2","so4":"3","bo5":"1","so5":"1","und_exch":"NSE","und_tk":"26000"}
+---
+[2026-01-07T14:32:38.865Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"uid":"FA22136","exch":"NFO","token":"46197"}&jKey=82fafcd6d07a1c46097d0cc84a789c684958f3880a51cdedc16e79529454d931
+---
+[2026-01-07T14:32:38.938Z] RESPONSE: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Status: 200
+Data: {"request_time":"20:02:39 07-01-2026","stat":"Ok","exch":"NFO","tsym":"NIFTY13JAN26P26250","cname":"NIFTY 13JAN26 26250 PE ","symname":"NIFTY","seg":"DER","exd":"13-JAN-2026","instname":"OPTIDX","optt":"PE","pp":"2","ls":"65","ti":"0.05","mult":"1","lut":"1767785067","uc":"466.40","lc":"0.05","oi":"977535","cutof_all":"false","strprc":"26250.00","prcftr_d":"(1 / 1 ) * (1 / 1)","token":"46197","lp":"146.75","c":"131.40","h":"183.30","l":"119.60","ap":"152.19","o":"152.75","v":"54424175","ltq":"195","ltt":"15:29:59","ltd":"07-01-2026","tbq":"73580","tsq":"105170","bp1":"146.55","sp1":"146.90","bp2":"146.50","sp2":"146.95","bp3":"146.45","sp3":"147.00","bp4":"146.40","sp4":"147.15","bp5":"146.35","sp5":"147.20","bq1":"65","sq1":"130","bq2":"260","sq2":"455","bq3":"390","sq3":"1040","bq4":"455","sq4":"390","bq5":"260","sq5":"260","bo1":"1","so1":"1","bo2":"1","so2":"2","bo3":"2","so3":"10","bo4":"2","so4":"2","bo5":"2","so5":"1","und_exch":"NSE","und_tk":"26000"}
+---
+[2026-01-07T14:32:38.939Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"uid":"FA22136","exch":"NFO","token":"46194"}&jKey=82fafcd6d07a1c46097d0cc84a789c684958f3880a51cdedc16e79529454d931
+---
+[2026-01-07T14:32:38.996Z] RESPONSE: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Status: 200
+Data: {"request_time":"20:02:39 07-01-2026","stat":"Ok","exch":"NFO","tsym":"NIFTY13JAN26P26200","cname":"NIFTY 13JAN26 26200 PE ","symname":"NIFTY","seg":"DER","exd":"13-JAN-2026","instname":"OPTIDX","optt":"PE","pp":"2","ls":"65","ti":"0.05","mult":"1","lut":"1767785067","uc":"412.55","lc":"0.05","oi":"5586620","cutof_all":"false","strprc":"26200.00","prcftr_d":"(1 / 1 ) * (1 / 1)","token":"46194","lp":"116.60","c":"105.95","h":"149.00","l":"94.60","ap":"122.50","o":"106.00","v":"221883415","ltq":"195","ltt":"15:29:59","ltd":"07-01-2026","tbq":"263575","tsq":"377325","bp1":"116.30","sp1":"116.60","bp2":"116.25","sp2":"116.65","bp3":"116.20","sp3":"116.75","bp4":"116.10","sp4":"116.80","bp5":"116.05","sp5":"116.90","bq1":"130","sq1":"715","bq2":"390","sq2":"130","bq3":"650","sq3":"195","bq4":"325","sq4":"1755","bq5":"325","sq5":"195","bo1":"1","so1":"1","bo2":"2","so2":"1","bo3":"3","so3":"1","bo4":"1","so4":"9","bo5":"1","so5":"1","und_exch":"NSE","und_tk":"26000"}
+---
+[2026-01-07T14:32:38.997Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"uid":"FA22136","exch":"NFO","token":"46185"}&jKey=82fafcd6d07a1c46097d0cc84a789c684958f3880a51cdedc16e79529454d931
+---
+[2026-01-07T14:32:39.077Z] RESPONSE: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Status: 200
+Data: {"request_time":"20:02:39 07-01-2026","stat":"Ok","exch":"NFO","tsym":"NIFTY13JAN26C26150","cname":"NIFTY 13JAN26 26150 CE ","symname":"NIFTY","seg":"DER","exd":"13-JAN-2026","instname":"OPTIDX","optt":"CE","pp":"2","ls":"65","ti":"0.05","mult":"1","lut":"1767785067","uc":"393.60","lc":"0.05","oi":"5478005","cutof_all":"false","strprc":"26150.00","prcftr_d":"(1 / 1 ) * (1 / 1)","token":"46185","lp":"101.90","c":"143.30","h":"145.45","l":"77.00","ap":"106.11","o":"127.00","v":"245450400","ltq":"65","ltt":"15:29:59","ltd":"07-01-2026","tbq":"271180","tsq":"801450","bp1":"101.65","sp1":"101.90","bp2":"101.60","sp2":"101.95","bp3":"101.55","sp3":"102.00","bp4":"101.50","sp4":"102.05","bp5":"101.45","sp5":"102.10","bq1":"130","sq1":"65","bq2":"260","sq2":"325","bq3":"910","sq3":"1170","bq4":"2665","sq4":"585","bq5":"195","sq5":"780","bo1":"1","so1":"1","bo2":"1","so2":"1","bo3":"2","so3":"2","bo4":"7","so4":"2","bo5":"2","so5":"2","und_exch":"NSE","und_tk":"26000"}
+---
+[2026-01-07T14:32:39.078Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"uid":"FA22136","exch":"NFO","token":"46209"}&jKey=82fafcd6d07a1c46097d0cc84a789c684958f3880a51cdedc16e79529454d931
+---
+[2026-01-07T14:32:39.157Z] RESPONSE: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Status: 200
+Data: {"request_time":"20:02:39 07-01-2026","stat":"Ok","exch":"NFO","tsym":"NIFTY13JAN26C26550","cname":"NIFTY 13JAN26 26550 CE ","symname":"NIFTY","seg":"DER","exd":"13-JAN-2026","instname":"OPTIDX","optt":"CE","pp":"2","ls":"65","ti":"0.05","mult":"1","lut":"1767785067","uc":"124.35","lc":"0.05","oi":"3680755","cutof_all":"false","strprc":"26550.00","prcftr_d":"(1 / 1 ) * (1 / 1)","token":"46209","lp":"7.30","c":"14.60","h":"14.85","l":"5.95","ap":"9.10","o":"13.65","v":"51454780","ltq":"65","ltt":"15:29:59","ltd":"07-01-2026","tbq":"166790","tsq":"437125","bp1":"7.20","sp1":"7.25","bp2":"7.15","sp2":"7.30","bp3":"7.10","sp3":"7.35","bp4":"7.05","sp4":"7.40","bp5":"7.00","sp5":"7.45","bq1":"65","sq1":"130","bq2":"520","sq2":"780","bq3":"130","sq3":"975","bq4":"1365","sq4":"130","bq5":"5135","sq5":"975","bo1":"1","so1":"1","bo2":"2","so2":"1","bo3":"1","so3":"1","bo4":"4","so4":"1","bo5":"13","so5":"3","und_exch":"NSE","und_tk":"26000"}
+---
+[2026-01-07T14:32:39.158Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"uid":"FA22136","exch":"NFO","token":"46184"}&jKey=82fafcd6d07a1c46097d0cc84a789c684958f3880a51cdedc16e79529454d931
+---
+[2026-01-07T14:32:39.219Z] RESPONSE: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Status: 200
+Data: {"request_time":"20:02:39 07-01-2026","stat":"Ok","exch":"NFO","tsym":"NIFTY13JAN26P26100","cname":"NIFTY 13JAN26 26100 PE ","symname":"NIFTY","seg":"DER","exd":"13-JAN-2026","instname":"OPTIDX","optt":"PE","pp":"2","ls":"65","ti":"0.05","mult":"1","lut":"1767785067","uc":"317.15","lc":"0.05","oi":"7346430","cutof_all":"false","strprc":"26100.00","prcftr_d":"(1 / 1 ) * (1 / 1)","token":"46184","lp":"69.45","c":"65.85","h":"94.75","l":"56.85","ap":"77.45","o":"75.00","v":"391609140","ltq":"195","ltt":"15:29:59","ltd":"07-01-2026","tbq":"360490","tsq":"1177150","bp1":"69.25","sp1":"69.50","bp2":"69.20","sp2":"69.55","bp3":"69.15","sp3":"69.60","bp4":"69.10","sp4":"69.70","bp5":"69.05","sp5":"69.75","bq1":"2600","sq1":"5005","bq2":"325","sq2":"390","bq3":"1885","sq3":"1365","bq4":"455","sq4":"715","bq5":"325","sq5":"1820","bo1":"3","so1":"15","bo2":"2","so2":"2","bo3":"3","so3":"4","bo4":"2","so4":"5","bo5":"1","so5":"3","und_exch":"NSE","und_tk":"26000"}
+---
+[2026-01-07T14:32:39.220Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"uid":"FA22136","exch":"NFO","token":"46160"}&jKey=82fafcd6d07a1c46097d0cc84a789c684958f3880a51cdedc16e79529454d931
+---
+[2026-01-07T14:32:39.293Z] RESPONSE: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Status: 200
+Data: {"request_time":"20:02:39 07-01-2026","stat":"Ok","exch":"NFO","tsym":"NIFTY13JAN26P25650","cname":"NIFTY 13JAN26 25650 PE ","symname":"NIFTY","seg":"DER","exd":"13-JAN-2026","instname":"OPTIDX","optt":"PE","pp":"2","ls":"65","ti":"0.05","mult":"1","lut":"1767785067","uc":"77.35","lc":"0.05","oi":"2033915","cutof_all":"false","strprc":"25650.00","prcftr_d":"(1 / 1 ) * (1 / 1)","token":"46160","lp":"4.95","c":"6.45","h":"8.35","l":"4.75","ap":"6.32","o":"6.15","v":"21759790","ltq":"65","ltt":"15:29:59","ltd":"07-01-2026","tbq":"141505","tsq":"49530","bp1":"4.90","sp1":"4.95","bp2":"4.85","sp2":"5.00","bp3":"4.80","sp3":"5.05","bp4":"4.75","sp4":"5.10","bp5":"4.70","sp5":"5.15","bq1":"130","sq1":"715","bq2":"1235","sq2":"325","bq3":"65","sq3":"520","bq4":"1430","sq4":"2275","bq5":"1755","sq5":"650","bo1":"1","so1":"2","bo2":"3","so2":"2","bo3":"1","so3":"3","bo4":"2","so4":"7","bo5":"3","so5":"4","und_exch":"NSE","und_tk":"26000"}
+---

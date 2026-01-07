@@ -586,7 +586,14 @@ class StrategyEngine {
         const logFile = path.join(process.cwd(), 'test_orders.log');
         const timestamp = new Date().toISOString();
 
-        for (const leg of this.state.selectedStrikes) {
+        // Sort: Close Shorts (SELL) first, then Longs (BUY)
+        const legsToExit = [...this.state.selectedStrikes].sort((a, b) => {
+            if (a.side === 'SELL' && b.side !== 'SELL') return -1;
+            if (b.side === 'SELL' && a.side !== 'SELL') return 1;
+            return 0;
+        });
+
+        for (const leg of legsToExit) {
             const exitOrder = {
                 exchange: 'NFO',
                 tradingsymbol: leg.symbol,
