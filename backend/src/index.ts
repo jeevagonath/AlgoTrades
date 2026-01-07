@@ -19,6 +19,10 @@ app.register(cors, {
 app.register(authRoutes, { prefix: '/api/auth' });
 app.register(strategyRoutes, { prefix: '/api/strategy' });
 
+app.get('/health', async (request, reply) => {
+    return { status: 'active', timestamp: new Date(), uptime: process.uptime() };
+});
+
 const PORT = Number(process.env.PORT) || 3001;
 
 const start = async () => {
