@@ -2,6 +2,8 @@ import { shoonya } from './shoonya.service';
 import { db } from './supabase.service';
 import { socketService } from './socket.service';
 import { telegramService } from './telegram.service';
+import * as fs from 'fs';
+import * as path from 'path';
 import { nseService } from './nse.service';
 import cron from 'node-cron';
 
@@ -491,29 +493,31 @@ class StrategyEngine {
         }
     }
 
-    async placeOrder() {
-        if (!shoonya.isLoggedIn()) {
+    public async placeOrder(isDryRun: boolean = false) {
+        if (!isDryRun && !shoonya.isLoggedIn()) {
             throw new Error('Shoonya session expired or not logged in. Please login again.');
         }
+        if (!isDryRun) {
+            // Checks for Real Execution
+            if (this.state.isPaused) {
+                this.addLog('⚠️ Order Placement Blocked: Strategy is PAUSED.');
+                throw new Error('Strategy is Paused.');
+            }
 
-        if (this.state.isPaused) {
-            this.addLog('⚠️ Order Placement Blocked: Strategy is PAUSED.');
-            throw new Error('Strategy is Paused.');
-        }
+            // Duplicate Execution Prevention
+            if (this.state.status === 'ACTIVE' || this.state.status === 'ENTRY_DONE') {
+                this.addLog('⚠️ BLOCKED: Trade already active/placed.');
+                return;
+            }
 
-        // Duplicate Execution Prevention
-        if (this.state.status === 'ACTIVE' || this.state.status === 'ENTRY_DONE') {
-            this.addLog('⚠️ BLOCKED: Trade already active/placed.');
-            return;
-        }
+            if (this.state.isTradePlaced) return;
 
-        if (this.state.isTradePlaced) return;
-
-        // Margin Check
-        if (!this.state.isVirtual) {
-            const hasMargin = await this.checkMargin(this.state.selectedStrikes);
-            if (!hasMargin) {
-                return { status: 'failed', reason: 'Insufficient Margin' };
+            // Margin Check
+            if (!this.state.isVirtual) {
+                const hasMargin = await this.checkMargin(this.state.selectedStrikes);
+                if (!hasMargin) {
+                    return { status: 'failed', reason: 'Insufficient Margin' };
+                }
             }
         }
 
@@ -521,16 +525,18 @@ class StrategyEngine {
             const longs = this.state.selectedStrikes.filter(s => s.side === 'BUY');
             const shorts = this.state.selectedStrikes.filter(s => s.side === 'SELL');
 
-            for (const leg of longs) await this.executeLeg(leg);
-            for (const leg of shorts) await this.executeLeg(leg);
+            for (const leg of longs) await this.executeLeg(leg, isDryRun);
+            for (const leg of shorts) await this.executeLeg(leg, isDryRun);
 
-            this.state.isTradePlaced = true;
-            this.state.isActive = true;
-            this.state.status = 'ACTIVE';    // Transition to ACTIVE
-            this.startMonitoring();
-            await this.syncToDb(true);
+            if (!isDryRun) {
+                this.state.isTradePlaced = true;
+                this.state.isActive = true;
+                this.state.status = 'ACTIVE';    // Transition to ACTIVE
+                this.startMonitoring();
+                await this.syncToDb(true);
 
-            telegramService.sendMessage(`🚀 <b>Trade Placed</b>\nAll 8 legs executed virtually for Iron Condor.`);
+                telegramService.sendMessage(`🚀 <b>Trade Placed</b>\nAll 8 legs executed virtually for Iron Condor.`);
+            }
 
             return { status: 'success' };
         } catch (err) {
@@ -539,8 +545,78 @@ class StrategyEngine {
         }
     }
 
+    public async testPlaceOrder() {
+        this.addLog('🧪 STARTING PLACE ORDER TEST (Dry Run)...');
+        // Ensure strikes are selected or mock them if needed
+        if (this.state.selectedStrikes.length === 0) {
+            this.addLog('❌ No strikes selected. Cannot test place order.');
+            throw new Error('No strikes selected.');
+        }
 
-    private async executeLeg(leg: LegState) {
+        try {
+            await this.placeOrder(true);
+            this.addLog('✅ PLACE ORDER TEST COMPLETED. Check test_orders.log');
+            return { status: 'success', message: 'Logged to test_orders.log' };
+        } catch (e: any) {
+            this.addLog(`❌ TEST FAILED: ${e.message}`);
+            throw e;
+        }
+    }
+
+    public async testExitOrder() {
+        this.addLog('🧪 STARTING EXIT ORDER TEST (Dry Run)...');
+        if (this.state.selectedStrikes.length === 0) {
+            this.addLog('❌ No open positions to exit. Cannot test exit order.');
+            throw new Error('No open positions.');
+        }
+
+        const logFile = path.join(process.cwd(), 'test_orders.log');
+        const timestamp = new Date().toISOString();
+
+        for (const leg of this.state.selectedStrikes) {
+            const exitOrder = {
+                exchange: 'NFO',
+                tradingsymbol: leg.symbol,
+                quantity: leg.quantity.toString(),
+                price: '0',
+                product: 'M',
+                trantype: leg.side === 'BUY' ? 'S' : 'B', // Reverse side
+                pricetype: 'MKT',
+                retention: 'DAY',
+                remarks: 'TEST_EXIT_ORDER'
+            };
+
+            const logEntry = `[${timestamp}] [TEST EXIT REQUEST] ${JSON.stringify(exitOrder)}\n`;
+            fs.appendFileSync(logFile, logEntry);
+            this.addLog(`📝 Logged Exit: ${leg.symbol} (${exitOrder.trantype})`);
+        }
+
+        this.addLog('✅ EXIT ORDER TEST COMPLETED. Check test_orders.log');
+        return { status: 'success', message: 'Logged to test_orders.log' };
+    }
+
+
+    private async executeLeg(leg: LegState, isDryRun: boolean = false) {
+        if (isDryRun) {
+            const orderParams = {
+                exchange: 'NFO',
+                tradingsymbol: leg.symbol,
+                quantity: leg.quantity.toString(),
+                price: '0',
+                product: 'M',
+                trantype: leg.side === 'BUY' ? 'B' : 'S',
+                pricetype: 'MKT',
+                retention: 'DAY',
+                remarks: 'TEST_PLACE_ORDER'
+            };
+            const logFile = path.join(process.cwd(), 'test_orders.log');
+            const timestamp = new Date().toISOString();
+            const logEntry = `[${timestamp}] [TEST PLACE REQUEST] ${JSON.stringify(orderParams)}\n`;
+            fs.appendFileSync(logFile, logEntry);
+            this.addLog(`📝 Logged Place: ${leg.symbol} (${leg.side})`);
+            return;
+        }
+
         if (this.state.isVirtual) {
             // Virtual execution
             await new Promise(r => setTimeout(r, 100));

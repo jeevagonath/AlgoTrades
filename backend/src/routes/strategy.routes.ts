@@ -193,5 +193,24 @@ export async function strategyRoutes(app: FastifyInstance) {
             return reply.status(500).send({ status: 'error', message: err.message });
         }
     });
+
+    // Test Routes
+    app.post('/test/place-order', async (request, reply) => {
+        try {
+            const result = await strategyEngine.testPlaceOrder();
+            return result;
+        } catch (err: any) {
+            return reply.status(500).send({ status: 'error', message: err.message });
+        }
+    });
+
+    app.post('/test/exit-order', async (request, reply) => {
+        try {
+            const result = await strategyEngine.testExitOrder();
+            return result;
+        } catch (err: any) {
+            return reply.status(500).send({ status: 'error', message: err.message });
+        }
+    });
 }
 

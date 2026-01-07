@@ -554,6 +554,45 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                 <Save className="w-5 h-5" />
                                 Save Configuration
                             </button>
+
+                            <div className="mt-8 pt-6 border-t border-slate-800">
+                                <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest block mb-4">
+                                    🚧 Testing Zone (Dry Run)
+                                </label>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <button
+                                        onClick={async () => {
+                                            try {
+                                                addLog('TEST: Initiating Place Order Test...');
+                                                await strategyApi.testPlaceOrder();
+                                                addLog('✅ TEST: Place Order Request Logged.');
+                                            } catch (e: any) {
+                                                addLog(`❌ TEST FAILED: ${e.message}`);
+                                            }
+                                        }}
+                                        className="py-3 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold text-xs transition-colors flex items-center justify-center gap-2"
+                                    >
+                                        🧪 Test Place Order
+                                    </button>
+                                    <button
+                                        onClick={async () => {
+                                            try {
+                                                addLog('TEST: Initiating Exit Order Test...');
+                                                await strategyApi.testExitOrder();
+                                                addLog('✅ TEST: Exit Order Request Logged.');
+                                            } catch (e: any) {
+                                                addLog(`❌ TEST FAILED: ${e.message}`);
+                                            }
+                                        }}
+                                        className="py-3 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold text-xs transition-colors flex items-center justify-center gap-2"
+                                    >
+                                        🧪 Test Close Order
+                                    </button>
+                                </div>
+                                <p className="text-[9px] text-slate-600 mt-2 text-center">
+                                    Logs requests to <code>backend/test_orders.log</code>. No real orders placed.
+                                </p>
+                            </div>
                         </div>
                     </div>
                 )
