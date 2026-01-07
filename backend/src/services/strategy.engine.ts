@@ -911,6 +911,49 @@ class StrategyEngine {
 
     async exitAllPositions(reason: string) {
         console.log(`Exiting all positions: ${reason}`);
+
+        // Sort: Close Shorts (SELL) first, then Longs (BUY)
+        const legsToExit = [...this.state.selectedStrikes].sort((a, b) => {
+            if (a.side === 'SELL' && b.side !== 'SELL') return -1;
+            if (b.side === 'SELL' && a.side !== 'SELL') return 1;
+            return 0;
+        });
+
+        // Loop and Place Exit Orders
+        for (const leg of legsToExit) {
+            if (!this.state.isVirtual) {
+                try {
+                    const exitOrder = {
+                        exchange: 'NFO',
+                        tradingsymbol: leg.symbol,
+                        quantity: leg.quantity.toString(),
+                        discloseqty: '0',
+                        price: '0',
+                        product_type: 'M',
+                        buy_or_sell: leg.side === 'BUY' ? 'S' : 'B', // Reverse side
+                        price_type: 'MKT',
+                        trigger_price: '0',
+                        retention: 'DAY',
+                        remarks: `EXIT_${reason.replace(/\s+/g, '_').toUpperCase()}`.substring(0, 20) // Truncate if needed
+                    };
+
+                    this.addLog(`🔄 Exiting ${leg.symbol} (${exitOrder.buy_or_sell})...`);
+                    const res: any = await shoonya.placeOrder(exitOrder);
+
+                    if (res && res.stat === 'Ok') {
+                        this.addLog(`✅ Exit Order Sent: ${leg.symbol} | ID: ${res.norenordno}`);
+                    } else {
+                        this.addLog(`❌ Exit Failed: ${leg.symbol} | ${res.emsg || 'Unknown'}`);
+                    }
+                } catch (e: any) {
+                    this.addLog(`❌ Exit Exception: ${leg.symbol} | ${e.message}`);
+                    console.error('Exit Order Error:', e);
+                }
+            } else {
+                this.addLog(`[VIRTUAL] Exited ${leg.symbol} (${leg.side === 'BUY' ? 'SELL' : 'BUY'})`);
+            }
+        }
+
         this.state.isActive = false;
         this.state.isTradePlaced = false;
 
@@ -923,6 +966,8 @@ class StrategyEngine {
 
         const tokens = this.state.selectedStrikes.map(s => `NFO|${s.token}`);
         shoonya.unsubscribe(tokens);
+        // Do NOT clear selectedStrikes immediately if we want to show history? 
+        // But logic says clear it.
         this.state.selectedStrikes = [];
         await db.syncPositions([]);
         await this.syncToDb(true);
