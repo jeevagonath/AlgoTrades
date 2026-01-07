@@ -138,9 +138,22 @@ class StrategyEngine {
         return new Date(year, month, day);
     }
 
+    private testDate: Date | null = null;
+
+    public async setTestDate(dateStr: string | null) {
+        if (dateStr) {
+            this.testDate = this.parseExpiryDate(dateStr);
+            this.addLog(`🧪 MOCK DATE SET: ${this.testDate.toDateString()}`);
+        } else {
+            this.testDate = null;
+            this.addLog(`🧪 MOCK DATE REMOVED`);
+        }
+        await this.initScheduler();
+    }
+
     // Helper: Check if dateStr matches today
     private isToday(dateStr: string): boolean {
-        const today = new Date();
+        const today = this.testDate || new Date();
         const expiryDate = this.parseExpiryDate(dateStr);
         return today.toDateString() === expiryDate.toDateString();
     }

@@ -24,6 +24,16 @@ export async function strategyRoutes(app: FastifyInstance) {
         }
     });
 
+    app.post('/mock-expiry', async (request, reply) => {
+        try {
+            const { date } = request.body as { date: string | null };
+            await strategyEngine.setTestDate(date);
+            return { status: 'success', message: `Mock date set to ${date || 'current'}` };
+        } catch (err: any) {
+            return reply.status(500).send({ status: 'error', message: err.message });
+        }
+    });
+
     app.post('/place-order', async (request, reply) => {
         try {
             await strategyEngine.placeOrder();
