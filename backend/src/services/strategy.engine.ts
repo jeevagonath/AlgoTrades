@@ -17,9 +17,14 @@ interface LegState {
     tier?: number; // 1 or 2
 }
 
+export type StrategyStatus = 'IDLE' | 'WAITING_FOR_EXPIRY' | 'EXIT_DONE' | 'ENTRY_DONE' | 'ACTIVE' | 'FORCE_EXITED';
+
 interface StrategyState {
-    isActive: boolean;
+    status: StrategyStatus;
+    isActive: boolean; // Legacy/Derived
     isVirtual: boolean;
+    isPaused: boolean;
+
     isTradePlaced: boolean;
     selectedStrikes: LegState[];
     pnl: number;
@@ -40,7 +45,10 @@ interface StrategyState {
 
 class StrategyEngine {
     private state: StrategyState = {
+        status: 'IDLE',
         isActive: false,
+        isPaused: false,
+
         isVirtual: true, // Default to virtual mode for safety
         isTradePlaced: false,
         selectedStrikes: [],
@@ -72,6 +80,7 @@ class StrategyEngine {
         try {
             const state: any = await db.getState();
             if (state) {
+                this.state.status = state.status || (state.isActive ? 'ACTIVE' : 'IDLE'); // Fallback
                 this.state.isActive = state.isActive;
                 this.state.isTradePlaced = state.isTradePlaced;
                 this.state.pnl = state.pnl;
@@ -84,6 +93,8 @@ class StrategyEngine {
                 this.state.telegramToken = state.telegramToken || '';
                 this.state.telegramChatId = state.telegramChatId || '';
                 this.state.isVirtual = state.isVirtual !== undefined ? state.isVirtual : true;
+                this.state.isPaused = state.isPaused !== undefined ? state.isPaused : false;
+                this.state.status = state.status || (this.state.isActive ? 'ACTIVE' : 'IDLE');
 
                 if (this.state.telegramToken && this.state.telegramChatId) {
                     telegramService.setCredentials(this.state.telegramToken, this.state.telegramChatId);
@@ -154,23 +165,35 @@ class StrategyEngine {
         const isExpiry = await this.isExpiryDay();
 
         if (isExpiry) {
+            // Update status if starting the day
+            if (this.state.status === 'IDLE' || this.state.status === 'ACTIVE') {
+                this.state.status = 'WAITING_FOR_EXPIRY';
+                await this.syncToDb();
+            }
+
             //console.log('[Strategy] Today is EXPIRY DAY - Scheduling exit and entry');
-            this.addLog('🔔 EXPIRY DAY DETECTED - Automated rollover scheduled');
+            this.addLog(`🔔 EXPIRY DAY DETECTED - Status: ${this.state.status}`);
             telegramService.sendMessage('🔔 <b>Expiry Day Detected</b>\nAutomated rollover sequence will execute:\n• 12:45 PM - Exit positions\n• 12:59:30 PM - Select new strikes\n• 1:00 PM - Place orders');
 
             // 12:45 PM - Exit positions if any exist
-            this.schedulers.push(cron.schedule('45 12 * * *', () => {
+            this.schedulers.push(cron.schedule('45 12 * * *', async () => {
                 if (this.state.selectedStrikes.length > 0) {
                     this.addLog('⏰ Expiry Day: Exiting all positions at 12:45 PM');
-                    this.exitAllPositions('Expiry Day Exit');
+                    await this.exitAllPositions('Expiry Day Exit');
+                    this.state.status = 'EXIT_DONE';
+                    await this.syncToDb();
                     telegramService.sendMessage('📤 <b>Expiry Day Exit</b>\nExiting all positions at 12:45 PM');
                 } else {
                     this.addLog('ℹ️ Expiry Day: No positions to exit at 12:45 PM');
+                    this.state.status = 'EXIT_DONE';
+                    await this.syncToDb();
                 }
             }));
 
             // 12:59:30 PM - Select strikes for next week (30-second delay)
             this.schedulers.push(cron.schedule('59 12 * * *', async () => {
+                if (this.state.status === 'ENTRY_DONE' || this.state.status === 'ACTIVE') return;
+
                 this.addLog('⏳ Waiting 30 seconds before strike selection...');
                 await new Promise(r => setTimeout(r, 30000)); // 30-second delay
                 this.addLog('🎯 Expiry Day: Selecting strikes for NEXT WEEK at 12:59:30 PM');
@@ -180,8 +203,16 @@ class StrategyEngine {
 
             // 1:00 PM - Place orders
             this.schedulers.push(cron.schedule('0 13 * * *', async () => {
-                this.addLog('🚀 Expiry Day: Placing orders at 1:00 PM');
-                await this.placeOrder();
+                this.addLog('🚀 Expiry Day: Attempting to place orders at 1:00 PM');
+                if (this.state.status === 'ENTRY_DONE' || this.state.status === 'ACTIVE') {
+                    this.addLog('⚠️ ENTRY SKIPPED: Trade already executed today.');
+                    return;
+                }
+                const result = await this.placeOrder();
+                if (result) {
+                    this.state.status = 'ENTRY_DONE';
+                    await this.syncToDb();
+                }
             }));
         } else {
             //console.log('[Strategy] Not expiry day - No actions scheduled');
@@ -410,11 +441,81 @@ class StrategyEngine {
         };
     }
 
+    private async checkMargin(legs: LegState[]): Promise<boolean> {
+        if (this.state.isVirtual) return true;
+
+        try {
+            this.addLog('🔍 Checking Margin Requirements...');
+            const marginRes: any = await shoonya.getBasketMargin(legs);
+
+            if (marginRes.stat !== 'Ok') {
+                const msg = `❌ Margin Check Failed: API Error - ${marginRes.emsg || 'Unknown error'}`;
+                this.addLog(msg);
+                telegramService.sendMessage(msg);
+                return false;
+            }
+
+            const limitsRes: any = await shoonya.getLimits();
+            if (limitsRes.stat !== 'Ok') {
+                const msg = `❌ Margin Check Failed: Limits API Error - ${limitsRes.emsg || 'Unknown error'}`;
+                this.addLog(msg);
+                telegramService.sendMessage(msg);
+                return false;
+            }
+
+            // Parse numeric values (Shoonya returns strings)
+            // Note: basket_margin field might vary, checking expected keys
+            const requiredMargin = parseFloat(marginRes.basket_margin || marginRes.margin_used || '0');
+            const cash = parseFloat(limitsRes.cash || '0');
+            const payin = parseFloat(limitsRes.payin || '0');
+            const collateral = parseFloat(limitsRes.collateral || limitsRes.collat || '0');
+
+            const availableMargin = cash + payin + collateral;
+
+            this.addLog(`💰 Margin: Required ₹${requiredMargin.toFixed(0)} | Avail ₹${availableMargin.toFixed(0)}`);
+
+            if (availableMargin < requiredMargin) {
+                const shortfall = requiredMargin - availableMargin;
+                const msg = `🚨 <b>Margin Shortfall</b>\nRequired: ₹${requiredMargin.toFixed(2)}\nAvailable: ₹${availableMargin.toFixed(2)}\nShortfall: ₹${shortfall.toFixed(2)}\n⚠️ <b>Trade Aborted!</b>`;
+                telegramService.sendMessage(msg);
+                this.addLog(`❌ Margin Shortfall: ₹${shortfall.toFixed(2)}. Trade Aborted.`);
+                return false;
+            }
+
+            return true;
+
+        } catch (err: any) {
+            console.error('Margin Check Logic Error:', err);
+            this.addLog(`❌ Margin Check Ex: ${err.message}`);
+            return false;
+        }
+    }
+
     async placeOrder() {
         if (!shoonya.isLoggedIn()) {
             throw new Error('Shoonya session expired or not logged in. Please login again.');
         }
+
+        if (this.state.isPaused) {
+            this.addLog('⚠️ Order Placement Blocked: Strategy is PAUSED.');
+            throw new Error('Strategy is Paused.');
+        }
+
+        // Duplicate Execution Prevention
+        if (this.state.status === 'ACTIVE' || this.state.status === 'ENTRY_DONE') {
+            this.addLog('⚠️ BLOCKED: Trade already active/placed.');
+            return;
+        }
+
         if (this.state.isTradePlaced) return;
+
+        // Margin Check
+        if (!this.state.isVirtual) {
+            const hasMargin = await this.checkMargin(this.state.selectedStrikes);
+            if (!hasMargin) {
+                return { status: 'failed', reason: 'Insufficient Margin' };
+            }
+        }
 
         try {
             const longs = this.state.selectedStrikes.filter(s => s.side === 'BUY');
@@ -425,6 +526,7 @@ class StrategyEngine {
 
             this.state.isTradePlaced = true;
             this.state.isActive = true;
+            this.state.status = 'ACTIVE';    // Transition to ACTIVE
             this.startMonitoring();
             await this.syncToDb(true);
 
@@ -436,6 +538,7 @@ class StrategyEngine {
             throw err;
         }
     }
+
 
     private async executeLeg(leg: LegState) {
         if (this.state.isVirtual) {
@@ -531,6 +634,8 @@ class StrategyEngine {
     }
 
     private checkAdjustments(leg: LegState) {
+        if (this.state.isPaused) return;
+
         // Only monitor Tier 2 Sells (₹75 legs)
         if (leg.tier !== 2 || leg.side !== 'SELL') return;
 
@@ -582,6 +687,16 @@ class StrategyEngine {
                     quantity: 50
                 };
 
+                // Margin Check for Adjustment
+                if (!this.state.isVirtual) {
+                    const hasMargin = await this.checkMargin([adjustmentLeg]);
+                    if (!hasMargin) {
+                        this.addLog(`❌ Adjustment Skipped: Insufficient Margin for ${adjustmentLeg.symbol}`);
+                        telegramService.sendMessage(`⚠️ <b>Adjustment Skipped</b>\nInsufficient Margin for ${adjustmentLeg.symbol}`);
+                        return;
+                    }
+                }
+
                 await this.executeLeg(adjustmentLeg);
                 this.state.selectedStrikes.push(adjustmentLeg);
                 this.resubscribe();
@@ -594,6 +709,8 @@ class StrategyEngine {
     }
 
     private checkExits() {
+        if (this.state.isPaused) return;
+
         const now = Date.now();
         // Profit Exit: > target for 10s
         if (this.state.pnl > this.state.targetPnl) {
@@ -631,6 +748,7 @@ class StrategyEngine {
         const now = Date.now();
         if (forcePnl || (now - this.lastPnlUpdateTime >= this.PNL_UPDATE_INTERVAL)) {
             await db.updateState({
+                status: this.state.status,
                 isActive: this.state.isActive,
                 isVirtual: this.state.isVirtual, // Include to prevent overwriting
                 isTradePlaced: this.state.isTradePlaced,
@@ -638,6 +756,7 @@ class StrategyEngine {
                 peakProfit: this.state.peakProfit,
                 peakLoss: this.state.peakLoss
             });
+
             this.lastPnlUpdateTime = now;
         }
     }
@@ -645,9 +764,17 @@ class StrategyEngine {
     private handleOrderReport(report: any) { }
 
     async exitAllPositions(reason: string) {
-        //console.log(`Exiting all positions: ${reason}`);
+        console.log(`Exiting all positions: ${reason}`);
         this.state.isActive = false;
         this.state.isTradePlaced = false;
+
+        // Set status based on reason
+        if (reason.includes('Profit') || reason.includes('Loss')) {
+            this.state.status = 'FORCE_EXITED';
+        } else {
+            this.state.status = 'IDLE';
+        }
+
         const tokens = this.state.selectedStrikes.map(s => `NFO|${s.token}`);
         shoonya.unsubscribe(tokens);
         this.state.selectedStrikes = [];
@@ -656,6 +783,37 @@ class StrategyEngine {
         socketService.emit('strategy_exit', { reason });
 
         telegramService.sendMessage(`🏁 <b>Strategy Closed</b>\nReason: ${reason}\nFinal PnL: <b>₹${this.state.pnl.toFixed(2)}</b>`);
+    }
+
+    // --- Control Methods ---
+
+    async pause() {
+        if (this.state.isPaused) return;
+        this.state.isPaused = true;
+        this.addLog('⏸️ Strategy PAUSED by User.');
+        telegramService.sendMessage('⏸️ <b>Strategy Paused</b>');
+        await this.syncToDb();
+    }
+
+    async resumeMonitoring() {
+        if (!this.state.isPaused) return;
+        this.state.isPaused = false;
+        this.addLog('▶️ Strategy RESUMED by User.');
+        telegramService.sendMessage('▶️ <b>Strategy Resumed</b>');
+        await this.syncToDb();
+        if (this.state.isActive) {
+            this.checkExits();
+        }
+    }
+
+    async manualExit() {
+        this.addLog('🛑 Manual Kill Switch Triggered!');
+        telegramService.sendMessage('🛑 <b>Manual Kill Switch Triggered!</b>\nExiting all positions and pausing strategy.');
+        await this.exitAllPositions('MANUAL_KILL_SWITCH');
+        // Pause after kill switch to prevent auto-reentry if any logic remains
+        this.state.isPaused = true;
+        this.state.status = 'FORCE_EXITED';
+        await this.syncToDb(true);
     }
 }
 

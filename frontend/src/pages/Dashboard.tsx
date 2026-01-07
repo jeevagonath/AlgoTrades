@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Activity, ListOrdered, History, Bell, LogOut, TrendingUp, TrendingDown, Clock, Play, Search, Shield, Settings, Save, X } from 'lucide-react';
+import { Activity, ListOrdered, History, Bell, LogOut, TrendingUp, TrendingDown, Clock, Play, Pause, Octagon, Power, Search, Shield, Settings, Save, X } from 'lucide-react';
 import { socketService } from '@/services/socket.service';
 import { strategyApi } from '@/services/api.service';
 
@@ -31,6 +31,8 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
         telegramChatId: '5177480141',
         isVirtual: true
     });
+    const [status, setStatus] = useState<string>('IDLE');
+    const [isPaused, setIsPaused] = useState(false);
     const [manualExpiriesText, setManualExpiriesText] = useState('');
     const [niftyData, setNiftyData] = useState<{ price: number, change: number, changePercent: number, prevClose?: number } | null>(null);
 
@@ -55,6 +57,8 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                         telegramChatId: d.telegramChatId || '5177480141',
                         isVirtual: d.isVirtual !== undefined ? d.isVirtual : true
                     });
+                    setStatus(d.status || (d.isActive ? 'ACTIVE' : 'IDLE'));
+                    setIsPaused(d.isPaused || false);
                     if (d.isActive) setExpiryApproved(true);
                 }
 
@@ -297,6 +301,16 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                             NewAlgoTrades
                         </span>
 
+                        {/* Status Badge */}
+                        <div className={`px-3 py-1 rounded-full text-xs font-bold border ${status === 'ACTIVE' ? 'bg-green-500/20 border-green-500/50 text-green-400' :
+                            status === 'ENTRY_DONE' ? 'bg-blue-500/20 border-blue-500/50 text-blue-400' :
+                                status === 'EXIT_DONE' ? 'bg-orange-500/20 border-orange-500/50 text-orange-400' :
+                                    status === 'FORCE_EXITED' ? 'bg-red-500/20 border-red-500/50 text-red-400' :
+                                        'bg-slate-700/50 border-slate-600 text-slate-400'
+                            }`}>
+                            {status.replace(/_/g, ' ')}
+                        </div>
+
                         {/* NIFTY 50 Ticker */}
                         {niftyData && (
                             <div className="hidden md:flex items-center gap-3 ml-6 animate-in slide-in-from-left-4 duration-500">
@@ -344,6 +358,55 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                         )}
                     </div>
                     <div className="flex items-center gap-8">
+                        {/* Control Center */}
+                        <div className="flex items-center gap-2 mr-4 border-r border-slate-800 pr-4">
+                            {/* Pause/Resume */}
+                            <button
+                                onClick={async () => {
+                                    try {
+                                        if (isPaused) {
+                                            await strategyApi.resume();
+                                            addLog('▶️ Sent RESUME command.');
+                                            setIsPaused(false);
+                                        } else {
+                                            await strategyApi.pause();
+                                            addLog('⏸️ Sent PAUSE command.');
+                                            setIsPaused(true);
+                                        }
+                                    } catch (e: any) { addLog(`Error: ${e.message}`); }
+                                }}
+                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-bold transition-all ${isPaused
+                                        ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20 hover:bg-yellow-500/20'
+                                        : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white hover:border-slate-600'
+                                    }`}
+                                title={isPaused ? "Resume Strategy" : "Pause Strategy"}
+                            >
+                                {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
+                                {isPaused ? 'RESUME' : 'PAUSE'}
+                            </button>
+
+                            {/* Kill Switch */}
+                            <button
+                                onClick={async () => {
+                                    if (!confirm('🛑 EXTREME WARNING: This will FORCE EXIT all positions immediately and PAUSE the strategy.\n\nAre you sure you want to proceed?')) return;
+                                    try {
+                                        addLog('🛑 Sending MANUAL KILL command...');
+                                        await strategyApi.manualExit();
+                                        setIsPaused(true);
+                                        setStatus('FORCE_EXITED');
+                                        addLog('✅ Kill Switch Executed.');
+                                    } catch (e: any) {
+                                        addLog(`❌ Exit Failed: ${e.message}`);
+                                    }
+                                }}
+                                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500/20 hover:text-red-400 transition-all text-xs font-bold"
+                                title="Emergency Exit (Kill Switch)"
+                            >
+                                <Octagon className="w-4 h-4" />
+                                KILL SWITCH
+                            </button>
+                        </div>
+
                         <div className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-400">
                             <button
                                 onClick={() => setActiveTab('positions')}

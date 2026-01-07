@@ -162,6 +162,54 @@ class ShoonyaService {
     }
 
     // Add more methods as needed...
+    async getLimits() {
+        return new Promise((resolve, reject) => {
+            if (!this.api.get_limits) {
+                // If API wrapper doesn't have it (it should), return empty or reject
+                reject('API get_limits not defined');
+                return;
+            }
+            this.api.get_limits()
+                .then((res: any) => {
+                    if (res.stat === 'Ok') {
+                        resolve(res);
+                    } else {
+                        reject(res);
+                    }
+                })
+                .catch(reject);
+        });
+    }
+
+    async getBasketMargin(legs: any[]) {
+        return new Promise((resolve, reject) => {
+            // API expects: { exch, tsym, qty, prc, prd, trantype, prctyp }
+            const list = legs.map(leg => ({
+                exch: 'NFO',
+                tsym: leg.symbol,
+                qty: leg.quantity.toString(),
+                prc: (leg.entryPrice || 0).toString(),
+                prd: 'M', // NRML margin
+                trantype: leg.side === 'BUY' ? 'B' : 'S',
+                prctyp: 'MKT'
+            }));
+
+            if (!this.api.basket_margin) {
+                reject('API basket_margin not defined');
+                return;
+            }
+
+            this.api.basket_margin({ exchange: 'NFO', list })
+                .then((res: any) => {
+                    if (res.stat === 'Ok') {
+                        resolve(res);
+                    } else {
+                        reject(res);
+                    }
+                })
+                .catch(reject);
+        });
+    }
 }
 
 export const shoonya = new ShoonyaService();

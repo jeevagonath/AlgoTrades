@@ -45,6 +45,7 @@ var NorenRestApi = function (params) {
     'positions': '/PositionBook',
     'scripinfo': '/GetSecurityInfo',
     'getquotes': '/GetQuotes',
+    'basket_margin': '/MarginCalculator/BasketMargin',
   }
 
   axios.defaults.timeout = API.timeout || 10000;
@@ -447,6 +448,22 @@ var NorenRestApi = function (params) {
     }
 
     let reply = post_request("limits", values, self.__susertoken);
+    return reply;
+  };
+
+  /**
+   * Description
+   * @method basket_margin
+   * @param params
+   */
+  self.basket_margin = function (params) {
+    let values = {};
+    values["uid"] = self.__username;
+    values["actid"] = self.__accountid;
+    values["exch"] = params.exchange;
+    values["list"] = params.list;
+
+    let reply = post_request("basket_margin", values, self.__susertoken);
     return reply;
   };
   /**

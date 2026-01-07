@@ -58,9 +58,22 @@ export const strategyApi = {
         return response.data;
     },
     getOrders: async () => {
-        const response = await apiClient.get('/orders');
+        const response = await apiClient.get('/strategy/orders');
         return response.data;
-    }
+    },
+    manualExit: async () => {
+        const response = await apiClient.post('/strategy/exit');
+        return response.data;
+    },
+    pause: async () => {
+        const response = await apiClient.post('/strategy/pause');
+        return response.data;
+    },
+    resume: async () => {
+        const response = await apiClient.post('/strategy/resume');
+        return response.data;
+    },
+
 };
 
 export default apiClient;

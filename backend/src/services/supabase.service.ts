@@ -10,6 +10,7 @@ export const db = {
         // Build payload dynamically to avoid sending undefined fields
         const payload: any = { id: 1, updated_at: new Date().toISOString() };
 
+        if (state.status !== undefined) payload.status = state.status;
         if (state.isActive !== undefined) payload.is_active = state.isActive;
         if (state.isVirtual !== undefined) payload.is_virtual = state.isVirtual;
         if (state.isTradePlaced !== undefined) payload.is_trade_placed = state.isTradePlaced;

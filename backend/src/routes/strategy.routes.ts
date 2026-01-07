@@ -166,5 +166,32 @@ export async function strategyRoutes(app: FastifyInstance) {
             return reply.status(500).send({ status: 'error', message: err.message });
         }
     });
+
+    app.post('/exit', async (request, reply) => {
+        try {
+            await strategyEngine.manualExit();
+            return { status: 'success', message: 'Manual exit triggered' };
+        } catch (err: any) {
+            return reply.status(500).send({ status: 'error', message: err.message });
+        }
+    });
+
+    app.post('/pause', async (request, reply) => {
+        try {
+            await strategyEngine.pause();
+            return { status: 'success', message: 'Strategy paused' };
+        } catch (err: any) {
+            return reply.status(500).send({ status: 'error', message: err.message });
+        }
+    });
+
+    app.post('/resume', async (request, reply) => {
+        try {
+            await strategyEngine.resumeMonitoring();
+            return { status: 'success', message: 'Strategy resumed' };
+        } catch (err: any) {
+            return reply.status(500).send({ status: 'error', message: err.message });
+        }
+    });
 }
 
