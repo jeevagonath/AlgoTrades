@@ -5,6 +5,150 @@ import { strategyApi } from '@/services/api.service';
 import { formatTradingViewSymbol, getNiftySpotChartUrl, openTradingViewChart } from '@/utils/tradingview';
 import { useAnimatedValue, useFlashOnChange } from '@/hooks/useAnimations';
 
+// --- Types ---
+
+interface LegState {
+    token: string;
+    symbol: string;
+    type: 'CE' | 'PE';
+    side: 'BUY' | 'SELL';
+    strike: string;
+    entryPrice: number;
+    ltp: number;
+    quantity: number;
+    tier?: number;
+}
+
+const parseExpiryDate = (dateStr: string) => {
+    if (!dateStr || dateStr === 'N/A') throw new Error('Invalid date');
+    const [day, month, year] = dateStr.split('-');
+    const months: any = { JAN: 0, FEB: 1, MAR: 2, APR: 3, MAY: 4, JUN: 5, JUL: 6, AUG: 7, SEP: 8, OCT: 9, NOV: 10, DEC: 11 };
+    return new Date(2000 + parseInt(year), months[month.toUpperCase()], parseInt(day));
+};
+
+// --- Animated Sub-components ---
+
+const AnimatedValueText = ({ value, prefix = '₹', className = '', duration = 300, fractionDigits = 2 }: { value: number, prefix?: string, className?: string, duration?: number, fractionDigits?: number }) => {
+    const { displayValue } = useAnimatedValue(value, duration);
+    return (
+        <span className={className}>
+            {prefix}{displayValue.toLocaleString('en-IN', { minimumFractionDigits: fractionDigits, maximumFractionDigits: fractionDigits })}
+        </span>
+    );
+};
+
+const AnimatedMetricCard = ({
+    label,
+    value,
+    icon: Icon,
+    isSignificant = false,
+    type = 'neutral',
+    className = ''
+}: {
+    label: string,
+    value: number,
+    icon?: any,
+    isSignificant?: boolean,
+    type?: 'positive' | 'negative' | 'neutral',
+    className?: string
+}) => {
+    const { displayValue } = useAnimatedValue(value, 500);
+    const isFlashing = useFlashOnChange(value);
+
+    let flashClass = '';
+    if (isFlashing) {
+        if (type === 'positive') flashClass = 'flash-positive';
+        else if (type === 'negative') flashClass = 'flash-negative';
+        else flashClass = 'flash-neutral';
+    }
+
+    const valueColor = type === 'positive' ? 'text-emerald-600' : type === 'negative' ? 'text-rose-600' : 'text-slate-900';
+
+    return (
+        <div className={`bg-white border border-slate-200 rounded-xl p-6 space-y-2 shadow-sm relative overflow-hidden group transition-all duration-200 ${flashClass} ${isSignificant && isFlashing ? 'pulse-update' : ''} ${className}`}>
+            <div className="flex items-center justify-between text-slate-400">
+                <span className="text-[10px] font-bold uppercase tracking-wider">{label}</span>
+                {Icon && <Icon className={`w-4 h-4 transition-colors duration-300 ${type === 'positive' ? 'text-emerald-500' : type === 'negative' ? 'text-rose-500' : 'text-blue-500'}`} />}
+            </div>
+            <div className={`text-3xl font-black tracking-tighter transition-colors duration-300 ${valueColor}`}>
+                ₹{displayValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+        </div>
+    );
+};
+
+const NiftyTicker = ({ data }: { data: any }) => {
+    const { displayValue: animatedPrice } = useAnimatedValue(data.price, 300);
+    const isFlashing = useFlashOnChange(data.price);
+
+    return (
+        <div className={`bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between shadow-sm overflow-hidden group transition-all duration-200 ${isFlashing ? 'flash-neutral' : ''}`}>
+            <div className="flex flex-col">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">NIFTY 50</span>
+                <span className="text-lg font-black text-slate-900 font-mono tracking-tighter transition-all duration-300">
+                    {animatedPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </span>
+            </div>
+            <div className="flex items-center gap-3">
+                <div className="flex flex-col items-end">
+                    <span className={`text-xs font-bold font-mono transition-colors duration-300 ${data.change >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                        {data.change > 0 ? '+' : ''}{data.change.toFixed(2)}
+                    </span>
+                    <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold mt-1 transition-colors duration-300 ${data.change >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
+                        {data.change >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                        {Math.abs(data.changePercent).toFixed(2)}%
+                    </div>
+                </div>
+                <button
+                    onClick={() => openTradingViewChart('NSE:NIFTY')}
+                    className="p-2 rounded-lg hover:bg-blue-50 text-slate-400 hover:text-blue-600 transition-colors"
+                    title="View NIFTY Chart"
+                >
+                    <BarChart3 className="w-5 h-5" />
+                </button>
+            </div>
+        </div>
+    );
+};
+
+const PositionRow = ({ leg }: { leg: LegState }) => {
+    const { displayValue: animatedLtp } = useAnimatedValue(leg.ltp, 300);
+    const isFlashing = useFlashOnChange(leg.ltp);
+
+    return (
+        <tr className={`hover:bg-slate-50/50 transition-all duration-200 ${isFlashing ? 'flash-neutral' : ''}`}>
+            <td className="px-6 py-4">
+                <div className="font-bold text-sm text-slate-900">{leg.symbol}</div>
+                <div className="text-[10px] text-slate-400 font-medium">{leg.token}</div>
+            </td>
+            <td className="px-6 py-4 text-center">
+                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${leg.side === 'BUY' ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'bg-amber-50 text-amber-700 border border-amber-100'}`}>
+                    {leg.side}
+                </span>
+            </td>
+            <td className="px-6 py-4 text-center font-mono text-sm text-slate-600">{leg.strike}</td>
+            <td className="px-6 py-4 text-center font-mono text-sm text-slate-800">₹{leg.entryPrice || '0.00'}</td>
+            <td className={`px-6 py-4 text-right font-mono text-sm font-bold tracking-tight transition-colors duration-300 ${leg.ltp > leg.entryPrice ? (leg.side === 'BUY' ? 'text-emerald-600' : 'text-rose-600') : (leg.side === 'BUY' ? 'text-rose-600' : 'text-emerald-600')}`}>
+                ₹{animatedLtp.toFixed(2)}
+            </td>
+            <td className="px-6 py-4 text-center">
+                <button
+                    onClick={() => {
+                        const tvSymbol = formatTradingViewSymbol(leg.symbol);
+                        if (tvSymbol) {
+                            openTradingViewChart(tvSymbol);
+                        }
+                    }}
+                    className="p-1.5 rounded-lg hover:bg-blue-50 text-slate-400 hover:text-blue-600 transition-colors"
+                    title="View Chart"
+                >
+                    <BarChart3 className="w-4 h-4" />
+                </button>
+            </td>
+        </tr>
+    );
+};
+
 const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
     const [pnl, setPnl] = useState(0);
     const [peakProfit, setPeakProfit] = useState(0);
@@ -653,86 +797,28 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                     </div>
 
                     {/* NIFTY Ticker Card */}
-                    {niftyData && (() => {
-                        const { displayValue: animatedPrice } = useAnimatedValue(niftyData.price, 300);
-                        const isFlashing = useFlashOnChange(niftyData.price);
-
-                        return (
-                            <div className={`bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between shadow-sm overflow-hidden group transition-all duration-200 ${isFlashing ? 'flash-neutral' : ''}`}>
-                                <div className="flex flex-col">
-                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">NIFTY 50</span>
-                                    <span className="text-lg font-black text-slate-900 font-mono tracking-tighter transition-all duration-300">
-                                        {animatedPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                                    </span>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <div className="flex flex-col items-end">
-                                        <span className={`text-xs font-bold font-mono transition-colors duration-300 ${niftyData.change >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                            {niftyData.change > 0 ? '+' : ''}{niftyData.change.toFixed(2)}
-                                        </span>
-                                        <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold mt-1 transition-colors duration-300 ${niftyData.change >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
-                                            {niftyData.change >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                                            {Math.abs(niftyData.changePercent).toFixed(2)}%
-                                        </div>
-                                    </div>
-                                    <button
-                                        onClick={() => openTradingViewChart('NSE:NIFTY')}
-                                        className="p-2 rounded-lg hover:bg-blue-50 text-slate-400 hover:text-blue-600 transition-colors"
-                                        title="View NIFTY Chart"
-                                    >
-                                        <BarChart3 className="w-5 h-5" />
-                                    </button>
-                                </div>
-                            </div>
-                        );
-                    })()}
+                    {niftyData && <NiftyTicker data={niftyData} />}
                 </div>
 
                 {/* Metric Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    {(() => {
-                        const { displayValue: animatedPnl } = useAnimatedValue(pnl, 500);
-                        const isPnlFlashing = useFlashOnChange(pnl);
-                        const isPnlSignificant = Math.abs(pnl) > 100;
-
-                        return (
-                            <div className={`bg-white border border-slate-200 rounded-xl p-6 space-y-2 shadow-sm relative overflow-hidden group transition-all duration-200 ${isPnlFlashing ? (pnl >= 0 ? 'flash-positive' : 'flash-negative') : ''} ${isPnlSignificant && isPnlFlashing ? 'pulse-update' : ''}`}>
-                                <div className="flex items-center justify-between text-slate-400">
-                                    <span className="text-[10px] font-bold uppercase tracking-wider">Total PnL</span>
-                                    <TrendingUp className={`w-4 h-4 transition-colors duration-300 ${pnl >= 0 ? 'text-emerald-500' : 'text-rose-500'}`} />
-                                </div>
-                                <div className={`text-3xl font-black tracking-tighter transition-colors duration-300 ${pnl >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                    ₹{animatedPnl.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                </div>
-                            </div>
-                        );
-                    })()}
-                    {(() => {
-                        const { displayValue: animatedPeakProfit } = useAnimatedValue(peakProfit, 500);
-                        const isFlashing = useFlashOnChange(peakProfit);
-
-                        return (
-                            <div className={`bg-white border border-slate-200 rounded-xl p-6 space-y-2 shadow-sm group transition-all duration-200 ${isFlashing ? 'flash-positive' : ''}`}>
-                                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Peak Profit</div>
-                                <div className="text-3xl font-black text-emerald-600 tracking-tighter transition-all duration-300">
-                                    ₹{animatedPeakProfit.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                </div>
-                            </div>
-                        );
-                    })()}
-                    {(() => {
-                        const { displayValue: animatedPeakLoss } = useAnimatedValue(peakLoss, 500);
-                        const isFlashing = useFlashOnChange(peakLoss);
-
-                        return (
-                            <div className={`bg-white border border-slate-200 rounded-xl p-6 space-y-2 shadow-sm group transition-all duration-200 ${isFlashing ? 'flash-negative' : ''}`}>
-                                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Peak Loss</div>
-                                <div className="text-3xl font-black text-rose-600 tracking-tighter transition-all duration-300">
-                                    ₹{animatedPeakLoss.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                </div>
-                            </div>
-                        );
-                    })()}
+                    <AnimatedMetricCard
+                        label="Total PnL"
+                        value={pnl}
+                        icon={TrendingUp}
+                        type={pnl >= 0 ? 'positive' : 'negative'}
+                        isSignificant={Math.abs(pnl) > 100}
+                    />
+                    <AnimatedMetricCard
+                        label="Peak Profit"
+                        value={peakProfit}
+                        type="positive"
+                    />
+                    <AnimatedMetricCard
+                        label="Peak Loss"
+                        value={peakLoss}
+                        type="negative"
+                    />
                     <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-2 shadow-sm group">
                         <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
                             <Clock className="w-3 h-3 text-blue-500" />
@@ -780,43 +866,9 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-slate-100">
-                                                {testStrikes.map((leg, i) => {
-                                                    const { displayValue: animatedLtp } = useAnimatedValue(leg.ltp, 300);
-                                                    const isFlashing = useFlashOnChange(leg.ltp);
-
-                                                    return (
-                                                        <tr key={i} className={`hover:bg-slate-50/50 transition-all duration-200 ${isFlashing ? 'flash-neutral' : ''}`}>
-                                                            <td className="px-6 py-4">
-                                                                <div className="font-bold text-sm text-slate-900">{leg.symbol}</div>
-                                                                <div className="text-[10px] text-slate-400 font-medium">{leg.token}</div>
-                                                            </td>
-                                                            <td className="px-6 py-4 text-center">
-                                                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${leg.side === 'BUY' ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'bg-amber-50 text-amber-700 border border-amber-100'}`}>
-                                                                    {leg.side}
-                                                                </span>
-                                                            </td>
-                                                            <td className="px-6 py-4 text-center font-mono text-sm text-slate-600">{leg.strike}</td>
-                                                            <td className="px-6 py-4 text-center font-mono text-sm text-slate-800">₹{leg.entryPrice || '0.00'}</td>
-                                                            <td className={`px-6 py-4 text-right font-mono text-sm font-bold tracking-tight transition-colors duration-300 ${leg.ltp > leg.entryPrice ? (leg.side === 'BUY' ? 'text-emerald-600' : 'text-rose-600') : (leg.side === 'BUY' ? 'text-rose-600' : 'text-emerald-600')}`}>
-                                                                ₹{animatedLtp.toFixed(2)}
-                                                            </td>
-                                                            <td className="px-6 py-4 text-center">
-                                                                <button
-                                                                    onClick={() => {
-                                                                        const tvSymbol = formatTradingViewSymbol(leg.symbol);
-                                                                        if (tvSymbol) {
-                                                                            openTradingViewChart(tvSymbol);
-                                                                        }
-                                                                    }}
-                                                                    className="p-1.5 rounded-lg hover:bg-blue-50 text-slate-400 hover:text-blue-600 transition-colors"
-                                                                    title="View Chart"
-                                                                >
-                                                                    <BarChart3 className="w-4 h-4" />
-                                                                </button>
-                                                            </td>
-                                                        </tr>
-                                                    );
-                                                })}
+                                                {testStrikes.map((leg, i) => (
+                                                    <PositionRow key={leg.token || i} leg={leg} />
+                                                ))}
                                             </tbody>
                                         </table>
                                     </div>
