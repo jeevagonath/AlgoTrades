@@ -4,6 +4,9 @@ import { db } from './supabase.service';
 class ShoonyaService {
     private api: any;
     private session: any;
+    private tickListeners: ((tick: any) => void)[] = [];
+    private orderListeners: ((order: any) => void)[] = [];
+    private wsStarted: boolean = false;
 
     constructor() {
         this.api = new Api({});
@@ -115,24 +118,57 @@ class ShoonyaService {
         });
     }
 
-    startWebSocket(onTick: (tick: any) => void, onOrder: (order: any) => void) {
+    startWebSocket(onTick?: (tick: any) => void, onOrder?: (order: any) => void) {
+        if (onTick) this.tickListeners.push(onTick);
+        if (onOrder) this.orderListeners.push(onOrder);
+
+        if (this.wsStarted) return;
+
+        if (!this.isLoggedIn()) {
+            console.warn('[Shoonya] Cannot start WebSocket: Not logged in.');
+            return;
+        }
+
+        this.wsStarted = true;
         this.api.start_websocket({
             socket_open: () => {
-                //console.log('[Shoonya] WebSocket Connected');
+                console.log('[Shoonya] WebSocket Connected');
                 // Auto subscribe to Nifty spot
-                this.api.subscribe(['NSE|26000']);
+                if (this.api.web_socket) {
+                    this.api.subscribe(['NSE|26000']);
+                }
             },
             quote: (tick: any) => {
-                onTick(tick);
+                this.tickListeners.forEach(cb => cb(tick));
+                // Also emit globally for UI convenience
+                import('./socket.service').then(({ socketService }) => {
+                    socketService.emit('tick', tick);
+                }).catch(() => { });
             },
             order: (order: any) => {
-                onOrder(order);
+                this.orderListeners.forEach(cb => cb(order));
             }
         });
     }
 
     subscribe(tokens: string[]) {
-        this.api.subscribe(tokens);
+        if (!this.wsStarted) {
+            console.log('[Shoonya] Subscribe called but WS not started. Initializing...');
+            this.startWebSocket();
+        }
+
+        // Small delay to ensure self.web_socket is assigned by start_websocket
+        setTimeout(() => {
+            if (this.api && this.api.web_socket) {
+                try {
+                    this.api.subscribe(tokens);
+                } catch (e) {
+                    console.error('[Shoonya] Subscription error:', e);
+                }
+            } else {
+                console.warn('[Shoonya] Could not subscribe: WebSocket still not ready.');
+            }
+        }, 500);
     }
 
     unsubscribe(tokens: string[]) {
