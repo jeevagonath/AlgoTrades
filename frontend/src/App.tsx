@@ -47,6 +47,9 @@ function App() {
 
   return (
     <>
+      <div className="fixed top-0 left-0 right-0 bg-blue-600 text-white text-[10px] font-bold text-center py-1 z-[9999] tracking-widest uppercase">
+        AlgoTrades Core v1.0.5 - Light Theme Verified
+      </div>
       {isAuthenticated ? <Dashboard onLogout={handleLogout} /> : <LoginPage onLogin={handleLogin} />}
     </>
   )
