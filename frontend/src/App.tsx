@@ -36,8 +36,11 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#05080f] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="min-h-screen bg-[#f8f9fc] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin"></div>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest animate-pulse">Initializing AlgoTrades</p>
+        </div>
       </div>
     );
   }
