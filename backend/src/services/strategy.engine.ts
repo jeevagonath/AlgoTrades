@@ -84,16 +84,7 @@ class StrategyEngine {
             if (state) {
                 this.state.isTradePlaced = state.isTradePlaced;
                 this.state.isActive = state.isActive;
-
-                // Refined Auto-correct: 
-                // If positions exist, the status should NOT be IDLE.
-                // However, we MUST preserve valid states like 'ENTRY_DONE', 'WAITING_FOR_EXPIRY', or 'FORCE_EXITED'.
-                const currentStatus = state.status || 'IDLE';
-                if ((this.state.isTradePlaced || this.state.isActive) && (currentStatus === 'IDLE' || !state.status)) {
-                    this.state.status = 'ACTIVE';
-                } else {
-                    this.state.status = currentStatus;
-                }
+                this.state.status = state.status || 'IDLE';
 
                 this.state.pnl = state.pnl || 0;
                 this.state.peakProfit = state.peakProfit || 0;
@@ -117,7 +108,15 @@ class StrategyEngine {
             this.state.selectedStrikes = positions;
 
             if (positions.length > 0) {
-                this.addLog(`[Strategy] Resumed: Found ${positions.length} positions. Status forced to: ${this.state.status}`);
+                // Definitive Status Auto-correction: 
+                // If positions exist in the DB, the engine MUST NOT be IDLE.
+                if (this.state.status === 'IDLE') {
+                    this.state.status = 'ACTIVE';
+                    this.state.isTradePlaced = true;
+                    this.state.isActive = true;
+                }
+
+                this.addLog(`[Strategy] Resumed: Found ${positions.length} positions. Status: ${this.state.status}`);
 
                 // Re-calculate PNL immediately with last known prices (LTP from DB)
                 this.calculatePnL();
