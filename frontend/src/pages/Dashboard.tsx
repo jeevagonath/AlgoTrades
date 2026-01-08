@@ -299,363 +299,281 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
     };
 
     return (
-        <div className="min-h-screen bg-[#05080f] text-slate-100 flex flex-col font-sans">
-            {/* Background Glow */}
-            <div className="fixed top-0 left-0 w-full h-full pointer-events-none opacity-20">
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600 rounded-full blur-[150px]" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600 rounded-full blur-[150px]" />
-            </div>
-
-            {/* Navigation */}
-            <nav className="border-b border-slate-800 bg-slate-900/40 backdrop-blur-xl sticky top-0 z-50">
-                <div className="max-w-7xl mx-auto px-6 h-18 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-blue-600/20 rounded-lg border border-blue-500/30">
-                            <Activity className="text-blue-500 w-6 h-6" />
+        <div className="min-h-screen bg-[#f8f9fc] text-slate-900 flex flex-col font-sans">
+            {/* Minimalist Top Navigation */}
+            <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200">
+                <div className="max-w-[1600px] mx-auto px-6 h-16 flex items-center justify-between">
+                    <div className="flex items-center gap-8">
+                        <div className="flex items-center gap-2.5">
+                            <div className="p-1.5 bg-blue-600 rounded-lg shadow-sm">
+                                <Activity className="text-white w-5 h-5" />
+                            </div>
+                            <span className="text-lg font-bold tracking-tight text-slate-900">
+                                AlgoTrades
+                            </span>
                         </div>
-                        <span className="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
-                            NewAlgoTrades
-                        </span>
 
-                        {/* Status Badge */}
-                        <div className={`px-3 py-1 rounded-full text-xs font-bold border ${status === 'ACTIVE' ? 'bg-green-500/20 border-green-500/50 text-green-400' :
-                            status === 'ENTRY_DONE' ? 'bg-blue-500/20 border-blue-500/50 text-blue-400' :
-                                status === 'EXIT_DONE' ? 'bg-orange-500/20 border-orange-500/50 text-orange-400' :
-                                    status === 'FORCE_EXITED' ? 'bg-red-500/20 border-red-500/50 text-red-400' :
-                                        'bg-slate-700/50 border-slate-600 text-slate-400'
+                        {/* Global Status Badge */}
+                        <div className={`flex items-center gap-2 px-2.5 py-1 rounded-md text-[10px] font-bold border transition-colors ${status === 'ACTIVE' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' :
+                            status === 'ENTRY_DONE' ? 'bg-blue-50 border-blue-200 text-blue-700' :
+                                status === 'EXIT_DONE' ? 'bg-amber-50 border-amber-200 text-amber-700' :
+                                    status === 'FORCE_EXITED' ? 'bg-rose-50 border-rose-200 text-rose-700' :
+                                        'bg-slate-50 border-slate-200 text-slate-600'
                             }`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${status === 'ACTIVE' ? 'bg-emerald-500' : 'bg-slate-400'}`} />
                             {status.replace(/_/g, ' ')}
                         </div>
-
-                        {/* System Activity Indicators */}
-                        <div className="flex flex-col gap-0.5 ml-2 border-l border-slate-800 pl-4 py-0.5">
-                            <div className="flex items-center gap-1.5">
-                                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.6)]" />
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter opacity-70">Activity:</span>
-                                <span className="text-[11px] font-black text-blue-300 tracking-tight">{engineActivity || 'N/A'}</span>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                                <Clock className="w-3 h-3 text-slate-500" />
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter opacity-70">Next Task:</span>
-                                <span className="text-[11px] font-black text-slate-200 tracking-tight">{nextAction || 'N/A'}</span>
-                            </div>
-                        </div>
-
-                        {/* NIFTY 50 Ticker */}
-
                     </div>
                     <div className="flex items-center gap-6">
                         {/* Control Center */}
-                        <div className="flex items-center gap-3 mr-2 bg-slate-900/50 p-1.5 rounded-xl border border-slate-800/50 backdrop-blur-sm shadow-inner group transition-all hover:bg-slate-900/80 hover:border-slate-700/50">
-                            {/* Pause/Resume */}
-                            <button
-                                onClick={async () => {
-                                    try {
-                                        if (isPaused) {
-                                            await strategyApi.resume();
-                                            addLog('▶️ Sent RESUME command.');
-                                            setIsPaused(false);
-                                        } else {
-                                            await strategyApi.pause();
-                                            addLog('⏸️ Sent PAUSE command.');
-                                            setIsPaused(true);
-                                        }
-                                    } catch (e: any) { addLog(`Error: ${e.message}`); }
-                                }}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all duration-300 relative overflow-hidden ${isPaused
-                                    ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-400 border border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.15)] hover:shadow-[0_0_20px_rgba(245,158,11,0.25)]'
-                                    : 'bg-slate-800/50 border border-slate-700/50 text-slate-400 hover:text-white hover:bg-slate-700 hover:border-slate-600'
-                                    }`}
-                                title={isPaused ? "Resume Strategy" : "Pause Strategy"}
-                            >
-                                {isPaused ? <Play className="w-4 h-4 fill-current animate-pulse" /> : <Pause className="w-4 h-4" />}
-                                <span className="tracking-wide">{isPaused ? 'RESUME' : 'PAUSE'}</span>
-                            </button>
-
-                            {/* Kill Switch */}
-                            <button
-                                onClick={async () => {
-                                    if (!confirm('🛑 EXTREME WARNING: This will FORCE EXIT all positions immediately and PAUSE the strategy.\n\nAre you sure you want to proceed?')) return;
-                                    try {
-                                        addLog('🛑 Sending MANUAL KILL command...');
-                                        await strategyApi.manualExit();
-                                        setIsPaused(true);
-                                        setStatus('FORCE_EXITED');
-                                        addLog('✅ Kill Switch Executed.');
-                                    } catch (e: any) {
-                                        addLog(`❌ Exit Failed: ${e.message}`);
-                                    }
-                                }}
-                                className="group/kill flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-red-600/10 to-rose-600/10 text-red-500 border border-red-500/20 hover:from-red-600/20 hover:to-rose-600/20 hover:border-red-500/40 hover:text-red-400 transition-all duration-300 text-xs font-bold relative overflow-hidden"
-                                title="Emergency Exit (Kill Switch)"
-                            >
-                                <div className="absolute inset-0 bg-red-500/5 opacity-0 group-hover/kill:opacity-100 transition-opacity" />
-                                <Octagon className="w-4 h-4 group-hover/kill:scale-110 transition-transform duration-300" />
-                                <span className="tracking-wide group-hover/kill:tracking-wider transition-all">KILL SWITCH</span>
-                            </button>
-                        </div>
-
-                        <div className="hidden md:flex items-center gap-1 bg-slate-800/20 p-1 rounded-xl border border-slate-800/50">
-                            {[
-                                { id: 'positions', label: 'POSITIONS' },
-                                { id: 'orders', label: 'ORDERS' },
-                                { id: 'alerts', label: 'ALERTS', icon: Bell }
-                            ].map((tab) => (
+                        <div className="flex items-center gap-4">
+                            {/* Control Center */}
+                            <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-lg border border-slate-200">
+                                {/* Pause/Resume */}
                                 <button
-                                    key={tab.id}
-                                    onClick={() => setActiveTab(tab.id as any)}
-                                    className={`relative px-4 py-2 rounded-lg text-[10px] font-black tracking-widest transition-all duration-300 ${activeTab === tab.id
-                                        ? 'text-blue-400 bg-slate-800 shadow-sm'
-                                        : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/50'
+                                    onClick={async () => {
+                                        try {
+                                            if (isPaused) {
+                                                await strategyApi.resume();
+                                                addLog('▶️ Sent RESUME command.');
+                                                setIsPaused(false);
+                                            } else {
+                                                await strategyApi.pause();
+                                                addLog('⏸️ Sent PAUSE command.');
+                                                setIsPaused(true);
+                                            }
+                                        } catch (e: any) { addLog(`Error: ${e.message}`); }
+                                    }}
+                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-[10px] font-bold transition-all ${isPaused
+                                        ? 'bg-amber-100 text-amber-700 border border-amber-200 shadow-sm'
+                                        : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
                                         }`}
                                 >
-                                    <div className="flex items-center gap-2">
-                                        {tab.icon && <tab.icon className="w-3 h-3" />}
-                                        {tab.label}
-                                    </div>
-                                    {activeTab === tab.id && (
-                                        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 bg-blue-500 rounded-full mb-1" />
-                                    )}
+                                    {isPaused ? <Play className="w-3.5 h-3.5 fill-current" /> : <Pause className="w-3.5 h-3.5" />}
+                                    {isPaused ? 'RESUME' : 'PAUSE'}
                                 </button>
-                            ))}
-                        </div>
 
-                        <div className="w-px h-8 bg-slate-800/80" />
+                                {/* Kill Switch */}
+                                <button
+                                    onClick={async () => {
+                                        if (!confirm('🛑 FORCE EXIT all positions?')) return;
+                                        try {
+                                            await strategyApi.manualExit();
+                                            setIsPaused(true);
+                                            setStatus('FORCE_EXITED');
+                                            addLog('✅ Kill Switch Executed.');
+                                        } catch (e: any) { addLog(`❌ failed: ${e.message}`); }
+                                    }}
+                                    className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100 transition-all text-[10px] font-bold"
+                                >
+                                    <Octagon className="w-3.5 h-3.5" />
+                                    KILL SWITCH
+                                </button>
+                            </div>
 
-                        <div className="flex items-center gap-3">
-                            <button
-                                onClick={() => setShowSettings(!showSettings)}
-                                className={`p-2.5 rounded-xl border transition-all duration-300 ${showSettings
-                                    ? 'bg-blue-600/20 border-blue-500/50 text-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.2)]'
-                                    : 'bg-slate-800/40 border-slate-700/50 text-slate-400 hover:text-white hover:bg-slate-700/60 hover:border-slate-600'
-                                    }`}
-                            >
-                                <Settings className="w-5 h-5" />
-                            </button>
-                            <button
-                                onClick={handleLogout}
-                                className="group flex items-center gap-2 px-4 py-2 bg-slate-800/40 text-rose-400/80 rounded-xl border border-transparent hover:border-rose-500/30 hover:bg-rose-500/10 hover:text-rose-400 transition-all duration-300 text-[10px] font-black tracking-widest uppercase"
-                            >
-                                <LogOut className="w-3 h-3 group-hover:-translate-x-0.5 transition-transform" />
-                                Logout
-                            </button>
+                            {/* Navigation Tabs */}
+                            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
+                                {[
+                                    { id: 'positions', label: 'Positions' },
+                                    { id: 'orders', label: 'Orders' },
+                                    { id: 'alerts', label: 'Alerts', icon: Bell }
+                                ].map((tab) => (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => setActiveTab(tab.id as any)}
+                                        className={`px-3 py-1.5 rounded-md text-[10px] font-bold transition-all ${activeTab === tab.id
+                                            ? 'bg-white text-blue-600 shadow-sm border border-slate-200'
+                                            : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
+                                            }`}
+                                    >
+                                        <div className="flex items-center gap-1.5">
+                                            {tab.icon && <tab.icon className="w-3 h-3" />}
+                                            {tab.label}
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+
+                            <div className="w-px h-6 bg-slate-200" />
+
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => setShowSettings(!showSettings)}
+                                    className={`p-2 rounded-lg border transition-all ${showSettings
+                                        ? 'bg-blue-50 border-blue-200 text-blue-600'
+                                        : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'
+                                        }`}
+                                >
+                                    <Settings className="w-4 h-4" />
+                                </button>
+                                <button
+                                    onClick={handleLogout}
+                                    className="flex items-center gap-1.5 px-3 py-2 text-slate-500 hover:text-rose-600 transition-colors text-[10px] font-bold uppercase tracking-wider"
+                                >
+                                    <LogOut className="w-3.5 h-3.5" />
+                                    Logout
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </nav >
 
             {/* Settings Overlay */}
-            {
-                showSettings && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-[#05080f]/80 backdrop-blur-sm animate-in fade-in duration-200">
-                        <div className="bg-slate-900 border border-slate-700 w-full max-w-md rounded-3xl shadow-2xl p-8 space-y-8 animate-in zoom-in-95 duration-200 max-h-[85vh] overflow-y-auto">
-                            <div className="flex items-center justify-between">
-                                <h2 className="text-xl font-bold flex items-center gap-3">
-                                    <Settings className="text-blue-500" />
-                                    Strategy Settings
-                                </h2>
-                                <button onClick={() => setShowSettings(false)} className="text-slate-500 hover:text-white">
-                                    <X className="w-6 h-6" />
-                                </button>
-                            </div>
-
-                            <div className="space-y-6">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Entry Time</label>
-                                        <input
-                                            type="time"
-                                            value={settings.entryTime}
-                                            onChange={e => setSettings({ ...settings, entryTime: e.target.value })}
-                                            className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-blue-400 outline-none focus:border-blue-500 transition-colors"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Exit Time</label>
-                                        <input
-                                            type="time"
-                                            value={settings.exitTime}
-                                            onChange={e => setSettings({ ...settings, exitTime: e.target.value })}
-                                            className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-blue-400 outline-none focus:border-blue-500 transition-colors"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Target Profit (₹)</label>
-                                    <input
-                                        type="number"
-                                        value={settings.targetPnl}
-                                        onChange={e => setSettings({ ...settings, targetPnl: parseInt(e.target.value) })}
-                                        className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-emerald-400 outline-none focus:border-emerald-500 transition-colors"
-                                    />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Stop Loss (₹)</label>
-                                    <input
-                                        type="number"
-                                        value={settings.stopLossPnl}
-                                        onChange={e => setSettings({ ...settings, stopLossPnl: parseInt(e.target.value) })}
-                                        className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-rose-400 outline-none focus:border-rose-500 transition-colors"
-                                    />
-                                </div>
-
-                                <div className="h-px bg-slate-800 my-2" />
-
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Trading Mode</label>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <button
-                                            onClick={() => setSettings({ ...settings, isVirtual: true })}
-                                            className={`py-3 px-4 rounded-xl font-bold text-sm transition-all ${settings.isVirtual
-                                                ? 'bg-blue-600 text-white border-2 border-blue-500'
-                                                : 'bg-slate-950 text-slate-400 border-2 border-slate-700 hover:border-slate-600'
-                                                }`}
-                                        >
-                                            🧪 Virtual
-                                        </button>
-                                        <button
-                                            onClick={() => setSettings({ ...settings, isVirtual: false })}
-                                            className={`py-3 px-4 rounded-xl font-bold text-sm transition-all ${!settings.isVirtual
-                                                ? 'bg-rose-600 text-white border-2 border-rose-500'
-                                                : 'bg-slate-950 text-slate-400 border-2 border-slate-700 hover:border-slate-600'
-                                                }`}
-                                        >
-                                            💰 Live
-                                        </button>
-                                    </div>
-                                    {!settings.isVirtual && (
-                                        <div className="mt-3 p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl">
-                                            <p className="text-rose-400 text-xs font-bold">⚠️ WARNING: Live mode will place REAL orders with real money!</p>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="h-px bg-slate-800 my-2" />
-
-                                <div className="space-y-4">
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Telegram Bot Token</label>
-                                        <input
-                                            type="text"
-                                            value={settings.telegramToken}
-                                            onChange={e => setSettings({ ...settings, telegramToken: e.target.value })}
-                                            placeholder="Enter Bot Token"
-                                            className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-xs font-mono text-slate-300 outline-none focus:border-blue-500 transition-colors"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Telegram Chat ID</label>
-                                        <input
-                                            type="text"
-                                            value={settings.telegramChatId}
-                                            onChange={e => setSettings({ ...settings, telegramChatId: e.target.value })}
-                                            placeholder="Enter Chat ID"
-                                            className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-xs font-mono text-slate-300 outline-none focus:border-blue-500 transition-colors"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="h-px bg-slate-800 my-2" />
-
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest flex items-center gap-2">
-                                        📅 Manual Expiry Dates
-                                        <span className="text-[8px] font-normal text-rose-400">(Required)</span>
-                                    </label>
-                                    <textarea
-                                        value={manualExpiriesText}
-                                        onChange={e => setManualExpiriesText(e.target.value)}
-                                        placeholder='{"expiryDates":["13-Jan-2026","20-Jan-2026","27-Jan-2026"]}'
-                                        rows={4}
-                                        className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-xs font-mono text-slate-300 outline-none focus:border-blue-500 transition-colors resize-none"
-                                    />
-                                    <p className="text-[9px] text-slate-600 leading-relaxed">
-                                        Paste NSE JSON or array. Format: {`{"expiryDates":["DD-Mon-YYYY",...]}`} or ["DD-MON-YYYY",...]
-                                    </p>
-                                </div>
-                            </div>
-
-                            <button
-                                onClick={handleSaveSettings}
-                                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-3 transition-all active:scale-[0.98] shadow-lg shadow-blue-600/20"
-                            >
-                                <Save className="w-5 h-5" />
-                                Save Configuration
+            {showSettings && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white border border-slate-200 w-full max-w-md rounded-2xl shadow-2xl p-8 space-y-8 animate-in zoom-in-95 duration-200 max-h-[85vh] overflow-y-auto">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-xl font-bold flex items-center gap-3 text-slate-900">
+                                <Settings className="text-blue-600" />
+                                Strategy Settings
+                            </h2>
+                            <button onClick={() => setShowSettings(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                                <X className="w-6 h-6" />
                             </button>
                         </div>
-                    </div>
-                )
-            }
 
-            <main className="flex-1 max-w-7xl mx-auto w-full p-6 space-y-6 relative z-10">
-                {/* Header Action Row */}
-                <div className="flex items-center justify-between">
+                        <div className="space-y-6">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Entry Time</label>
+                                    <input
+                                        type="time"
+                                        value={settings.entryTime}
+                                        onChange={e => setSettings({ ...settings, entryTime: e.target.value })}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm font-bold text-blue-600 outline-none focus:border-blue-500 transition-colors"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Exit Time</label>
+                                    <input
+                                        type="time"
+                                        value={settings.exitTime}
+                                        onChange={e => setSettings({ ...settings, exitTime: e.target.value })}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm font-bold text-blue-600 outline-none focus:border-blue-500 transition-colors"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Target Profit (₹)</label>
+                                <input
+                                    type="number"
+                                    value={settings.targetPnl}
+                                    onChange={e => setSettings({ ...settings, targetPnl: parseInt(e.target.value) })}
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm font-bold text-emerald-600 outline-none focus:border-emerald-500 transition-colors"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Stop Loss (₹)</label>
+                                <input
+                                    type="number"
+                                    value={settings.stopLossPnl}
+                                    onChange={e => setSettings({ ...settings, stopLossPnl: parseInt(e.target.value) })}
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm font-bold text-rose-600 outline-none focus:border-rose-500 transition-colors"
+                                />
+                            </div>
+
+                            <div className="h-px bg-slate-100 my-2" />
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Trading Mode</label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <button
+                                        onClick={() => setSettings({ ...settings, isVirtual: true })}
+                                        className={`py-2.5 px-4 rounded-lg font-bold text-xs transition-all ${settings.isVirtual
+                                            ? 'bg-blue-600 text-white shadow-md'
+                                            : 'bg-slate-50 text-slate-500 border border-slate-200 hover:bg-slate-100'
+                                            }`}
+                                    >
+                                        🧪 Virtual
+                                    </button>
+                                    <button
+                                        onClick={() => setSettings({ ...settings, isVirtual: false })}
+                                        className={`py-2.5 px-4 rounded-lg font-bold text-xs transition-all ${!settings.isVirtual
+                                            ? 'bg-rose-600 text-white shadow-md'
+                                            : 'bg-slate-50 text-slate-500 border border-slate-200 hover:bg-slate-100'
+                                            }`}
+                                    >
+                                        💰 Live
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-bold uppercase text-slate-500 tracking-wider text-slate-500">Telegram Bot Token</label>
+                                    <input
+                                        type="text"
+                                        value={settings.telegramToken}
+                                        onChange={e => setSettings({ ...settings, telegramToken: e.target.value })}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-xs font-mono text-slate-600 outline-none focus:border-blue-500 transition-colors"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-bold uppercase text-slate-500 tracking-wider text-slate-500">Telegram Chat ID</label>
+                                    <input
+                                        type="text"
+                                        value={settings.telegramChatId}
+                                        onChange={e => setSettings({ ...settings, telegramChatId: e.target.value })}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-xs font-mono text-slate-600 outline-none focus:border-blue-500 transition-colors"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-bold uppercase text-slate-500 tracking-wider flex items-center gap-2">
+                                    📅 Manual Expiry Dates
+                                </label>
+                                <textarea
+                                    value={manualExpiriesText}
+                                    onChange={e => setManualExpiriesText(e.target.value)}
+                                    placeholder='{"expiryDates":["13-Jan-2026","20-Jan-2026", "27-Jan-2026"]}'
+                                    rows={4}
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-xs font-mono text-slate-600 outline-none focus:border-blue-500 transition-colors resize-none"
+                                />
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={handleSaveSettings}
+                            className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-all shadow-lg"
+                        >
+                            <Save className="w-4 h-4" />
+                            Save Configuration
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            <main className="flex-1 max-w-[1600px] mx-auto w-full p-6 space-y-6 relative z-10">
+                {/* Header Info Row */}
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-2xl font-bold">Strategy Dashboard</h1>
-                        <p className="text-slate-400 text-xs font-medium">
-                            Monitoring <span className="text-blue-400">Iron Condor</span> •
-                            <span className={settings.isVirtual ? 'text-blue-400' : 'text-rose-400'}>
+                        <h1 className="text-2xl font-black text-slate-900 tracking-tight">Strategy Dashboard</h1>
+                        <div className="flex items-center gap-2 mt-1">
+                            <span className="text-slate-500 text-xs font-medium">Monitoring</span>
+                            <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-[10px] font-bold border border-blue-100 uppercase">Iron Condor</span>
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${settings.isVirtual ? 'bg-sky-50 text-sky-700 border-sky-100' : 'bg-rose-50 text-rose-700 border-rose-100'} uppercase`}>
                                 {settings.isVirtual ? 'Virtual' : 'LIVE'} Mode
                             </span>
-                        </p>
-                        {currentWeekExpiry && nextWeekExpiry && (
-                            <div className="flex gap-4 mt-2 text-[10px] font-bold">
-                                <div className={`flex items-center gap-2 bg-slate-800/50 border rounded-lg px-3 py-1 ${isExpiryDay ? 'border-rose-500 animate-pulse' : 'border-slate-700'}`}>
-                                    <span className="text-slate-500">Current Week:</span>
-                                    <span className={isExpiryDay ? 'text-rose-400' : 'text-blue-400'}>
-                                        {currentWeekExpiry}
-                                        {isExpiryDay && ' 🔔'}
-                                    </span>
-                                </div>
-                                <div className="flex items-center gap-2 bg-slate-800/50 border border-emerald-700 rounded-lg px-3 py-1">
-                                    <span className="text-slate-500">Trading Week:</span>
-                                    <span className="text-emerald-400">{nextWeekExpiry}</span>
-                                </div>
+                        </div>
+                    </div>
 
-                                {/* NIFTY Ticker Moved Here */}
-                                {niftyData && (
-                                    <div className="flex items-center gap-3 ml-4 pl-4 border-l border-slate-800 animate-in fade-in slide-in-from-left-4 duration-500">
-                                        {/* Market Status Badge */}
-                                        {(() => {
-                                            const now = new Date();
-                                            const hours = now.getHours();
-                                            const minutes = now.getMinutes();
-                                            const currentTime = hours * 60 + minutes;
-                                            const marketOpen = 9 * 60 + 15;
-                                            const marketClose = 15 * 60 + 30;
-                                            const isOpen = currentTime >= marketOpen && currentTime <= marketClose;
-
-                                            return (
-                                                <div className={`px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider border ${isOpen
-                                                    ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
-                                                    : 'bg-rose-500/10 text-rose-500 border-rose-500/20'
-                                                    }`}>
-                                                    {isOpen ? 'Open' : 'Closed'}
-                                                </div>
-                                            );
-                                        })()}
-
-                                        <span className="text-xs font-bold text-slate-500 uppercase tracking-tight">NIFTY</span>
-                                        <span className="text-sm font-bold text-white font-mono tracking-tight">
-                                            {niftyData.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                        </span>
-                                        <span className={`text-xs font-bold font-mono tracking-tight ${niftyData.change >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                                            {niftyData.change > 0 ? '+' : ''}{niftyData.change.toFixed(2)}
-                                        </span>
-                                        <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded ${niftyData.change >= 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
-                                            {niftyData.change >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                                            <span className="text-[9px] font-bold">{Math.abs(niftyData.changePercent).toFixed(2)}%</span>
-                                        </div>
-                                    </div>
-                                )}
+                    {/* Expiry and Selection Controls */}
+                    <div className="flex flex-wrap items-center gap-3">
+                        {currentWeekExpiry && (
+                            <div className={`flex items-center gap-2 px-3 py-1.5 bg-white border rounded-lg shadow-sm ${isExpiryDay ? 'border-rose-300 bg-rose-50/30' : 'border-slate-200'}`}>
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Current Week</span>
+                                <span className={`text-xs font-bold font-mono ${isExpiryDay ? 'text-rose-600' : 'text-slate-700'}`}>
+                                    {currentWeekExpiry}
+                                    {isExpiryDay && ' 🔔'}
+                                </span>
                             </div>
                         )}
-                    </div>
-                    <div className="flex gap-4 items-center">
-                        <div className="flex items-center gap-2 bg-slate-900/50 border border-slate-700 rounded-xl px-3 py-1">
-                            <span className="text-[10px] font-black uppercase text-slate-500">Expiry</span>
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-lg shadow-sm">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Select Expiry</span>
                             <select
                                 value={selectedExpiry}
                                 onChange={(e) => {
@@ -664,189 +582,259 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                     setTestStrikes([]);
                                 }}
                                 disabled={expiryApproved || testing}
-                                className="bg-transparent text-xs font-bold text-blue-400 outline-none cursor-pointer"
+                                className="bg-transparent text-xs font-bold text-blue-600 outline-none cursor-pointer"
                             >
                                 {expiries.map(ex => (
-                                    <option key={ex} value={ex} className="bg-slate-900">{ex}</option>
+                                    <option key={ex} value={ex}>{ex}</option>
                                 ))}
                             </select>
-                            {!expiryApproved && (
+                            {!expiryApproved ? (
                                 <button
-                                    onClick={() => {
-                                        setExpiryApproved(true);
-                                        addLog(`Expiry ${selectedExpiry} approved.`);
-                                    }}
-                                    className="bg-blue-600 hover:bg-blue-500 text-[10px] font-black uppercase px-2 py-1 rounded-lg transition-colors ml-2"
+                                    onClick={() => setExpiryApproved(true)}
+                                    className="bg-blue-600 text-white text-[10px] font-bold uppercase px-2 py-1 rounded-md ml-1 shadow-sm hover:bg-blue-500 transition-colors"
                                 >
                                     Approve
                                 </button>
-                            )}
-                            {expiryApproved && (
-                                <button
-                                    onClick={() => setExpiryApproved(false)}
-                                    className="text-slate-500 hover:text-rose-400 p-1"
-                                >
-                                    <LogOut className="w-3 h-3 rotate-180" />
+                            ) : (
+                                <button onClick={() => setExpiryApproved(false)} className="ml-1 text-slate-400 hover:text-rose-500">
+                                    <X className="w-3.5 h-3.5" />
                                 </button>
                             )}
                         </div>
                     </div>
                 </div>
 
+                {/* Strategy Monitoring Bar (NEW) */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="md:col-span-2 bg-white border border-slate-200 rounded-xl p-4 flex flex-col md:flex-row items-center gap-8 shadow-sm">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-blue-50 rounded-lg">
+                                <Activity className="w-4 h-4 text-blue-600" />
+                            </div>
+                            <div>
+                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Engine Activity</div>
+                                <div className="text-sm font-bold text-slate-700">{engineActivity || 'Ready'}</div>
+                            </div>
+                        </div>
+                        <div className="hidden md:block w-px h-8 bg-slate-100" />
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-slate-50 rounded-lg">
+                                <Clock className="w-4 h-4 text-slate-500" />
+                            </div>
+                            <div>
+                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Next Task</div>
+                                <div className="text-sm font-bold text-slate-700">{nextAction || 'Pending'}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* NIFTY Ticker Card */}
+                    {niftyData && (
+                        <div className="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between shadow-sm overflow-hidden group">
+                            <div className="flex flex-col">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">NIFTY 50</span>
+                                <span className="text-lg font-black text-slate-900 font-mono tracking-tighter">
+                                    {niftyData.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                                </span>
+                            </div>
+                            <div className="flex flex-col items-end">
+                                <span className={`text-xs font-bold font-mono ${niftyData.change >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                    {niftyData.change > 0 ? '+' : ''}{niftyData.change.toFixed(2)}
+                                </span>
+                                <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold mt-1 ${niftyData.change >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
+                                    {niftyData.change >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                                    {Math.abs(niftyData.changePercent).toFixed(2)}%
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
                 {/* Metric Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-2xl p-6 space-y-2 group hover:border-blue-500/30 transition-colors">
+                    <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-2 shadow-sm relative overflow-hidden group">
                         <div className="flex items-center justify-between text-slate-400">
-                            <span className="text-[10px] font-black uppercase tracking-widest">Total PnL</span>
+                            <span className="text-[10px] font-bold uppercase tracking-wider">Total PnL</span>
                             <TrendingUp className={`w-4 h-4 ${pnl >= 0 ? 'text-emerald-500' : 'text-rose-500'}`} />
                         </div>
-                        <div className={`text-3xl font-black ${pnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        <div className={`text-3xl font-black tracking-tighter ${pnl >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                             ₹{pnl.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>
                     </div>
-                    {/* ... other metric cards ... */}
-                    <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-2xl p-6 space-y-2">
-                        <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">Peak Profit</div>
-                        <div className="text-3xl font-black text-emerald-500/80">
+                    <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-2 shadow-sm group">
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Peak Profit</div>
+                        <div className="text-3xl font-black text-emerald-600 tracking-tighter">
                             ₹{peakProfit.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>
                     </div>
-                    <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-2xl p-6 space-y-2">
-                        <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">Peak Loss</div>
-                        <div className="text-3xl font-black text-rose-500/80">
+                    <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-2 shadow-sm group">
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Peak Loss</div>
+                        <div className="text-3xl font-black text-rose-600 tracking-tighter">
                             ₹{peakLoss.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>
                     </div>
-                    <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-2xl p-6 space-y-2">
-                        <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1">
-                            <Clock className="w-3 h-3 text-blue-400" />
+                    <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-2 shadow-sm group">
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
+                            <Clock className="w-3 h-3 text-blue-500" />
                             Next Expiry
                         </div>
-                        <div className="text-3xl font-black text-blue-400">Thursday</div>
+                        <div className="text-3xl font-black text-slate-900 tracking-tighter">
+                            {nextWeekExpiry && nextWeekExpiry !== 'N/A' ? (
+                                (() => {
+                                    try {
+                                        return parseExpiryDate(nextWeekExpiry).toLocaleDateString('en-IN', { weekday: 'long' });
+                                    } catch (e) {
+                                        return 'N/A';
+                                    }
+                                })()
+                            ) : 'N/A'}
+                        </div>
                     </div>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Main Content Area */}
                     <div className="lg:col-span-2 space-y-6">
-                        <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-2xl overflow-hidden">
-                            <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/30">
-                                <h2 className="font-black text-[10px] uppercase tracking-widest flex items-center gap-2">
-                                    <ListOrdered className="w-4 h-4 text-blue-500" />
+                        <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                            <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                                <h2 className="font-bold text-xs uppercase tracking-wider flex items-center gap-2 text-slate-700">
+                                    <ListOrdered className="w-4 h-4 text-blue-600" />
                                     Active Positions
                                 </h2>
-                                <span className="px-2 py-0.5 bg-blue-500/10 text-blue-400 text-[10px] rounded-full font-black border border-blue-500/20 uppercase">
-                                    {testStrikes.length > 0 ? 'Live - Virtual' : 'Standby'}
-                                </span>
                             </div>
 
                             {activeTab === 'positions' ? (
                                 testStrikes.length > 0 ? (
-                                    <div className="divide-y divide-slate-800/50">
-                                        <div className="grid grid-cols-5 p-3 text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-slate-800/50">
-                                            <span className="col-span-1">Symbol</span>
-                                            <span className="text-center">Side</span>
-                                            <span className="text-center">Strike</span>
-                                            <span className="text-center">Avg</span>
-                                            <span className="text-right">LTP</span>
-                                        </div>
-                                        {testStrikes.map((leg, i) => (
-                                            <div key={i} className="grid grid-cols-5 p-4 items-center hover:bg-white/5 transition-colors group">
-                                                <div className="col-span-1">
-                                                    <div className="font-bold text-sm text-slate-100">{leg.symbol}</div>
-                                                    <div className="text-[10px] text-slate-500 font-bold uppercase">{leg.token}</div>
-                                                </div>
-                                                <div className="text-center">
-                                                    <span className={`px-2 py-0.5 rounded text-[10px] font-black ${leg.side === 'BUY' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'}`}>
-                                                        {leg.side}
-                                                    </span>
-                                                </div>
-                                                <div className="text-center font-mono text-sm text-slate-400">{leg.strike}</div>
-                                                <div className="text-center font-mono text-sm text-slate-200">₹{leg.entryPrice || '0.00'}</div>
-                                                <div className={`text-right font-mono text-sm font-bold group-hover:scale-105 transition-transform origin-right tracking-tight ${leg.ltp > leg.entryPrice ? (leg.side === 'BUY' ? 'text-emerald-400' : 'text-rose-400') : (leg.side === 'BUY' ? 'text-rose-400' : 'text-emerald-400')}`}>
-                                                    ₹{leg.ltp || '0.00'}
-                                                </div>
-                                            </div>
-                                        ))}
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-left">
+                                            <thead>
+                                                <tr className="border-b border-slate-100 bg-slate-50/30">
+                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Symbol</th>
+                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Side</th>
+                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Strike</th>
+                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Avg Price</th>
+                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">LTP</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-100">
+                                                {testStrikes.map((leg, i) => (
+                                                    <tr key={i} className="hover:bg-slate-50/50 transition-colors">
+                                                        <td className="px-6 py-4">
+                                                            <div className="font-bold text-sm text-slate-900">{leg.symbol}</div>
+                                                            <div className="text-[10px] text-slate-400 font-medium">{leg.token}</div>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-center">
+                                                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${leg.side === 'BUY' ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'bg-amber-50 text-amber-700 border border-amber-100'}`}>
+                                                                {leg.side}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-center font-mono text-sm text-slate-600">{leg.strike}</td>
+                                                        <td className="px-6 py-4 text-center font-mono text-sm text-slate-800">₹{leg.entryPrice || '0.00'}</td>
+                                                        <td className={`px-6 py-4 text-right font-mono text-sm font-bold tracking-tight ${leg.ltp > leg.entryPrice ? (leg.side === 'BUY' ? 'text-emerald-600' : 'text-rose-600') : (leg.side === 'BUY' ? 'text-rose-600' : 'text-emerald-600')}`}>
+                                                            ₹{leg.ltp || '0.00'}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
                                     </div>
+                                ) : activeTab === 'orders' ? (
+                                    orders.length > 0 ? (
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-left">
+                                                <thead>
+                                                    <tr className="border-b border-slate-100 bg-slate-50/30">
+                                                        <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Time</th>
+                                                        <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Symbol</th>
+                                                        <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Side</th>
+                                                        <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Price</th>
+                                                        <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Qty</th>
+                                                        <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Status</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-slate-100">
+                                                    {orders.map((order, i) => (
+                                                        <tr key={i} className="hover:bg-slate-50/50 transition-colors">
+                                                            <td className="px-6 py-4 font-mono text-xs text-slate-600">
+                                                                {new Date(order.created_at).toLocaleTimeString('en-IN', { hour12: false })}
+                                                            </td>
+                                                            <td className="px-6 py-4 font-bold text-sm text-slate-900">{order.symbol}</td>
+                                                            <td className="px-6 py-4 text-center">
+                                                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${order.side === 'BUY' ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'bg-amber-50 text-amber-700 border border-amber-100'}`}>
+                                                                    {order.side}
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-6 py-4 text-center font-mono text-sm text-slate-800">₹{order.price}</td>
+                                                            <td className="px-6 py-4 text-center font-mono text-sm text-slate-600">{order.quantity}</td>
+                                                            <td className="px-6 py-4 text-right">
+                                                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${order.status === 'COMPLETE' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-slate-50 text-slate-700 border border-slate-100'}`}>
+                                                                    {order.status}
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    ) : (
+                                        <div className="p-20 text-center space-y-4">
+                                            <div className="flex justify-center flex-col items-center gap-4 opacity-20">
+                                                <Shield className="w-12 h-12 text-slate-400" />
+                                                <span className="text-[10px] font-bold tracking-widest uppercase text-slate-500">No orders placed today.</span>
+                                            </div>
+                                        </div>
+                                    )
                                 ) : (
-                                    <div className="p-16 text-center text-slate-500 italic space-y-4">
-                                        <div className="flex justify-center flex-col items-center gap-6 opacity-30">
-                                            <Shield className="w-16 h-16 text-slate-700" />
-                                            <span className="text-xs font-bold tracking-widest uppercase">No active positions. Execute strategy to begin.</span>
+                                    <div className="p-20 text-center space-y-4">
+                                        <div className="flex justify-center flex-col items-center gap-4 opacity-20">
+                                            <Bell className="w-12 h-12 text-slate-400" />
+                                            <span className="text-[10px] font-bold tracking-widest uppercase text-slate-500">Alerts Coming Soon</span>
                                         </div>
                                     </div>
                                 )
-                            ) : activeTab === 'orders' ? (
-                                orders.length > 0 ? (
-                                    <div className="divide-y divide-slate-800/50">
-                                        <div className="grid grid-cols-6 p-3 text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-slate-800/50">
-                                            <span className="col-span-1">Time</span>
-                                            <span className="col-span-1">Symbol</span>
-                                            <span className="text-center">Side</span>
-                                            <span className="text-center">Price</span>
-                                            <span className="text-center">Qty</span>
-                                            <span className="text-right">Status</span>
-                                        </div>
-                                        {orders.map((order, i) => (
-                                            <div key={i} className="grid grid-cols-6 p-4 items-center hover:bg-white/5 transition-colors">
-                                                <div className="col-span-1 font-mono text-xs text-slate-400">
-                                                    {new Date(order.created_at).toLocaleTimeString('en-IN', { hour12: false })}
-                                                </div>
-                                                <div className="col-span-1 font-bold text-sm text-slate-100">{order.symbol}</div>
-                                                <div className="text-center">
-                                                    <span className={`px-2 py-0.5 rounded text-[10px] font-black ${order.side === 'BUY' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'}`}>
-                                                        {order.side}
-                                                    </span>
-                                                </div>
-                                                <div className="text-center font-mono text-sm text-slate-200">₹{order.price}</div>
-                                                <div className="text-center font-mono text-sm text-slate-400">{order.quantity}</div>
-                                                <div className="text-right">
-                                                    <span className={`px-2 py-0.5 rounded text-[10px] font-black ${order.status === 'COMPLETE' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-slate-700 text-slate-400'}`}>
-                                                        {order.status}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="p-16 text-center text-slate-500 italic space-y-4">
-                                        <div className="flex justify-center flex-col items-center gap-6 opacity-30">
-                                            <ListOrdered className="w-16 h-16 text-slate-700" />
-                                            <span className="text-xs font-bold tracking-widest uppercase">No orders placed today.</span>
-                                        </div>
-                                    </div>
-                                )
-                            ) : (
-                                <div className="p-16 text-center text-slate-500 italic">
-                                    <div className="text-xs font-bold tracking-widest uppercase opacity-30">Alerts Coming Soon...</div>
-                                </div>
                             )}
                         </div>
                     </div>
 
-                    {/* Sidebar Area */}
-                    <div className="space-y-6">
-                        <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-2xl h-[600px] flex flex-col shadow-2xl">
-                            <div className="p-4 border-b border-slate-800 bg-slate-950/30">
-                                <h2 className="font-bold text-sm uppercase tracking-widest flex items-center gap-2">
-                                    <History className="w-4 h-4 text-purple-500" />
+                    {/* Sidebar: System Logs */}
+                    <div className="lg:col-span-1 space-y-4">
+                        <div className="bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col h-[600px] overflow-hidden">
+                            <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                                <h2 className="font-bold text-xs uppercase tracking-wider flex items-center gap-2 text-slate-700">
+                                    <ListOrdered className="w-4 h-4 text-blue-600" />
                                     System Logs
                                 </h2>
+                                <button
+                                    onClick={() => setLogs([])}
+                                    className="text-[10px] font-bold text-slate-400 hover:text-rose-500 transition-colors uppercase tracking-widest"
+                                >
+                                    Clear
+                                </button>
                             </div>
-                            <div className="flex-1 overflow-y-auto p-4 space-y-3 font-mono text-[10px]">
-                                {logs.map((log, i) => (
-                                    <div key={i} className="text-slate-400 flex gap-3 group">
-                                        <span className="text-blue-500 font-bold shrink-0">[{log.time}]</span>
-                                        <span className="leading-relaxed group-hover:text-slate-200 transition-colors">{log.msg}</span>
+                            <div className="flex-1 overflow-y-auto p-4 space-y-2 font-mono scrollbar-thin scrollbar-thumb-slate-200">
+                                {logs.length > 0 ? (
+                                    logs.map((log, i) => {
+                                        const logMsg = typeof log === 'object' && log !== null ? (log as any).msg || JSON.stringify(log) : String(log);
+                                        const logTime = typeof log === 'object' && log !== null ? (log as any).time || new Date().toLocaleTimeString() : new Date().toLocaleTimeString();
+
+                                        return (
+                                            <div key={i} className="text-[11px] leading-relaxed animate-in slide-in-from-left-2 duration-300">
+                                                <span className="text-slate-400 mr-2">[{logTime}]</span>
+                                                <span className="text-slate-600">{logMsg}</span>
+                                            </div>
+                                        );
+                                    })
+                                ) : (
+                                    <div className="h-full flex items-center justify-center text-[10px] font-bold text-slate-300 uppercase tracking-widest">
+                                        No recent activity
                                     </div>
-                                ))}
+                                )}
                             </div>
                         </div>
                     </div>
                 </div>
             </main>
-        </div >
+        </div>
     );
 };
 
