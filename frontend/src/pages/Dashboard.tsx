@@ -841,7 +841,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                         </div>
                                     </div>
                                 )
-                            )}
+                            ) : null}
                         </div>
                     </div>
 
