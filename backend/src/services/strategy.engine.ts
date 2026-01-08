@@ -85,11 +85,14 @@ class StrategyEngine {
                 this.state.isTradePlaced = state.isTradePlaced;
                 this.state.isActive = state.isActive;
 
-                // Auto-correct status: If trade is placed, it cannot be IDLE
-                if (this.state.isTradePlaced || this.state.isActive) {
+                // Refined Auto-correct: 
+                // If positions exist, the status should NOT be IDLE.
+                // However, we MUST preserve valid states like 'ENTRY_DONE', 'WAITING_FOR_EXPIRY', or 'FORCE_EXITED'.
+                const currentStatus = state.status || 'IDLE';
+                if ((this.state.isTradePlaced || this.state.isActive) && (currentStatus === 'IDLE' || !state.status)) {
                     this.state.status = 'ACTIVE';
                 } else {
-                    this.state.status = state.status || 'IDLE';
+                    this.state.status = currentStatus;
                 }
 
                 this.state.pnl = state.pnl || 0;
