@@ -507,6 +507,12 @@ class StrategyEngine {
             addLeg(pe7, 'BUY', 2);
 
             this.state.selectedStrikes = selectedLegs;
+
+            // Reset peak values for new positions
+            this.state.peakProfit = 0;
+            this.state.peakLoss = 0;
+            this.state.pnl = 0;
+
             this.startMonitoring();
             await db.syncPositions(selectedLegs);
             await this.syncToDb(true);
