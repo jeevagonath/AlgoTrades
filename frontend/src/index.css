@@ -15,3 +15,70 @@
     min-height: 100vh;
   }
 }
+
+/* Price Change Animations */
+@keyframes flash-green {
+
+  0%,
+  100% {
+    background-color: transparent;
+  }
+
+  50% {
+    background-color: rgba(16, 185, 129, 0.15);
+  }
+}
+
+@keyframes flash-red {
+
+  0%,
+  100% {
+    background-color: transparent;
+  }
+
+  50% {
+    background-color: rgba(239, 68, 68, 0.15);
+  }
+}
+
+@keyframes flash-blue {
+
+  0%,
+  100% {
+    background-color: transparent;
+  }
+
+  50% {
+    background-color: rgba(59, 130, 246, 0.1);
+  }
+}
+
+@keyframes pulse-scale {
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+@layer utilities {
+  .flash-positive {
+    animation: flash-green 200ms ease-out;
+  }
+
+  .flash-negative {
+    animation: flash-red 200ms ease-out;
+  }
+
+  .flash-neutral {
+    animation: flash-blue 200ms ease-out;
+  }
+
+  .pulse-update {
+    animation: pulse-scale 200ms ease-out;
+  }
+}
