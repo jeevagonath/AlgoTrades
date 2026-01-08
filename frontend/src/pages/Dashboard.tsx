@@ -605,7 +605,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                         </div>
                     </div>
 
-                    {/* Expiry and Selection Controls */}
+                    {/* Expiry Display */}
                     <div className="flex flex-wrap items-center gap-3">
                         {currentWeekExpiry && (
                             <div className={`flex items-center gap-2 px-3 py-1.5 bg-white border rounded-lg shadow-sm ${isExpiryDay ? 'border-rose-300 bg-rose-50/30' : 'border-slate-200'}`}>
@@ -616,35 +616,14 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                 </span>
                             </div>
                         )}
-                        <div className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-lg shadow-sm">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Select Expiry</span>
-                            <select
-                                value={selectedExpiry}
-                                onChange={(e) => {
-                                    setSelectedExpiry(e.target.value);
-                                    setExpiryApproved(false);
-                                    setTestStrikes([]);
-                                }}
-                                disabled={expiryApproved || testing}
-                                className="bg-transparent text-xs font-bold text-blue-600 outline-none cursor-pointer"
-                            >
-                                {expiries.map(ex => (
-                                    <option key={ex} value={ex}>{ex}</option>
-                                ))}
-                            </select>
-                            {!expiryApproved ? (
-                                <button
-                                    onClick={() => setExpiryApproved(true)}
-                                    className="bg-blue-600 text-white text-[10px] font-bold uppercase px-2 py-1 rounded-md ml-1 shadow-sm hover:bg-blue-500 transition-colors"
-                                >
-                                    Approve
-                                </button>
-                            ) : (
-                                <button onClick={() => setExpiryApproved(false)} className="ml-1 text-slate-400 hover:text-rose-500">
-                                    <X className="w-3.5 h-3.5" />
-                                </button>
-                            )}
-                        </div>
+                        {nextWeekExpiry && nextWeekExpiry !== 'N/A' && (
+                            <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg shadow-sm">
+                                <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider">Target Expiry</span>
+                                <span className="text-xs font-bold font-mono text-blue-700">
+                                    {nextWeekExpiry}
+                                </span>
+                            </div>
+                        )}
                     </div>
                 </div>
 

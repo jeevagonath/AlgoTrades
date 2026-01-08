@@ -250,6 +250,16 @@ class StrategyEngine {
                 return;
             }
 
+            // Check if positions exist before exiting
+            if (this.state.selectedStrikes.length === 0) {
+                this.addLog('ℹ️ [Expiry] No positions to exit. Skipping square-off.');
+                this.state.status = 'EXIT_DONE';
+                this.state.engineActivity = 'No Positions to Exit';
+                this.state.nextAction = '12:59 PM Strike Selection';
+                await this.syncToDb(true);
+                return;
+            }
+
             this.addLog('⏰ [Expiry] 12:45 PM reached. Squaring off positions...');
             await this.exitAllPositions('Expiry Day Rollover');
             this.state.status = 'EXIT_DONE';
