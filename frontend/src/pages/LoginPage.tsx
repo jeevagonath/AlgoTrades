@@ -48,138 +48,120 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
     };
 
     return (
-        <div className="min-h-screen bg-[#f8f9fc] flex items-center justify-center p-4 relative overflow-hidden">
+        <div className="min-h-screen bg-[#f8f9fc] bg-linear-to-br from-white to-slate-100 flex items-center justify-center p-4 relative overflow-hidden">
+            {/* Decorative background elements */}
+            <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/5 rounded-full blur-[120px]" />
+            <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-500/5 rounded-full blur-[120px]" />
+
             <div className="w-full max-w-md space-y-8 relative z-10">
-                <div className="text-center space-y-2">
-                    <div className="inline-flex items-center justify-center p-3 bg-white rounded-2xl border border-slate-200 shadow-sm mb-4">
-                        <Activity className="w-10 h-10 text-blue-600" />
+                <div className="text-center space-y-3">
+                    <div className="inline-flex items-center justify-center p-4 bg-white rounded-3xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] mb-2">
+                        <Activity className="w-12 h-12 text-blue-600" />
                     </div>
-                    <h1 className="text-3xl font-black tracking-tighter text-slate-900">AlgoTrades</h1>
-                    <p className="text-slate-500 font-medium">Initialize the trading engine</p>
+                    <div className="space-y-1">
+                        <h1 className="text-4xl font-black tracking-tighter text-transparent bg-clip-text bg-linear-to-r from-slate-900 to-slate-600">
+                            AlgoTrades
+                        </h1>
+                        <p className="text-slate-400 text-sm font-semibold uppercase tracking-widest">Trading Intelligence</p>
+                    </div>
                 </div>
 
-                <form onSubmit={handleSubmit} className="bg-white border border-slate-200 p-8 rounded-3xl shadow-sm space-y-6">
-                    {error && (
-                        <div className="bg-rose-50 border border-rose-100 text-rose-600 p-3 rounded-xl text-sm font-bold text-center">
-                            {error}
-                        </div>
-                    )}
-                    <div className="space-y-4">
-                        <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">User ID</label>
-                            <div className="relative group">
-                                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
-                                <input
-                                    name="userid"
-                                    type="text"
-                                    required
-                                    value={formData.userid}
-                                    onChange={handleChange}
-                                    className="w-full bg-slate-50/50 border border-slate-200 rounded-xl py-3.5 pl-11 pr-4 text-slate-900 font-medium focus:outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 transition-all placeholder:text-slate-300"
-                                    placeholder="Broker User ID"
-                                />
+                <div className="bg-white/80 backdrop-blur-xl border border-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] p-10 space-y-8">
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        {error && (
+                            <div className="bg-rose-50 border border-rose-100 text-rose-600 p-4 rounded-2xl text-sm font-bold text-center animate-in shake duration-500">
+                                {error}
                             </div>
-                        </div>
-
-                        <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Password</label>
-                            <div className="relative group">
-                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
-                                <input
-                                    name="password"
-                                    type="password"
-                                    required
-                                    value={formData.password}
-                                    onChange={handleChange}
-                                    className="w-full bg-slate-50/50 border border-slate-200 rounded-xl py-3.5 pl-11 pr-4 text-slate-900 font-medium focus:outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 transition-all placeholder:text-slate-300"
-                                    placeholder="••••••••"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">2FA / TOTP</label>
-                                <div className="relative group">
-                                    <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
-                                    <input
-                                        name="twoFA"
-                                        type="text"
-                                        required
-                                        value={formData.twoFA}
-                                        onChange={handleChange}
-                                        className="w-full bg-slate-50/50 border border-slate-200 rounded-xl py-3.5 pl-11 pr-4 text-slate-900 font-medium focus:outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 transition-all placeholder:text-slate-300"
-                                        placeholder="123456"
-                                    />
-                                </div>
-                            </div>
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Vendor Code</label>
-                                <div className="relative group">
-                                    <Key className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
-                                    <input
-                                        name="vendor_code"
-                                        type="text"
-                                        required
-                                        value={formData.vendor_code}
-                                        onChange={handleChange}
-                                        className="w-full bg-slate-50/50 border border-slate-200 rounded-xl py-3.5 pl-11 pr-4 text-slate-900 font-medium focus:outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 transition-all placeholder:text-slate-300"
-                                        placeholder="VC Code"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">API Secret</label>
-                            <input
-                                name="api_secret"
-                                type="text"
-                                required
-                                value={formData.api_secret}
-                                onChange={handleChange}
-                                className="w-full bg-slate-50/50 border border-slate-200 rounded-xl py-3.5 px-4 text-slate-900 font-medium focus:outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 transition-all placeholder:text-slate-300"
-                                placeholder="Broker API Secret"
-                            />
-                        </div>
-
-                        <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Machine ID</label>
-                            <div className="relative group">
-                                <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
-                                <input
-                                    name="imei"
-                                    type="text"
-                                    required
-                                    value={formData.imei}
-                                    onChange={handleChange}
-                                    className="w-full bg-slate-50/50 border border-slate-200 rounded-xl py-3.5 pl-11 pr-4 text-slate-900 font-medium focus:outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 transition-all placeholder:text-slate-300"
-                                    placeholder="e.g. ABC-123"
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-md shadow-blue-600/10 transition-all active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2 group"
-                    >
-                        {loading ? (
-                            <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        ) : (
-                            <>
-                                Start Trading
-                                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                            </>
                         )}
-                    </button>
-                </form>
+                        <div className="space-y-5">
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Identity</label>
+                                <div className="relative group">
+                                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-blue-500 transition-colors" />
+                                    <input
+                                        name="userid"
+                                        type="text"
+                                        required
+                                        value={formData.userid}
+                                        onChange={handleChange}
+                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-12 pr-4 text-slate-900 font-medium focus:outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500/50 transition-all placeholder:text-slate-300 shadow-sm"
+                                        placeholder="Broker User ID"
+                                    />
+                                </div>
+                            </div>
 
-                <div className="flex flex-col items-center gap-2 opacity-40">
-                    <div className="w-8 h-1 bg-slate-300 rounded-full" />
-                    <p className="text-center text-slate-500 text-[10px] font-bold uppercase tracking-widest">
-                        Protected by end-to-end encryption
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Authentication</label>
+                                <div className="relative group">
+                                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-blue-500 transition-colors" />
+                                    <input
+                                        name="password"
+                                        type="password"
+                                        required
+                                        value={formData.password}
+                                        onChange={handleChange}
+                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-12 pr-4 text-slate-900 font-medium focus:outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500/50 transition-all placeholder:text-slate-300 shadow-sm"
+                                        placeholder="Enter Password"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">2FA Code</label>
+                                    <div className="relative group">
+                                        <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-blue-500 transition-colors" />
+                                        <input
+                                            name="twoFA"
+                                            type="text"
+                                            required
+                                            value={formData.twoFA}
+                                            onChange={handleChange}
+                                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-12 pr-4 text-slate-900 font-medium focus:outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500/50 transition-all placeholder:text-slate-300 shadow-sm"
+                                            placeholder="123456"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Vendor</label>
+                                    <div className="relative group">
+                                        <Key className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-blue-500 transition-colors" />
+                                        <input
+                                            name="vendor_code"
+                                            type="text"
+                                            required
+                                            value={formData.vendor_code}
+                                            onChange={handleChange}
+                                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-12 pr-4 text-slate-900 font-medium focus:outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500/50 transition-all placeholder:text-slate-300 shadow-sm"
+                                            placeholder="Code"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-5 rounded-2xl shadow-xl shadow-slate-900/10 transition-all active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2 group relative overflow-hidden"
+                        >
+                            <div className="absolute inset-0 bg-linear-to-r from-blue-600/20 to-purple-600/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            {loading ? (
+                                <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            ) : (
+                                <span className="relative z-10 flex items-center gap-2">
+                                    Unlock Trading Engine
+                                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                </span>
+                            )}
+                        </button>
+                    </form>
+                </div>
+
+                <div className="flex flex-col items-center gap-4">
+                    <div className="w-12 h-1 bg-slate-200 rounded-full" />
+                    <p className="text-center text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em]">
+                        Military Grade Encryption • v1.0.4
                     </p>
                 </div>
             </div>
