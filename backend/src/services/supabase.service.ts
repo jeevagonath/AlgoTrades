@@ -277,5 +277,55 @@ export const db = {
             console.error('Failed to load manual expiries:', err);
             return [];
         }
+    },
+
+    async saveAlert(alert: {
+        type: string,
+        severity: string,
+        title: string,
+        message: string,
+        icon?: string
+    }) {
+        try {
+            const { error } = await supabase
+                .from('alerts')
+                .insert({
+                    type: alert.type,
+                    severity: alert.severity,
+                    title: alert.title,
+                    message: alert.message,
+                    icon: alert.icon || ''
+                });
+
+            if (error) {
+                console.error('Supabase Alert Save Error:', error);
+                return { success: false, error };
+            }
+
+            return { success: true };
+        } catch (err) {
+            console.error('Failed to save alert:', err);
+            return { success: false, error: err };
+        }
+    },
+
+    async getAlerts(limit: number = 50) {
+        try {
+            const { data, error } = await supabase
+                .from('alerts')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(limit);
+
+            if (error) {
+                console.error('Supabase Alerts Load Error:', error);
+                return [];
+            }
+
+            return data || [];
+        } catch (err) {
+            console.error('Failed to load alerts:', err);
+            return [];
+        }
     }
 };

@@ -81,6 +81,10 @@ export const strategyApi = {
         const response = await apiClient.post('/strategy/test/exit-order');
         return response.data;
     },
+    getAlerts: async () => {
+        const response = await apiClient.get('/strategy/alerts');
+        return response.data;
+    },
 };
 
 export default apiClient;

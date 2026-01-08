@@ -239,6 +239,15 @@ export async function strategyRoutes(app: FastifyInstance) {
         }
     });
 
+    app.get('/alerts', async (request, reply) => {
+        try {
+            const alerts = await db.getAlerts();
+            return { status: 'success', data: alerts };
+        } catch (err: any) {
+            return reply.status(500).send({ status: 'error', message: err.message });
+        }
+    });
+
     // Test Routes
     app.post('/test/place-order', async (request, reply) => {
         try {

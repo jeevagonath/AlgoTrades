@@ -11,6 +11,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
     const [testing, setTesting] = useState(false);
     const [logs, setLogs] = useState<{ time: string, msg: string }[]>([]);
     const [orders, setOrders] = useState<any[]>([]); // New Order State
+    const [alerts, setAlerts] = useState<any[]>([]); // Alerts State
 
 
     const [expiries, setExpiries] = useState<string[]>([]);
@@ -112,6 +113,16 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                     }
                 } catch (err) {
                     console.error('Failed to fetch orders:', err);
+                }
+
+                // 6. Fetch Alerts
+                try {
+                    const alertsRes = await strategyApi.getAlerts();
+                    if (alertsRes.status === 'success') {
+                        setAlerts(alertsRes.data);
+                    }
+                } catch (err) {
+                    console.error('Failed to fetch alerts:', err);
                 }
 
             } catch (err) {
@@ -794,13 +805,42 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                         </div>
                                     </div>
                                 )
-                            ) : (
-                                <div className="p-20 text-center space-y-4">
-                                    <div className="flex justify-center flex-col items-center gap-4 opacity-20">
-                                        <Bell className="w-12 h-12 text-slate-400" />
-                                        <span className="text-[10px] font-bold tracking-widest uppercase text-slate-500">Alerts Coming Soon</span>
+                            ) : activeTab === 'alerts' ? (
+                                alerts.length > 0 ? (
+                                    <div className="overflow-y-auto max-h-[600px] p-4 space-y-3">
+                                        {alerts.map((alert, i) => {
+                                            const severityColors = {
+                                                SUCCESS: 'bg-emerald-50 border-emerald-200 text-emerald-700',
+                                                ERROR: 'bg-rose-50 border-rose-200 text-rose-700',
+                                                WARNING: 'bg-amber-50 border-amber-200 text-amber-700',
+                                                INFO: 'bg-blue-50 border-blue-200 text-blue-700'
+                                            };
+                                            const colorClass = severityColors[alert.severity as keyof typeof severityColors] || severityColors.INFO;
+
+                                            return (
+                                                <div key={i} className={`border rounded-xl p-4 ${colorClass} transition-all hover:shadow-md`}>
+                                                    <div className="flex items-start gap-3">
+                                                        <span className="text-2xl">{alert.icon}</span>
+                                                        <div className="flex-1">
+                                                            <div className="font-bold text-sm mb-1">{alert.title}</div>
+                                                            <div className="text-xs opacity-80 whitespace-pre-line">{alert.message}</div>
+                                                            <div className="text-[10px] font-mono mt-2 opacity-60">
+                                                                {new Date(alert.created_at).toLocaleString('en-IN')}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
-                                </div>
+                                ) : (
+                                    <div className="p-20 text-center space-y-4">
+                                        <div className="flex justify-center flex-col items-center gap-4 opacity-20">
+                                            <Bell className="w-12 h-12 text-slate-400" />
+                                            <span className="text-[10px] font-bold tracking-widest uppercase text-slate-500">No alerts yet</span>
+                                        </div>
+                                    </div>
+                                )
                             )}
                         </div>
                     </div>
