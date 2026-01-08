@@ -82,12 +82,19 @@ class StrategyEngine {
         try {
             const state: any = await db.getState();
             if (state) {
-                this.state.status = state.status || (state.isActive ? 'ACTIVE' : 'IDLE'); // Fallback
-                this.state.isActive = state.isActive;
                 this.state.isTradePlaced = state.isTradePlaced;
-                this.state.pnl = state.pnl;
-                this.state.peakProfit = state.peakProfit;
-                this.state.peakLoss = state.peakLoss;
+                this.state.isActive = state.isActive;
+
+                // Auto-correct status: If trade is placed, it cannot be IDLE
+                if (this.state.isTradePlaced || this.state.isActive) {
+                    this.state.status = 'ACTIVE';
+                } else {
+                    this.state.status = state.status || 'IDLE';
+                }
+
+                this.state.pnl = state.pnl || 0;
+                this.state.peakProfit = state.peakProfit || 0;
+                this.state.peakLoss = state.peakLoss || 0;
                 this.state.entryTime = state.entryTime || '12:59';
                 this.state.exitTime = state.exitTime || '15:15';
                 this.state.targetPnl = state.targetPnl || 2100;
@@ -96,7 +103,6 @@ class StrategyEngine {
                 this.state.telegramChatId = state.telegramChatId || '';
                 this.state.isVirtual = state.isVirtual !== undefined ? state.isVirtual : true;
                 this.state.isPaused = state.isPaused !== undefined ? state.isPaused : false;
-                this.state.status = state.status || (this.state.isActive ? 'ACTIVE' : 'IDLE');
 
                 if (this.state.telegramToken && this.state.telegramChatId) {
                     telegramService.setCredentials(this.state.telegramToken, this.state.telegramChatId);
@@ -106,10 +112,20 @@ class StrategyEngine {
             // Always load positions from database to ensure sync
             const positions = await db.getPositions();
             this.state.selectedStrikes = positions;
-            //console.log(`[Strategy] Resumed state: ${this.state.selectedStrikes.length} legs, PnL: ${this.state.pnl}`);
 
-            if (this.state.isActive && positions.length > 0) {
+            if (positions.length > 0) {
+                this.addLog(`[Strategy] Resumed: Found ${positions.length} positions. Status forced to: ${this.state.status}`);
+
+                // Re-calculate PNL immediately with last known prices (LTP from DB)
+                this.calculatePnL();
+
+                // Start monitoring (WebSocket + Subscription)
                 this.startMonitoring();
+
+                // Initial broadcast to sync frontend
+                this.syncToDb(true);
+            } else {
+                this.addLog('[Strategy] Resumed: No active positions found.');
             }
 
             this.initScheduler();
@@ -769,24 +785,42 @@ class StrategyEngine {
         const ltp = parseFloat(tick.lp);
         if (!token || isNaN(ltp)) return;
 
-        //console.log(`[Feed] Tick received: ${token} -> ${ltp}`);
+        // 1. Always emit NIFTY updates (token 26000) for the frontend ticker
+        if (token === '26000') {
+            socketService.emit('price_update', {
+                token,
+                lp: tick.lp,
+                pc: tick.pc,
+                h: tick.h,
+                l: tick.l,
+                c: tick.c,
+                v: tick.v,
+                ltp: ltp // Unified field
+            });
+        }
 
         const legIdx = this.state.selectedStrikes.findIndex(s => s.token === token);
         if (legIdx !== -1) {
             this.state.selectedStrikes[legIdx].ltp = ltp;
+
+            // 2. Perform strategy logic (Monitoring and Exits) if trade is placed
             if (this.state.isTradePlaced) {
-                this.calculatePnL();
                 this.checkAdjustments(this.state.selectedStrikes[legIdx]);
                 this.checkExits();
             }
+
+            // 3. ALWAYS calculate PNL if we have strikes, to update UI
+            this.calculatePnL();
+
+            // 4. ALWAYS emit leg updates for the frontend table
             const emitData = {
-                token, ltp,
+                token,
+                ltp,
                 symbol: this.state.selectedStrikes[legIdx].symbol,
                 pnl: this.state.pnl,
                 peakProfit: this.state.peakProfit,
                 peakLoss: this.state.peakLoss
             };
-            //console.log(`[Socket] Emitting price_update: ${token} -> ${ltp} (PnL: ${this.state.pnl}, PeakProfit: ${this.state.peakProfit})`);
             socketService.emit('price_update', emitData);
         }
         await this.syncToDb();

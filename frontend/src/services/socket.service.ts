@@ -2,10 +2,10 @@ import { io, Socket } from 'socket.io-client';
 
 class SocketService {
     private socket: Socket | null = null;
-    //'https://algotradesservice.onrender.com/') {//
-    connect(url: string = 'https://algotradesservice.onrender.com/') {
-        //connect(url: string = 'http://localhost:3001') {
-        this.socket = io(url);
+    connect(url: string = import.meta.env.VITE_SOCKET_URL || 'https://algotradesservice.onrender.com/') {
+        this.socket = io(url, {
+            transports: ['websocket']
+        });
 
         this.socket.on('connect', () => {
             //console.log('Connected to server');

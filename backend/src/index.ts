@@ -42,6 +42,21 @@ const start = async () => {
 
         io.on('connection', (socket) => {
             //console.log('Client connected:', socket.id);
+
+            socket.on('subscribe', (tokens: string[]) => {
+                //console.log(`[Socket] Client ${socket.id} subscribing to:`, tokens);
+                if (Array.isArray(tokens) && tokens.length > 0) {
+                    import('./services/shoonya.service').then(({ shoonya }) => {
+                        // Ensure exchange is prefixed if missing, default to NSE for indices or NFO for others
+                        const formattedTokens = tokens.map(t => {
+                            if (t.includes('|')) return t;
+                            return (t === '26000' || t === '26009') ? `NSE|${t}` : `NFO|${t}`;
+                        });
+                        shoonya.subscribe(formattedTokens);
+                    });
+                }
+            });
+
             socket.on('disconnect', () => {
                 //console.log('Client disconnected:', socket.id);
             });
