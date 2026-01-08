@@ -12,6 +12,7 @@ class ShoonyaService {
 
     private async resumeSession() {
         try {
+            console.log('[Shoonya] Attempting to resume session from database...');
             const { data, error } = await db.getSession();
             if (data && data.susertoken) {
                 // Check if the session is from today
@@ -19,15 +20,17 @@ class ShoonyaService {
                 const today = new Date().toDateString();
 
                 if (sessionDate === today) {
-                    //console.log('Resuming Shoonya session for UID:', data.uid);
+                    console.log('[Shoonya] Resuming session for UID:', data.uid);
                     this.api.setSessionDetails(data);
                     this.session = data;
                 } else {
-                    //console.log('Stale Shoonya session found (Date:', sessionDate, '). Ignoring.');
+                    console.log('[Shoonya] Stale session found (Date:', sessionDate, '). Ignoring.');
                 }
+            } else {
+                console.log('[Shoonya] No active session found in database.');
             }
         } catch (err) {
-            console.error('Failed to resume Shoonya session:', err);
+            console.error('[Shoonya] Failed to resume session:', err);
         }
     }
 
@@ -163,12 +166,18 @@ class ShoonyaService {
 
     async getOrderBook() {
         return new Promise((resolve, reject) => {
-            this.api.get_order_book()
+            // Corrected method name: get_orderbook (no underscore between order and book)
+            if (!this.api.get_orderbook) {
+                console.error('[Shoonya] get_orderbook method missing in API wrapper');
+                resolve([]);
+                return;
+            }
+            this.api.get_orderbook()
                 .then((res: any) => {
                     resolve(res || []);
                 })
                 .catch((err: any) => {
-                    // Start empty if fails (e.g. no orders)
+                    console.error('[Shoonya] Order book fetch failed:', err);
                     resolve([]);
                 });
         });

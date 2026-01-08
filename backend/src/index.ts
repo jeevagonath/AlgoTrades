@@ -12,19 +12,23 @@ const app: FastifyInstance = fastify({ logger: true });
 
 // Setup CORS
 app.register(cors, {
-    origin: true, // Allow all origins explicitly while debugging
+    origin: (origin, cb) => {
+        // Allow all origins for debugging, or you can restrict to Vercel here
+        cb(null, true);
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
     credentials: true,
 });
 
-// Fail-safe CORS headers for all responses
-app.addHook('onSend', async (request, reply, payload) => {
-    reply.header('Access-Control-Allow-Origin', request.headers.origin || '*');
-    reply.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    reply.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
-    reply.header('Access-Control-Allow-Credentials', 'true');
-    return payload;
+// Global Error Handler
+app.setErrorHandler((error: any, request, reply) => {
+    app.log.error(error);
+    reply.status(500).send({
+        status: 'error',
+        message: 'Internal Server Error',
+        detail: error.message
+    });
 });
 
 // Setup Routes
@@ -39,7 +43,10 @@ const PORT = Number(process.env.PORT) || 3001;
 
 const start = async () => {
     try {
+        console.log(`[System] Starting server on port ${PORT}...`);
+
         await app.listen({ port: PORT, host: '0.0.0.0' });
+        console.log(`[System] HTTP Server is listening at 0.0.0.0:${PORT}`);
 
         // Initialize Socket.io after server is listening
         const io = new Server(app.server, {
@@ -50,16 +57,15 @@ const start = async () => {
 
         import('./services/socket.service').then(({ socketService }) => {
             socketService.init(io);
+            console.log('[System] SocketService initialized');
+        }).catch(err => {
+            console.error('[System] Failed to init SocketService:', err);
         });
 
         io.on('connection', (socket) => {
-            //console.log('Client connected:', socket.id);
-
             socket.on('subscribe', (tokens: string[]) => {
-                //console.log(`[Socket] Client ${socket.id} subscribing to:`, tokens);
                 if (Array.isArray(tokens) && tokens.length > 0) {
                     import('./services/shoonya.service').then(({ shoonya }) => {
-                        // Ensure exchange is prefixed if missing, default to NSE for indices or NFO for others
                         const formattedTokens = tokens.map(t => {
                             if (t.includes('|')) return t;
                             return (t === '26000' || t === '26009') ? `NSE|${t}` : `NFO|${t}`;
@@ -68,17 +74,14 @@ const start = async () => {
                     });
                 }
             });
-
-            socket.on('disconnect', () => {
-                //console.log('Client disconnected:', socket.id);
-            });
         });
 
-        //console.log(`Server is listening on port ${PORT}`);
-
         // Resume any active strategy
+        console.log('[System] Resuming strategy engine...');
         strategyEngine.resume();
+
     } catch (err) {
+        console.error('[System] FATAL: Failed to start server:', err);
         app.log.error(err);
         process.exit(1);
     }

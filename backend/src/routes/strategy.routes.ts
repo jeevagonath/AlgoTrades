@@ -141,39 +141,74 @@ export async function strategyRoutes(app: FastifyInstance) {
 
     app.get('/orders', async (request, reply) => {
         try {
+            console.log('[Routes] GET /orders - Fetching state...');
             const state = strategyEngine.getState();
+
             if (state.isVirtual) {
+                console.log('[Routes] GET /orders - Mode: VIRTUAL. Fetching from DB...');
                 const orders = await db.getOrders();
+                console.log(`[Routes] GET /orders - Found ${orders.length} virtual orders.`);
                 return { status: 'success', data: orders };
             } else {
+                console.log('[Routes] GET /orders - Mode: LIVE. Fetching from Shoonya...');
                 const rawOrders: any = await shoonya.getOrderBook();
-                const orders = Array.isArray(rawOrders) ? rawOrders.map((o: any) => {
+
+                if (!rawOrders || !Array.isArray(rawOrders)) {
+                    console.log('[Routes] GET /orders - Shoonya returned no orders or non-array data.');
+                    return { status: 'success', data: [] };
+                }
+
+                console.log(`[Routes] GET /orders - Processing ${rawOrders.length} Shoonya orders...`);
+                const orders = rawOrders.map((o: any) => {
                     let isoTime = new Date().toISOString();
+
                     if (o.norentm) {
                         try {
-                            // "14:30:21 07-01-2025"
-                            const [time, date] = o.norentm.split(' ');
-                            if (time && date) {
-                                const [d, mon, y] = date.split('-');
-                                isoTime = new Date(`${y}-${mon}-${d}T${time}`).toISOString();
+                            // Expected: "HH:mm:ss DD-MM-YYYY"
+                            const parts = o.norentm.split(' ');
+                            if (parts.length === 2) {
+                                const [time, datePart] = parts;
+                                const dateParts = datePart.split('-');
+                                if (dateParts.length === 3) {
+                                    const [d, mon, y] = dateParts;
+                                    const dateObj = new Date(`${y}-${mon}-${d}T${time}`);
+                                    if (!isNaN(dateObj.getTime())) {
+                                        isoTime = dateObj.toISOString();
+                                    }
+                                }
                             }
-                        } catch (e) { console.error('Date parse error', e); }
+                        } catch (e) {
+                            console.error('[Routes] Date parse error for:', o.norentm, e);
+                        }
                     }
+
                     return {
-                        symbol: o.tsym,
+                        symbol: o.tsym || 'Unknown',
                         side: o.trantype === 'B' ? 'BUY' : 'SELL',
-                        price: o.avgprc || o.prc,
-                        quantity: o.qty,
-                        status: o.status,
+                        price: o.avgprc || o.prc || 0,
+                        quantity: o.qty || 0,
+                        status: o.status || 'Unknown',
                         created_at: isoTime
                     };
-                }) : [];
+                });
 
-                orders.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+                console.log('[Routes] GET /orders - Sorting orders...');
+                orders.sort((a: any, b: any) => {
+                    const timeA = new Date(a.created_at).getTime();
+                    const timeB = new Date(b.created_at).getTime();
+                    return (timeB || 0) - (timeA || 0);
+                });
+
+                console.log('[Routes] GET /orders - Success.');
                 return { status: 'success', data: orders };
             }
         } catch (err: any) {
-            return reply.status(500).send({ status: 'error', message: err.message });
+            console.error('[Routes] FATAL Error in /orders:', err);
+            return reply.status(500).send({
+                status: 'error',
+                message: 'Failed to fetch orders',
+                detail: err.message
+            });
         }
     });
 
