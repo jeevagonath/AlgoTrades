@@ -681,14 +681,23 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                     {niftyData.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                                 </span>
                             </div>
-                            <div className="flex flex-col items-end">
-                                <span className={`text-xs font-bold font-mono ${niftyData.change >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                    {niftyData.change > 0 ? '+' : ''}{niftyData.change.toFixed(2)}
-                                </span>
-                                <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold mt-1 ${niftyData.change >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
-                                    {niftyData.change >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                                    {Math.abs(niftyData.changePercent).toFixed(2)}%
+                            <div className="flex items-center gap-3">
+                                <div className="flex flex-col items-end">
+                                    <span className={`text-xs font-bold font-mono ${niftyData.change >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                        {niftyData.change > 0 ? '+' : ''}{niftyData.change.toFixed(2)}
+                                    </span>
+                                    <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold mt-1 ${niftyData.change >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
+                                        {niftyData.change >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                                        {Math.abs(niftyData.changePercent).toFixed(2)}%
+                                    </div>
                                 </div>
+                                <button
+                                    onClick={() => openTradingViewChart('NSE:NIFTY')}
+                                    className="p-2 rounded-lg hover:bg-blue-50 text-slate-400 hover:text-blue-600 transition-colors"
+                                    title="View NIFTY Chart"
+                                >
+                                    <BarChart3 className="w-5 h-5" />
+                                </button>
                             </div>
                         </div>
                     )}
