@@ -189,6 +189,14 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
             }
         });
 
+        // Real-time engine state listener
+        socketService.on('state_updated', (data: any) => {
+            if (data.status) setStatus(data.status);
+            if (data.engineActivity) setEngineActivity(data.engineActivity);
+            if (data.nextAction) setNextAction(data.nextAction);
+            if (data.isPaused !== undefined) setIsPaused(data.isPaused);
+        });
+
         socketService.on('strategy_exit', (data: any) => {
             addLog(`Strategy Exit: ${data.reason}`);
             setTestStrikes([]);

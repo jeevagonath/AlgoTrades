@@ -37,6 +37,16 @@ export const db = {
             console.error('Error details:', JSON.stringify(error, null, 2));
         } else {
             //console.log('[DB] State updated successfully');
+            // Emit real-time state update
+            import('./socket.service').then(({ socketService }) => {
+                socketService.emit('state_updated', {
+                    status: state.status,
+                    engineActivity: state.engineActivity,
+                    nextAction: state.nextAction,
+                    isPaused: state.isPaused,
+                    isActive: state.isActive
+                });
+            }).catch(() => { });
         }
         return { data, error };
     },
