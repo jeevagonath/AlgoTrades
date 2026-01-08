@@ -12,13 +12,19 @@ const app: FastifyInstance = fastify({ logger: true });
 
 // Setup CORS
 app.register(cors, {
-    origin: (origin, cb) => {
-        // Reflect any origin to allow cross-site requests during debugging
-        cb(null, true);
-    },
+    origin: true, // Allow all origins explicitly while debugging
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
     credentials: true,
+});
+
+// Fail-safe CORS headers for all responses
+app.addHook('onSend', async (request, reply, payload) => {
+    reply.header('Access-Control-Allow-Origin', request.headers.origin || '*');
+    reply.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    reply.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
+    reply.header('Access-Control-Allow-Credentials', 'true');
+    return payload;
 });
 
 // Setup Routes
