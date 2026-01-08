@@ -80,59 +80,70 @@ class StrategyEngine {
 
     async resume() {
         try {
-            const state: any = await db.getState();
-            if (state) {
-                this.state.isTradePlaced = state.isTradePlaced;
-                this.state.isActive = state.isActive;
-                this.state.status = state.status || 'IDLE';
+            this.addLog('🔄 [System] Engine Startup: Initializing state...');
 
-                this.state.pnl = state.pnl || 0;
-                this.state.peakProfit = state.peakProfit || 0;
-                this.state.peakLoss = state.peakLoss || 0;
-                this.state.entryTime = state.entryTime || '12:59';
-                this.state.exitTime = state.exitTime || '15:15';
-                this.state.targetPnl = state.targetPnl || 2100;
-                this.state.stopLossPnl = state.stopLossPnl || -1500;
-                this.state.telegramToken = state.telegramToken || '';
-                this.state.telegramChatId = state.telegramChatId || '';
-                this.state.isVirtual = state.isVirtual !== undefined ? state.isVirtual : true;
-                this.state.isPaused = state.isPaused !== undefined ? state.isPaused : false;
+            // 1. Load basic state from DB
+            const savedState: any = await db.getState();
+            if (savedState) {
+                this.state.isVirtual = savedState.isVirtual !== undefined ? savedState.isVirtual : true;
+                this.state.isPaused = savedState.isPaused !== undefined ? savedState.isPaused : false;
+                this.state.targetPnl = savedState.targetPnl || 2100;
+                this.state.stopLossPnl = savedState.stopLossPnl || -1500;
+                this.state.entryTime = savedState.entryTime || '12:59';
+                this.state.exitTime = savedState.exitTime || '15:15';
 
-                if (this.state.telegramToken && this.state.telegramChatId) {
+                this.state.pnl = savedState.pnl || 0;
+                this.state.peakProfit = savedState.peakProfit || 0;
+                this.state.peakLoss = savedState.peakLoss || 0;
+
+                if (savedState.telegramToken && savedState.telegramChatId) {
+                    this.state.telegramToken = savedState.telegramToken;
+                    this.state.telegramChatId = savedState.telegramChatId;
                     telegramService.setCredentials(this.state.telegramToken, this.state.telegramChatId);
                 }
             }
 
-            // Always load positions from database to ensure sync
+            // 2. Load positions
             const positions = await db.getPositions();
             this.state.selectedStrikes = positions;
 
+            // 3. Determine Lifecycle State
+            const isExpiry = await this.isExpiryDay();
+
             if (positions.length > 0) {
-                // Definitive Status Auto-correction: 
-                // If positions exist in the DB, the engine MUST NOT be IDLE.
-                if (this.state.status === 'IDLE') {
+                // If we have positions, we MUST be in a state that monitors them
+                // Usually ACTIVE, but could be FORCE_EXITED if we crashed during exit
+                const currentStatus = savedState?.status || 'IDLE';
+                if (currentStatus === 'FORCE_EXITED') {
+                    this.state.status = 'FORCE_EXITED';
+                } else {
                     this.state.status = 'ACTIVE';
-                    this.state.isTradePlaced = true;
-                    this.state.isActive = true;
                 }
-
-                this.addLog(`[Strategy] Resumed: Found ${positions.length} positions. Status: ${this.state.status}`);
-
-                // Re-calculate PNL immediately with last known prices (LTP from DB)
-                this.calculatePnL();
-
-                // Start monitoring (WebSocket + Subscription)
+                this.state.isTradePlaced = true;
+                this.state.isActive = true;
                 this.startMonitoring();
-
-                // Initial broadcast to sync frontend
-                this.syncToDb(true);
+                this.calculatePnL();
+                this.addLog(`[Strategy] Resumed ACTIVE: Found ${positions.length} positions.`);
             } else {
-                this.addLog('[Strategy] Resumed: No active positions found.');
+                // No positions - Check if we should be waiting for expiry or idle
+                if (isExpiry) {
+                    this.state.status = 'WAITING_FOR_EXPIRY';
+                    this.addLog('🔔 [Strategy] Resumed: Today is EXPIRY DAY. Waiting for 12:45 PM.');
+                } else {
+                    this.state.status = 'IDLE';
+                    this.addLog('💤 [Strategy] Resumed: Normal day. Status IDLE.');
+                }
+                this.state.isTradePlaced = false;
+                this.state.isActive = false;
             }
 
+            // 4. Initial sync and scheduler
+            await this.syncToDb(true);
             this.initScheduler();
+
         } catch (err) {
             console.error('[Strategy] Failed to resume strategy:', err);
+            this.addLog(`❌ [System] Resume Error: ${err}`);
         }
     }
 
@@ -188,72 +199,81 @@ class StrategyEngine {
         this.schedulers.forEach(s => s.stop());
         this.schedulers = [];
 
-        // Daily check at 9 AM to re-evaluate if today is expiry day
+        // 1. Daily Reset at 9:00 AM
         this.schedulers.push(cron.schedule('0 9 * * *', async () => {
-            //console.log('[Strategy] Daily 9 AM check - Re-initializing scheduler');
+            this.addLog('🌅 [System] Daily 9 AM Reset - evaluating today...');
+            const isExpiry = await this.isExpiryDay();
+
+            if (isExpiry) {
+                this.state.status = 'WAITING_FOR_EXPIRY';
+                telegramService.sendMessage('🔔 <b>Expiry Day Detected</b>\nAutomated rollover sequence armed.');
+            } else {
+                this.state.status = 'IDLE';
+            }
+
+            await this.syncToDb(true);
             await this.initScheduler();
         }));
 
-        // Check if today is expiry day
         const isExpiry = await this.isExpiryDay();
+        if (!isExpiry) {
+            this.addLog('ℹ️ Not expiry day - Positions will be held');
+            return;
+        }
 
-        if (isExpiry) {
-            // Update status if starting the day
-            if (this.state.status === 'IDLE' || this.state.status === 'ACTIVE') {
-                this.state.status = 'WAITING_FOR_EXPIRY';
-                await this.syncToDb();
+        // --- EXPIRY DAY TIMERS ---
+
+        // 12:45 PM - Exit positions (Transition to EXIT_DONE)
+        this.schedulers.push(cron.schedule('45 12 * * *', async () => {
+            if (this.state.status !== 'WAITING_FOR_EXPIRY') {
+                this.addLog(`⚠️ [Scheduler] Skipped 12:45 exit. Status is ${this.state.status} (expected WAITING_FOR_EXPIRY)`);
+                return;
             }
 
-            //console.log('[Strategy] Today is EXPIRY DAY - Scheduling exit and entry');
-            this.addLog(`🔔 EXPIRY DAY DETECTED - Status: ${this.state.status}`);
-            telegramService.sendMessage('🔔 <b>Expiry Day Detected</b>\nAutomated rollover sequence will execute:\n• 12:45 PM - Exit positions\n• 12:59:30 PM - Select new strikes\n• 1:00 PM - Place orders');
+            this.addLog('⏰ [Expiry] 12:45 PM reached. Squaring off positions...');
+            await this.exitAllPositions('Expiry Day Rollover');
+            this.state.status = 'EXIT_DONE';
+            await this.syncToDb(true);
+            telegramService.sendMessage('📤 <b>Expiry Day Exit</b>\nAll positions squared off successfully.');
+        }));
 
-            // 12:45 PM - Exit positions if any exist
-            this.schedulers.push(cron.schedule('45 12 * * *', async () => {
-                if (this.state.selectedStrikes.length > 0) {
-                    this.addLog('⏰ Expiry Day: Exiting all positions at 12:45 PM');
-                    await this.exitAllPositions('Expiry Day Exit');
-                    this.state.status = 'EXIT_DONE';
-                    await this.syncToDb();
-                    telegramService.sendMessage('📤 <b>Expiry Day Exit</b>\nExiting all positions at 12:45 PM');
-                } else {
-                    this.addLog('ℹ️ Expiry Day: No positions to exit at 12:45 PM');
-                    this.state.status = 'EXIT_DONE';
-                    await this.syncToDb();
-                }
-            }));
+        // 12:59:00 PM - Pre-selection
+        this.schedulers.push(cron.schedule('59 12 * * *', async () => {
+            if (this.state.status !== 'EXIT_DONE') {
+                this.addLog(`⚠️ [Scheduler] Skipped strike selection. Status is ${this.state.status} (expected EXIT_DONE)`);
+                return;
+            }
 
-            // 12:59:30 PM - Select strikes for next week (30-second delay)
-            this.schedulers.push(cron.schedule('59 12 * * *', async () => {
-                if (this.state.status === 'ENTRY_DONE' || this.state.status === 'ACTIVE') return;
+            this.addLog('🎯 [Expiry] 12:59 PM: Selecting strikes for next week...');
+            await this.selectStrikes();
+        }));
 
-                this.addLog('⏳ Waiting 30 seconds before strike selection...');
-                await new Promise(r => setTimeout(r, 30000)); // 30-second delay
-                this.addLog('🎯 Expiry Day: Selecting strikes for NEXT WEEK at 12:59:30 PM');
-                await this.selectStrikes(); // Will auto-select 2nd expiry
-                telegramService.sendMessage('✅ <b>Strikes Selected</b>\nNew positions ready for next week');
-            }));
+        // 01:00:00 PM - Entry (Transition to ENTRY_DONE then ACTIVE)
+        this.schedulers.push(cron.schedule('0 13 * * *', async () => {
+            if (this.state.status !== 'EXIT_DONE') {
+                this.addLog(`⚠️ [Scheduler] Skipped 1:00 PM entry. Status is ${this.state.status} (expected EXIT_DONE)`);
+                return;
+            }
 
-            // 1:00 PM - Place orders
-            this.schedulers.push(cron.schedule('0 13 * * *', async () => {
-                this.addLog('🚀 Expiry Day: Attempting to place orders at 1:00 PM');
-                if (this.state.status === 'ENTRY_DONE' || this.state.status === 'ACTIVE') {
-                    this.addLog('⚠️ ENTRY SKIPPED: Trade already executed today.');
-                    return;
-                }
-                const result = await this.placeOrder();
-                if (result) {
-                    this.state.status = 'ENTRY_DONE';
-                    await this.syncToDb();
-                }
-            }));
-        } else {
-            //console.log('[Strategy] Not expiry day - No actions scheduled');
-            this.addLog('ℹ️ Not expiry day - Positions will be held');
-        }
+            this.addLog('🚀 [Expiry] 1:00 PM: Placing orders for new cycle...');
+            const res = await this.placeOrder();
+            if (res && res.status === 'success') {
+                this.state.status = 'ENTRY_DONE';
+                await this.syncToDb(true);
+
+                setTimeout(async () => {
+                    this.state.status = 'ACTIVE';
+                    await this.syncToDb(true);
+                    this.addLog('✅ [System] Transitioned to ACTIVE Monitoring.');
+                }, 5000);
+            } else {
+                this.state.status = 'FORCE_EXITED';
+                await this.syncToDb(true);
+                this.addLog('❌ [System] Entry Failed. System LOCKED in FORCE_EXITED.');
+            }
+        }));
     }
-
-    async updateSettings(settings: {
+    public async updateSettings(settings: {
         entryTime?: string,
         exitTime?: string,
         targetPnl?: number,
@@ -279,11 +299,11 @@ class StrategyEngine {
         this.addLog(`Strategy settings updated. Entry: ${this.state.entryTime}, Exit: ${this.state.exitTime}, Target: ${this.state.targetPnl}, SL: ${this.state.stopLossPnl}, Mode: ${this.state.isVirtual ? 'Virtual' : 'LIVE'}`);
     }
 
-    getState() {
+    public getState() {
         return this.state;
     }
 
-    async getAvailableExpiries() {
+    public async getAvailableExpiries() {
         try {
             // Use manual expiries from database
             const manualExpiries = await db.getManualExpiries();
@@ -322,7 +342,7 @@ class StrategyEngine {
         });
     }
 
-    async selectStrikes(expiryDate?: string) {
+    public async selectStrikes(expiryDate?: string) {
         if (!shoonya.isLoggedIn()) {
             throw new Error('Shoonya session expired or not logged in. Please login again.');
         }
@@ -562,11 +582,18 @@ class StrategyEngine {
             if (!isDryRun) {
                 this.state.isTradePlaced = true;
                 this.state.isActive = true;
-                this.state.status = 'ACTIVE';    // Transition to ACTIVE
+                this.state.status = 'ENTRY_DONE';    // Transition to ENTRY_DONE
                 this.startMonitoring();
                 await this.syncToDb(true);
 
                 telegramService.sendMessage(`🚀 <b>Trade Placed</b>\nAll 8 legs executed virtually for Iron Condor.`);
+
+                // Auto-transition to ACTIVE after a short delay for verification
+                setTimeout(async () => {
+                    this.state.status = 'ACTIVE';
+                    await this.syncToDb(true);
+                    this.addLog('✅ [System] Verify Complete: Engine is now ACTIVE.');
+                }, 5000);
             }
 
             return { status: 'success' };
@@ -805,8 +832,8 @@ class StrategyEngine {
         if (legIdx !== -1) {
             this.state.selectedStrikes[legIdx].ltp = ltp;
 
-            // 2. Perform strategy logic (Monitoring and Exits) if trade is placed
-            if (this.state.isTradePlaced) {
+            // 2. Perform strategy logic ONLY if ACTIVE
+            if (this.state.status === 'ACTIVE' && !this.state.isPaused) {
                 this.checkAdjustments(this.state.selectedStrikes[legIdx]);
                 this.checkExits();
             }
@@ -829,7 +856,7 @@ class StrategyEngine {
     }
 
     private checkAdjustments(leg: LegState) {
-        if (this.state.isPaused) return;
+        if (this.state.status !== 'ACTIVE' || this.state.isPaused) return;
 
         // Only monitor Tier 2 Sells (₹75 legs)
         if (leg.tier !== 2 || leg.side !== 'SELL') return;
