@@ -1015,10 +1015,12 @@ class StrategyEngine {
             this.state.status = 'IDLE';
         }
 
-        const tokens = this.state.selectedStrikes.map(s => `NFO|${s.token}`);
-        shoonya.unsubscribe(tokens);
-        // Do NOT clear selectedStrikes immediately if we want to show history? 
-        // But logic says clear it.
+        // Save to history before clearing
+        await db.saveTradeHistory({
+            ...this.state,
+            exitReason: reason
+        }, this.state.selectedStrikes);
+
         this.state.selectedStrikes = [];
         await db.syncPositions([]);
         await this.syncToDb(true);

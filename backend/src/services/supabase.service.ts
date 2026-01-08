@@ -173,6 +173,58 @@ export const db = {
         }));
     },
 
+    async saveTradeHistory(state: any, legs: any[]) {
+        try {
+            // 1. Insert into trade_history
+            const { data: historyData, error: historyError } = await supabase
+                .from('trade_history')
+                .insert({
+                    is_virtual: state.isVirtual,
+                    pnl: state.pnl,
+                    peak_profit: state.peakProfit,
+                    peak_loss: state.peakLoss,
+                    status: state.status,
+                    reason: state.exitReason || 'Manual Exit',
+                    entry_time: state.entryTime,
+                    exit_time: new Date().toISOString()
+                })
+                .select()
+                .single();
+
+            if (historyError) {
+                console.error('Supabase Trade History Save Error:', historyError);
+                return { success: false, error: historyError };
+            }
+
+            // 2. Insert legs into position_history_log
+            if (legs.length > 0 && historyData) {
+                const { error: legsError } = await supabase
+                    .from('position_history_log')
+                    .insert(legs.map(l => ({
+                        history_id: historyData.id,
+                        token: l.token,
+                        symbol: l.symbol,
+                        type: l.type,
+                        side: l.side,
+                        strike: l.strike,
+                        entry_price: l.entryPrice,
+                        exit_price: l.ltp, // LTP at time of exit
+                        quantity: l.quantity,
+                        tier: l.tier
+                    })));
+
+                if (legsError) {
+                    console.error('Supabase Position History Save Error:', legsError);
+                }
+            }
+
+            return { success: true };
+        } catch (err) {
+            console.error('Failed to save trade history:', err);
+            return { success: false, error: err };
+        }
+    },
+
     async saveManualExpiries(expiries: string[]) {
         try {
             // Save to manual_expiry_settings table
