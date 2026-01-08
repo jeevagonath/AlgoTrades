@@ -16,4 +16,13 @@ export async function authRoutes(app: FastifyInstance) {
     app.get('/session', async (request, reply) => {
         return { status: 'success', data: { authenticated: shoonya.isLoggedIn() } };
     });
+
+    app.post('/logout', async (request, reply) => {
+        try {
+            await shoonya.logout();
+            return { status: 'success', message: 'Logged out successfully' };
+        } catch (err: any) {
+            return reply.status(500).send({ status: 'error', message: err.message });
+        }
+    });
 }

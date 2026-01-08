@@ -18,6 +18,10 @@ export const authApi = {
         const response = await apiClient.get('/auth/session');
         return response.data;
     },
+    logout: async () => {
+        const response = await apiClient.post('/auth/logout');
+        return response.data;
+    },
 };
 
 export const strategyApi = {

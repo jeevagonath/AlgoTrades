@@ -27,11 +27,17 @@ function App() {
     setIsAuthenticated(true);
   };
 
-  const handleLogout = () => {
-    // Clear any local storage or session data
-    localStorage.clear();
-    sessionStorage.clear();
-    setIsAuthenticated(false);
+  const handleLogout = async () => {
+    try {
+      await authApi.logout();
+    } catch (err) {
+      console.error('Logout API failed:', err);
+    } finally {
+      // Clear any local storage or session data regardless of API success
+      localStorage.clear();
+      sessionStorage.clear();
+      setIsAuthenticated(false);
+    }
   };
 
   if (loading) {

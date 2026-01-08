@@ -151,6 +151,18 @@ export const db = {
         return { data, error };
     },
 
+    async clearSession() {
+        const { data, error } = await supabase
+            .from('broker_session')
+            .update({
+                susertoken: null,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', 1);
+        if (error) console.error('Supabase Session Clear Error:', error);
+        return { data, error };
+    },
+
     async getSession() {
         const { data, error } = await supabase
             .from('broker_session')

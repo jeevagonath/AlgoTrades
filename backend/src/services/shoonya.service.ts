@@ -62,6 +62,22 @@ class ShoonyaService {
         });
     }
 
+    async logout() {
+        try {
+            // Shoonya API might have a logout, but if it's just local session clearing:
+            if (this.api.logout) {
+                await this.api.logout();
+            }
+            this.session = null;
+            this.api.setSessionDetails({});
+            await db.clearSession();
+            console.log('[Shoonya] Logged out successfully and session cleared from DB.');
+        } catch (err) {
+            console.error('[Shoonya] Logout failed:', err);
+            throw err;
+        }
+    }
+
     async searchScrip(exchange: string, searchtext: string) {
         return new Promise((resolve, reject) => {
             this.api.searchscrip(exchange, searchtext)
