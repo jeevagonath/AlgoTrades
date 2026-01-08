@@ -58,6 +58,11 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
                     <div className="inline-flex items-center justify-center p-4 bg-white rounded-3xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] mb-2">
                         <Activity className="w-12 h-12 text-blue-600" />
                     </div>
+                    <div className="flex justify-center">
+                        <span className="bg-emerald-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full tracking-tighter animate-pulse uppercase">
+                            New Interface Active
+                        </span>
+                    </div>
                     <div className="space-y-1">
                         <h1 className="text-4xl font-black tracking-tighter text-transparent bg-clip-text bg-linear-to-r from-slate-900 to-slate-600">
                             AlgoTrades

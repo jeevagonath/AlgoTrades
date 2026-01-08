@@ -5,8 +5,13 @@
   --color-foreground: hsl(222 47% 11%);
 }
 
-body {
-  @apply bg-[#f8f9fc] text-slate-900;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  -webkit-font-smoothing: antialiased;
+@layer base {
+  body {
+    background-color: #f8f9fc;
+    color: #0f172a;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    margin: 0;
+    min-height: 100vh;
+  }
 }
