@@ -487,19 +487,12 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                 <div className="max-w-[1600px] mx-auto px-6 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-8">
                         <div className="flex items-center gap-2.5">
-                            <div className="p-1.5 bg-blue-600 rounded-lg shadow-sm">
-                                <Activity className="text-white w-5 h-5" />
+                            <div className="p-1 bg-white border border-slate-100 rounded-lg shadow-sm overflow-hidden">
+                                <img src="/logo.png" alt="Logo" className="w-7 h-7 object-contain" />
                             </div>
                             <span className="text-lg font-bold tracking-tight text-slate-900">
                                 AlgoTrades
                             </span>
-                            <button
-                                onClick={() => openTradingViewChart('NSE:NIFTY')}
-                                className="p-1.5 rounded-lg hover:bg-blue-50 text-slate-400 hover:text-blue-600 transition-colors"
-                                title="View NIFTY Chart"
-                            >
-                                <BarChart3 className="w-4 h-4" />
-                            </button>
                         </div>
 
                         {/* Global Status Badge */}

@@ -55,8 +55,8 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
 
             <div className="w-full max-w-md space-y-8 relative z-10">
                 <div className="text-center space-y-3">
-                    <div className="inline-flex items-center justify-center p-4 bg-white rounded-3xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] mb-2">
-                        <Activity className="w-12 h-12 text-blue-600" />
+                    <div className="inline-flex items-center justify-center p-4 bg-white rounded-3xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] mb-2 overflow-hidden">
+                        <img src="/logo.png" alt="AlgoTrades Logo" className="w-14 h-14 object-contain" />
                     </div>
                     <div className="space-y-1">
                         <h1 className="text-4xl font-black tracking-tighter text-transparent bg-clip-text bg-linear-to-r from-slate-900 to-slate-600">
@@ -193,10 +193,6 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
                         Military Grade Encryption • v1.0.6
                     </p>
                 </div>
-
-                <p className="text-center text-[10px] font-bold text-slate-300 uppercase tracking-widest">
-                    AlgoTrades Core v1.0.6
-                </p>
             </div>
         </div>
     );
