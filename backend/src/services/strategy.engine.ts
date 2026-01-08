@@ -880,7 +880,8 @@ class StrategyEngine {
                     strike: targetScrip.strprc,
                     entryPrice: 0, // Market order
                     ltp: 0,
-                    quantity: 50
+                    quantity: 50,
+                    tier: 2 // Adjustments for Tier 2 Sell should maintain Tier 2 monitoring
                 };
 
                 // Margin Check for Adjustment

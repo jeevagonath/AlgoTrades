@@ -53,7 +53,8 @@ export const db = {
                     strike: l.strike,
                     entry_price: l.entryPrice,
                     ltp: l.ltp,
-                    quantity: l.quantity
+                    quantity: l.quantity,
+                    tier: l.tier
                 })));
             if (error) console.error('Supabase Positions Sync Error:', error);
             return { data, error };
@@ -167,7 +168,8 @@ export const db = {
             strike: p.strike,
             entryPrice: p.entry_price,
             ltp: p.ltp,
-            quantity: p.quantity
+            quantity: p.quantity,
+            tier: p.tier
         }));
     },
 
