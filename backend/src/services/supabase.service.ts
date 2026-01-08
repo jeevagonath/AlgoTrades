@@ -58,7 +58,16 @@ export const db = {
                     quantity: l.quantity,
                     tier: l.tier
                 })));
-            if (error) console.error('Supabase Positions Sync Error:', error);
+
+            if (error) {
+                console.error('Supabase Positions Sync Error:', error);
+            } else {
+                // Emit real-time positions update
+                import('./socket.service').then(({ socketService }) => {
+                    socketService.emit('positions_updated', legs);
+                }).catch(() => { });
+            }
+
             return { data, error };
         }
     },
@@ -74,8 +83,19 @@ export const db = {
                 quantity: order.quantity,
                 status: order.status,
                 order_type: order.isVirtual ? 'VIRTUAL' : 'REAL'
-            });
-        if (error) console.error('Supabase Order Log Error:', error);
+            })
+            .select()
+            .single();
+
+        if (error) {
+            console.error('Supabase Order Log Error:', error);
+        } else if (data) {
+            // Emit real-time order update
+            import('./socket.service').then(({ socketService }) => {
+                socketService.emit('new_order', data);
+            }).catch(() => { });
+        }
+
         return { data, error };
     },
 

@@ -58,13 +58,23 @@ class TelegramService {
         try {
             // Parse and save alert to database
             const alertMeta = this.parseAlert(message);
-            await db.saveAlert({
+            const alertData = {
                 type: alertMeta.type,
                 severity: alertMeta.severity,
                 title: alertMeta.title,
                 message: message.replace(/<\/?b>/g, ''), // Remove HTML tags for storage
                 icon: alertMeta.icon
-            });
+            };
+
+            await db.saveAlert(alertData);
+
+            // Emit real-time alert to connected clients
+            import('./socket.service').then(({ socketService }) => {
+                socketService.emit('new_alert', {
+                    ...alertData,
+                    created_at: new Date().toISOString()
+                });
+            }).catch(() => { });
 
             // Send to Telegram
             const url = `https://api.telegram.org/bot${this.token}/sendMessage`;

@@ -172,6 +172,23 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
             setLogs(prev => [{ time: data.time, msg: data.msg }, ...prev].slice(0, 75));
         });
 
+        // Real-time alerts listener
+        socketService.on('new_alert', (data: any) => {
+            setAlerts(prev => [data, ...prev].slice(0, 50));
+        });
+
+        // Real-time orders listener
+        socketService.on('new_order', (data: any) => {
+            setOrders(prev => [data, ...prev].slice(0, 100));
+        });
+
+        // Real-time positions listener
+        socketService.on('positions_updated', (data: any) => {
+            if (Array.isArray(data)) {
+                setTestStrikes(data);
+            }
+        });
+
         socketService.on('strategy_exit', (data: any) => {
             addLog(`Strategy Exit: ${data.reason}`);
             setTestStrikes([]);
