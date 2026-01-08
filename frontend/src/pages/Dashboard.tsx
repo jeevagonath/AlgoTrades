@@ -738,60 +738,67 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                             </tbody>
                                         </table>
                                     </div>
-                                ) : activeTab === 'orders' ? (
-                                    orders.length > 0 ? (
-                                        <div className="overflow-x-auto">
-                                            <table className="w-full text-left">
-                                                <thead>
-                                                    <tr className="border-b border-slate-100 bg-slate-50/30">
-                                                        <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Time</th>
-                                                        <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Symbol</th>
-                                                        <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Side</th>
-                                                        <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Price</th>
-                                                        <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Qty</th>
-                                                        <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Status</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody className="divide-y divide-slate-100">
-                                                    {orders.map((order, i) => (
-                                                        <tr key={i} className="hover:bg-slate-50/50 transition-colors">
-                                                            <td className="px-6 py-4 font-mono text-xs text-slate-600">
-                                                                {new Date(order.created_at).toLocaleTimeString('en-IN', { hour12: false })}
-                                                            </td>
-                                                            <td className="px-6 py-4 font-bold text-sm text-slate-900">{order.symbol}</td>
-                                                            <td className="px-6 py-4 text-center">
-                                                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${order.side === 'BUY' ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'bg-amber-50 text-amber-700 border border-amber-100'}`}>
-                                                                    {order.side}
-                                                                </span>
-                                                            </td>
-                                                            <td className="px-6 py-4 text-center font-mono text-sm text-slate-800">₹{order.price}</td>
-                                                            <td className="px-6 py-4 text-center font-mono text-sm text-slate-600">{order.quantity}</td>
-                                                            <td className="px-6 py-4 text-right">
-                                                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${order.status === 'COMPLETE' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-slate-50 text-slate-700 border border-slate-100'}`}>
-                                                                    {order.status}
-                                                                </span>
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    ) : (
-                                        <div className="p-20 text-center space-y-4">
-                                            <div className="flex justify-center flex-col items-center gap-4 opacity-20">
-                                                <Shield className="w-12 h-12 text-slate-400" />
-                                                <span className="text-[10px] font-bold tracking-widest uppercase text-slate-500">No orders placed today.</span>
-                                            </div>
-                                        </div>
-                                    )
                                 ) : (
                                     <div className="p-20 text-center space-y-4">
                                         <div className="flex justify-center flex-col items-center gap-4 opacity-20">
-                                            <Bell className="w-12 h-12 text-slate-400" />
-                                            <span className="text-[10px] font-bold tracking-widest uppercase text-slate-500">Alerts Coming Soon</span>
+                                            <Shield className="w-12 h-12 text-slate-400" />
+                                            <span className="text-[10px] font-bold tracking-widest uppercase text-slate-500">No active positions</span>
                                         </div>
                                     </div>
                                 )
+                            ) : activeTab === 'orders' ? (
+                                orders.length > 0 ? (
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-left">
+                                            <thead>
+                                                <tr className="border-b border-slate-100 bg-slate-50/30">
+                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Time</th>
+                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Symbol</th>
+                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Side</th>
+                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Price</th>
+                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Qty</th>
+                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-100">
+                                                {orders.map((order, i) => (
+                                                    <tr key={i} className="hover:bg-slate-50/50 transition-colors">
+                                                        <td className="px-6 py-4 font-mono text-xs text-slate-600">
+                                                            {new Date(order.created_at).toLocaleTimeString('en-IN', { hour12: false })}
+                                                        </td>
+                                                        <td className="px-6 py-4 font-bold text-sm text-slate-900">{order.symbol}</td>
+                                                        <td className="px-6 py-4 text-center">
+                                                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${order.side === 'BUY' ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'bg-amber-50 text-amber-700 border border-amber-100'}`}>
+                                                                {order.side}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-center font-mono text-sm text-slate-800">₹{order.price}</td>
+                                                        <td className="px-6 py-4 text-center font-mono text-sm text-slate-600">{order.quantity}</td>
+                                                        <td className="px-6 py-4 text-right">
+                                                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${order.status === 'COMPLETE' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-slate-50 text-slate-700 border border-slate-100'}`}>
+                                                                {order.status}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                ) : (
+                                    <div className="p-20 text-center space-y-4">
+                                        <div className="flex justify-center flex-col items-center gap-4 opacity-20">
+                                            <Shield className="w-12 h-12 text-slate-400" />
+                                            <span className="text-[10px] font-bold tracking-widest uppercase text-slate-500">No orders placed today.</span>
+                                        </div>
+                                    </div>
+                                )
+                            ) : (
+                                <div className="p-20 text-center space-y-4">
+                                    <div className="flex justify-center flex-col items-center gap-4 opacity-20">
+                                        <Bell className="w-12 h-12 text-slate-400" />
+                                        <span className="text-[10px] font-bold tracking-widest uppercase text-slate-500">Alerts Coming Soon</span>
+                                    </div>
+                                </div>
                             )}
                         </div>
                     </div>
