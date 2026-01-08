@@ -151,6 +151,13 @@ class StrategyEngine {
                 this.state.isActive = false;
             }
 
+            // Send startup notification
+            const startupMsg = `🚀 <b>Strategy Engine Resumed</b>\n` +
+                `Status: ${this.state.status}\n` +
+                `Activity: ${this.state.engineActivity}\n` +
+                `Mode: ${this.state.isVirtual ? 'VIRTUAL' : 'LIVE'}`;
+            telegramService.sendMessage(startupMsg);
+
             // 4. Initial sync and scheduler
             await this.syncToDb(true);
             this.initScheduler();
@@ -227,6 +234,7 @@ class StrategyEngine {
                 this.state.status = 'IDLE';
                 this.state.engineActivity = 'Watching for Expiry Day';
                 this.state.nextAction = 'Next 9 AM Check';
+                telegramService.sendMessage('🌅 <b>Daily Strategy Reset</b>\nEngine is idle and watching for expiry day.');
             }
 
             await this.syncToDb(true);
