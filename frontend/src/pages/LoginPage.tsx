@@ -143,6 +143,35 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
                                     </div>
                                 </div>
                             </div>
+
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">API Secret</label>
+                                <input
+                                    name="api_secret"
+                                    type="text"
+                                    required
+                                    value={formData.api_secret}
+                                    onChange={handleChange}
+                                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-4 text-slate-900 font-medium focus:outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500/50 transition-all placeholder:text-slate-300 shadow-sm"
+                                    placeholder="Enter Broker API Secret"
+                                />
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Machine ID / IMEI</label>
+                                <div className="relative group">
+                                    <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-blue-500 transition-colors" />
+                                    <input
+                                        name="imei"
+                                        type="text"
+                                        required
+                                        value={formData.imei}
+                                        onChange={handleChange}
+                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-12 pr-4 text-slate-900 font-medium focus:outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500/50 transition-all placeholder:text-slate-300 shadow-sm"
+                                        placeholder="e.g. ABC-123-XYZ"
+                                    />
+                                </div>
+                            </div>
                         </div>
 
                         <button
