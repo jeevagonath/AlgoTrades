@@ -32,6 +32,8 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
         isVirtual: true
     });
     const [status, setStatus] = useState<string>('IDLE');
+    const [engineActivity, setEngineActivity] = useState<string>('Initializing...');
+    const [nextAction, setNextAction] = useState<string>('Waiting for data...');
     const [isPaused, setIsPaused] = useState(false);
     const [manualExpiriesText, setManualExpiriesText] = useState('');
     const [niftyData, setNiftyData] = useState<{ price: number, change: number, changePercent: number, prevClose?: number } | null>(null);
@@ -58,6 +60,8 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                         isVirtual: d.isVirtual !== undefined ? d.isVirtual : true
                     });
                     setStatus(d.status || (d.isActive ? 'ACTIVE' : 'IDLE'));
+                    setEngineActivity(d.engineActivity || 'Engine Ready');
+                    setNextAction(d.nextAction || 'Pending');
                     setIsPaused(d.isPaused || false);
                     if (d.isActive) setExpiryApproved(true);
                 }
@@ -163,8 +167,20 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
             setPnl(0);
         });
 
+        socketService.on('strategy_state', (data: any) => {
+            if (data.status) setStatus(data.status);
+            if (data.engineActivity) setEngineActivity(data.engineActivity);
+            if (data.nextAction) setNextAction(data.nextAction);
+            if (data.pnl !== undefined) setPnl(data.pnl);
+            if (data.peakProfit !== undefined) setPeakProfit(data.peakProfit);
+            if (data.peakLoss !== undefined) setPeakLoss(data.peakLoss);
+            if (data.isPaused !== undefined) setIsPaused(data.isPaused);
+        });
+
         return () => {
             // Cleanup socket listeners if needed
+            socketService.off('system_log');
+            socketService.off('strategy_state');
         };
     }, []);
 
@@ -309,6 +325,20 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                         'bg-slate-700/50 border-slate-600 text-slate-400'
                             }`}>
                             {status.replace(/_/g, ' ')}
+                        </div>
+
+                        {/* System Activity Indicators */}
+                        <div className="flex flex-col gap-0.5 ml-2 border-l border-slate-800 pl-4 py-0.5">
+                            <div className="flex items-center gap-1.5">
+                                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.6)]" />
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter opacity-70">Activity:</span>
+                                <span className="text-[11px] font-black text-blue-300 tracking-tight">{engineActivity || 'N/A'}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <Clock className="w-3 h-3 text-slate-500" />
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter opacity-70">Next Task:</span>
+                                <span className="text-[11px] font-black text-slate-200 tracking-tight">{nextAction || 'N/A'}</span>
+                            </div>
                         </div>
 
                         {/* NIFTY 50 Ticker */}

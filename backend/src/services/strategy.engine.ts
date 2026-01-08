@@ -43,6 +43,9 @@ interface StrategyState {
         lossTime: number;   // Start timestamp
         adjustments: Record<string, number>; // token -> start timestamp
     };
+    nextAction: string; // "Exit at 12:45 PM", "Target Hit", etc.
+    engineActivity: string; // "Watching Spikes", "Waiting for Expiry", etc.
+    lastHeartbeat: string; // ISO string
 }
 
 class StrategyEngine {
@@ -67,7 +70,10 @@ class StrategyEngine {
             profitTime: 0,
             lossTime: 0,
             adjustments: {}
-        }
+        },
+        nextAction: 'Daily 9 AM Evaluation',
+        engineActivity: 'Initializing',
+        lastHeartbeat: new Date().toISOString()
     };
 
     private lastPnlUpdateTime: number = 0;
@@ -116,8 +122,12 @@ class StrategyEngine {
                 const currentStatus = savedState?.status || 'IDLE';
                 if (currentStatus === 'FORCE_EXITED') {
                     this.state.status = 'FORCE_EXITED';
+                    this.state.engineActivity = 'System Locked';
+                    this.state.nextAction = 'Manual Reset Required';
                 } else {
                     this.state.status = 'ACTIVE';
+                    this.state.engineActivity = 'Monitoring Positions';
+                    this.state.nextAction = 'Target/SL or 12:45 Expiry Exit';
                 }
                 this.state.isTradePlaced = true;
                 this.state.isActive = true;
@@ -128,9 +138,13 @@ class StrategyEngine {
                 // No positions - Check if we should be waiting for expiry or idle
                 if (isExpiry) {
                     this.state.status = 'WAITING_FOR_EXPIRY';
+                    this.state.engineActivity = 'Waiting for Expiry Time';
+                    this.state.nextAction = '12:45 PM Exit';
                     this.addLog('🔔 [Strategy] Resumed: Today is EXPIRY DAY. Waiting for 12:45 PM.');
                 } else {
                     this.state.status = 'IDLE';
+                    this.state.engineActivity = 'Idle';
+                    this.state.nextAction = 'Daily 9 AM Expiry Check';
                     this.addLog('💤 [Strategy] Resumed: Normal day. Status IDLE.');
                 }
                 this.state.isTradePlaced = false;
@@ -206,9 +220,13 @@ class StrategyEngine {
 
             if (isExpiry) {
                 this.state.status = 'WAITING_FOR_EXPIRY';
+                this.state.engineActivity = 'Waiting for Expiry Sequence';
+                this.state.nextAction = '12:45 PM Exit';
                 telegramService.sendMessage('🔔 <b>Expiry Day Detected</b>\nAutomated rollover sequence armed.');
             } else {
                 this.state.status = 'IDLE';
+                this.state.engineActivity = 'Watching for Expiry Day';
+                this.state.nextAction = 'Next 9 AM Check';
             }
 
             await this.syncToDb(true);
@@ -233,6 +251,8 @@ class StrategyEngine {
             this.addLog('⏰ [Expiry] 12:45 PM reached. Squaring off positions...');
             await this.exitAllPositions('Expiry Day Rollover');
             this.state.status = 'EXIT_DONE';
+            this.state.engineActivity = 'Exit Sequence Complete';
+            this.state.nextAction = '12:59 PM Strike Selection';
             await this.syncToDb(true);
             telegramService.sendMessage('📤 <b>Expiry Day Exit</b>\nAll positions squared off successfully.');
         }));
@@ -244,6 +264,8 @@ class StrategyEngine {
                 return;
             }
 
+            this.state.engineActivity = 'Selecting Strikes...';
+            this.state.nextAction = '1:00 PM Order Placement';
             this.addLog('🎯 [Expiry] 12:59 PM: Selecting strikes for next week...');
             await this.selectStrikes();
         }));
@@ -255,19 +277,27 @@ class StrategyEngine {
                 return;
             }
 
+            this.state.engineActivity = 'Placing Orders...';
+            this.state.nextAction = 'Verifying Execution';
             this.addLog('🚀 [Expiry] 1:00 PM: Placing orders for new cycle...');
             const res = await this.placeOrder();
             if (res && res.status === 'success') {
                 this.state.status = 'ENTRY_DONE';
+                this.state.engineActivity = 'Verifying Entry';
+                this.state.nextAction = 'Transition to ACTIVE';
                 await this.syncToDb(true);
 
                 setTimeout(async () => {
                     this.state.status = 'ACTIVE';
+                    this.state.engineActivity = 'Monitoring Iron Condor';
+                    this.state.nextAction = 'Target/SL or Weekly Expiry';
                     await this.syncToDb(true);
                     this.addLog('✅ [System] Transitioned to ACTIVE Monitoring.');
                 }, 5000);
             } else {
                 this.state.status = 'FORCE_EXITED';
+                this.state.engineActivity = 'Entry Failed';
+                this.state.nextAction = 'Manual Reset Required';
                 await this.syncToDb(true);
                 this.addLog('❌ [System] Entry Failed. System LOCKED in FORCE_EXITED.');
             }
@@ -583,6 +613,8 @@ class StrategyEngine {
                 this.state.isTradePlaced = true;
                 this.state.isActive = true;
                 this.state.status = 'ENTRY_DONE';    // Transition to ENTRY_DONE
+                this.state.engineActivity = 'Entry Complete';
+                this.state.nextAction = 'Transitioning to Monitoring';
                 this.startMonitoring();
                 await this.syncToDb(true);
 
@@ -591,6 +623,8 @@ class StrategyEngine {
                 // Auto-transition to ACTIVE after a short delay for verification
                 setTimeout(async () => {
                     this.state.status = 'ACTIVE';
+                    this.state.engineActivity = 'Monitoring Iron Condor';
+                    this.state.nextAction = 'Next Weekly Expiry Roll';
                     await this.syncToDb(true);
                     this.addLog('✅ [System] Verify Complete: Engine is now ACTIVE.');
                 }, 5000);
@@ -970,15 +1004,22 @@ class StrategyEngine {
     private async syncToDb(forcePnl: boolean = false) {
         const now = Date.now();
         if (forcePnl || (now - this.lastPnlUpdateTime >= this.PNL_UPDATE_INTERVAL)) {
-            await db.updateState({
+            const statePayload = {
                 status: this.state.status,
                 isActive: this.state.isActive,
-                isVirtual: this.state.isVirtual, // Include to prevent overwriting
+                isVirtual: this.state.isVirtual,
                 isTradePlaced: this.state.isTradePlaced,
                 pnl: this.state.pnl,
                 peakProfit: this.state.peakProfit,
-                peakLoss: this.state.peakLoss
-            });
+                peakLoss: this.state.peakLoss,
+                nextAction: this.state.nextAction,
+                engineActivity: this.state.engineActivity,
+                isPaused: this.state.isPaused,
+                lastHeartbeat: new Date().toISOString()
+            };
+
+            await db.updateState(statePayload);
+            socketService.emit('strategy_state', statePayload);
 
             this.lastPnlUpdateTime = now;
         }
@@ -1035,10 +1076,14 @@ class StrategyEngine {
         this.state.isTradePlaced = false;
 
         // Set status based on reason
-        if (reason.includes('Profit') || reason.includes('Loss')) {
+        if (reason.includes('Profit') || reason.includes('Loss') || reason.includes('MANUAL')) {
             this.state.status = 'FORCE_EXITED';
+            this.state.engineActivity = 'Strategy Terminated';
+            this.state.nextAction = 'Manual Reset Required';
         } else {
             this.state.status = 'IDLE';
+            this.state.engineActivity = 'Waiting for Next Cycle';
+            this.state.nextAction = 'Daily 9 AM Evaluation';
         }
 
         // Save to history before clearing

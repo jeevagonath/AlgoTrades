@@ -23,6 +23,8 @@ export const db = {
         if (state.stopLossPnl !== undefined) payload.stop_loss_pnl = state.stopLossPnl;
         if (state.telegramToken !== undefined) payload.telegram_token = state.telegramToken;
         if (state.telegramChatId !== undefined) payload.telegram_chat_id = state.telegramChatId;
+        if (state.nextAction !== undefined) payload.next_action = state.nextAction;
+        if (state.engineActivity !== undefined) payload.engine_activity = state.engineActivity;
 
         //console.log('[DB] Updating state with payload:', JSON.stringify(payload, null, 2));
 
@@ -149,7 +151,9 @@ export const db = {
                 targetPnl: data.target_pnl,
                 stopLossPnl: data.stop_loss_pnl,
                 telegramToken: data.telegram_token,
-                telegramChatId: data.telegram_chat_id
+                telegramChatId: data.telegram_chat_id,
+                nextAction: data.next_action || '',
+                engineActivity: data.engine_activity || ''
             };
         }
         return null;
