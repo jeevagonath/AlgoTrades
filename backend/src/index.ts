@@ -12,12 +12,13 @@ const app: FastifyInstance = fastify({ logger: true });
 
 // Setup CORS
 app.register(cors, {
-    origin: ["https://algo-trades.vercel.app", "http://localhost:5173"],
+    origin: (origin, cb) => {
+        // Reflect any origin to allow cross-site requests during debugging
+        cb(null, true);
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
     credentials: true,
-    preflightContinue: false,
-    optionsSuccessStatus: 204
 });
 
 // Setup Routes
