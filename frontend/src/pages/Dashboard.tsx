@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Activity, ListOrdered, History, Bell, LogOut, TrendingUp, TrendingDown, Clock, Play, Pause, Octagon, Power, Search, Shield, Settings, Save, X } from 'lucide-react';
+import { Activity, ListOrdered, History, Bell, LogOut, TrendingUp, TrendingDown, Clock, Play, Pause, Octagon, Power, Search, Shield, Settings, Save, X, BarChart3 } from 'lucide-react';
 import { socketService } from '@/services/socket.service';
 import { strategyApi } from '@/services/api.service';
+import { formatTradingViewSymbol, getNiftySpotChartUrl, openTradingViewChart } from '@/utils/tradingview';
 
 const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
     const [pnl, setPnl] = useState(0);
@@ -347,6 +348,13 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                             <span className="text-lg font-bold tracking-tight text-slate-900">
                                 AlgoTrades
                             </span>
+                            <button
+                                onClick={() => openTradingViewChart('NSE:NIFTY')}
+                                className="p-1.5 rounded-lg hover:bg-blue-50 text-slate-400 hover:text-blue-600 transition-colors"
+                                title="View NIFTY Chart"
+                            >
+                                <BarChart3 className="w-4 h-4" />
+                            </button>
                         </div>
 
                         {/* Global Status Badge */}
@@ -752,6 +760,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                                     <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Strike</th>
                                                     <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Avg Price</th>
                                                     <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">LTP</th>
+                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Chart</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-slate-100">
@@ -770,6 +779,20 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                                         <td className="px-6 py-4 text-center font-mono text-sm text-slate-800">₹{leg.entryPrice || '0.00'}</td>
                                                         <td className={`px-6 py-4 text-right font-mono text-sm font-bold tracking-tight ${leg.ltp > leg.entryPrice ? (leg.side === 'BUY' ? 'text-emerald-600' : 'text-rose-600') : (leg.side === 'BUY' ? 'text-rose-600' : 'text-emerald-600')}`}>
                                                             ₹{leg.ltp || '0.00'}
+                                                        </td>
+                                                        <td className="px-6 py-4 text-center">
+                                                            <button
+                                                                onClick={() => {
+                                                                    const tvSymbol = formatTradingViewSymbol(leg.symbol);
+                                                                    if (tvSymbol) {
+                                                                        openTradingViewChart(tvSymbol);
+                                                                    }
+                                                                }}
+                                                                className="p-1.5 rounded-lg hover:bg-blue-50 text-slate-400 hover:text-blue-600 transition-colors"
+                                                                title="View Chart"
+                                                            >
+                                                                <BarChart3 className="w-4 h-4" />
+                                                            </button>
                                                         </td>
                                                     </tr>
                                                 ))}
