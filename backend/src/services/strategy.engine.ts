@@ -235,7 +235,9 @@ class StrategyEngine {
 
         const isExpiry = await this.isExpiryDay();
         if (!isExpiry) {
-            this.addLog('ℹ️ Not expiry day - Positions will be held');
+            if (this.state.selectedStrikes.length > 0) {
+                this.addLog('ℹ️ Not expiry day - Positions will be held');
+            }
             return;
         }
 

@@ -698,8 +698,10 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                         <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
                             <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                                 <h2 className="font-bold text-xs uppercase tracking-wider flex items-center gap-2 text-slate-700">
-                                    <ListOrdered className="w-4 h-4 text-blue-600" />
-                                    Active Positions
+                                    {activeTab === 'positions' && <ListOrdered className="w-4 h-4 text-blue-600" />}
+                                    {activeTab === 'orders' && <History className="w-4 h-4 text-blue-600" />}
+                                    {activeTab === 'alerts' && <Bell className="w-4 h-4 text-blue-600" />}
+                                    {activeTab === 'positions' ? 'Active Positions' : activeTab === 'orders' ? 'Order History' : 'System Alerts'}
                                 </h2>
                             </div>
 
@@ -807,10 +809,13 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                     <div className="lg:col-span-1 space-y-4">
                         <div className="bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col h-[600px] overflow-hidden">
                             <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                                <h2 className="font-bold text-xs uppercase tracking-wider flex items-center gap-2 text-slate-700">
-                                    <ListOrdered className="w-4 h-4 text-blue-600" />
-                                    System Logs
-                                </h2>
+                                <div className="flex flex-col">
+                                    <h2 className="font-bold text-xs uppercase tracking-wider flex items-center gap-2 text-slate-700">
+                                        <ListOrdered className="w-4 h-4 text-blue-600" />
+                                        System Logs
+                                    </h2>
+                                    <span className="text-[8px] font-bold text-slate-300 uppercase tracking-widest ml-6">v1.0.6</span>
+                                </div>
                                 <button
                                     onClick={() => setLogs([])}
                                     className="text-[10px] font-bold text-slate-400 hover:text-rose-500 transition-colors uppercase tracking-widest"
