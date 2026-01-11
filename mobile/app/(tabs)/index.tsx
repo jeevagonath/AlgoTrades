@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { StyleSheet, View, Text, ScrollView, RefreshControl, TouchableOpacity, SafeAreaView, Platform, Linking } from 'react-native';
-import { Activity, Bell, Play, Pause, Octagon, Settings, LogOut, Info, Clock, TrendingUp, TrendingDown, ChevronRight } from 'lucide-react-native';
+import { Activity, Bell, Play, Pause, Octagon, Settings, LogOut, Info, Clock, TrendingUp, TrendingDown, ChevronRight, Calendar, Zap } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MetricCard } from '@/src/components/MetricCard';
@@ -25,6 +25,8 @@ export default function DashboardScreen() {
   const [niftyData, setNiftyData] = useState<{ price: number, change: number, changePercent: number, prevClose?: number } | null>(null);
   const [isVirtual, setIsVirtual] = useState(true);
   const [clientName, setClientName] = useState('Trade User');
+  const [currentWeekExpiry, setCurrentWeekExpiry] = useState('...');
+  const [nextWeekExpiry, setNextWeekExpiry] = useState('...');
 
   const fetchData = useCallback(async () => {
     try {
@@ -46,14 +48,24 @@ export default function DashboardScreen() {
         socketService.subscribe(['26000']);
       }
 
-      // Fetch Client Info (Optional)
       try {
         const clientRes = await authApi.getClient();
         if (clientRes.status === 'success' && clientRes.data) {
           setClientName(clientRes.data.uname || clientRes.data.mname || 'Trade User');
         }
       } catch (err) {
-        console.warn('Could not fetch client info (may not be deployed):', err);
+        console.warn('Could not fetch client info:', err);
+      }
+
+      // Fetch Expiries
+      try {
+        const expiryRes = await strategyApi.getExpiries();
+        if (expiryRes.status === 'success' && expiryRes.data) {
+          setCurrentWeekExpiry(expiryRes.data[0] || 'N/A');
+          setNextWeekExpiry(expiryRes.data[1] || 'N/A');
+        }
+      } catch (err) {
+        console.error('Failed to fetch expiries:', err);
       }
     } catch (err) {
       console.error('Failed to fetch dashboard data:', err);
@@ -170,6 +182,28 @@ export default function DashboardScreen() {
         {/* Nifty Ticker */}
         <Animated.View entering={FadeInDown.delay(100).duration(800)}>
           <NiftyTicker data={niftyData} />
+        </Animated.View>
+
+        {/* Expiry Info */}
+        <Animated.View entering={FadeInDown.delay(150).duration(800)} style={styles.expiryRow}>
+          <View style={styles.expiryItem}>
+            <View style={[styles.expiryIcon, { backgroundColor: 'rgba(59, 130, 246, 0.1)' }]}>
+              <Calendar size={18} color="#3b82f6" />
+            </View>
+            <View>
+              <Text style={styles.expiryLabel}>CURRENT EXPIRY</Text>
+              <Text style={styles.expiryValue}>{currentWeekExpiry}</Text>
+            </View>
+          </View>
+          <View style={styles.expiryItem}>
+            <View style={[styles.expiryIcon, { backgroundColor: 'rgba(16, 185, 129, 0.1)' }]}>
+              <Zap size={18} color="#10b981" />
+            </View>
+            <View>
+              <Text style={styles.expiryLabel}>TRADE EXPIRY</Text>
+              <Text style={styles.expiryValue}>{nextWeekExpiry}</Text>
+            </View>
+          </View>
         </Animated.View>
 
         {/* Primary Metrics */}
@@ -434,5 +468,41 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: 0.5,
     textTransform: 'uppercase',
+  },
+  expiryRow: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    marginTop: 16,
+    gap: 12,
+  },
+  expiryItem: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Theme.colors.surface,
+    padding: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+    gap: 12,
+  },
+  expiryIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  expiryLabel: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: Theme.colors.textDim,
+    letterSpacing: 0.5,
+  },
+  expiryValue: {
+    fontSize: 12,
+    fontWeight: '900',
+    color: Theme.colors.text,
+    marginTop: 1,
   },
 });
