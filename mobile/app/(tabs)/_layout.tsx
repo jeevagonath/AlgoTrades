@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { Home, ListOrdered, History, Settings } from 'lucide-react-native';
+import { Home, ListOrdered, History, Settings, User } from 'lucide-react-native';
 import { Platform } from 'react-native';
 import { Theme } from '@/src/constants/Theme';
 
@@ -47,6 +47,13 @@ export default function TabLayout() {
         options={{
           title: 'Logs',
           tabBarIcon: ({ color }) => <History size={22} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="account"
+        options={{
+          title: 'Account',
+          tabBarIcon: ({ color }) => <User size={22} color={color} />,
         }}
       />
       <Tabs.Screen

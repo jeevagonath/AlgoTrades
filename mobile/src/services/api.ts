@@ -32,6 +32,10 @@ export const authApi = {
         const response = await apiClient.get('/auth/client');
         return response.data;
     },
+    getMargins: async () => {
+        const response = await apiClient.get('/auth/margins');
+        return response.data;
+    },
 };
 
 export const strategyApi = {

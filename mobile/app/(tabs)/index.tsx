@@ -25,8 +25,6 @@ export default function DashboardScreen() {
   const [niftyData, setNiftyData] = useState<{ price: number, change: number, changePercent: number, prevClose?: number } | null>(null);
   const [isVirtual, setIsVirtual] = useState(true);
   const [clientName, setClientName] = useState('Trade User');
-  const [showDetails, setShowDetails] = useState(false);
-  const [clientDetails, setClientDetails] = useState<any>(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -53,7 +51,6 @@ export default function DashboardScreen() {
         const clientRes = await authApi.getClient();
         if (clientRes.status === 'success' && clientRes.data) {
           setClientName(clientRes.data.uname || clientRes.data.mname || 'Trade User');
-          setClientDetails(clientRes.data);
         }
       } catch (err) {
         console.warn('Could not fetch client info (may not be deployed):', err);
@@ -141,47 +138,12 @@ export default function DashboardScreen() {
           <Text style={styles.dashboardTitle}>Strategy Dashboard</Text>
         </View>
         <View style={styles.headerActions}>
-          <TouchableOpacity onPress={() => setShowDetails(!showDetails)} style={styles.infoBtn}>
-            <Info size={20} color={Theme.colors.primary} />
-          </TouchableOpacity>
           <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
             <LogOut size={20} color="#ef4444" />
           </TouchableOpacity>
         </View>
       </View>
 
-      {showDetails && clientDetails && (
-        <Animated.View entering={FadeInDown} style={styles.detailsCard}>
-          <LinearGradient
-            colors={['rgba(30, 41, 59, 0.95)', 'rgba(15, 23, 42, 0.98)']}
-            style={StyleSheet.absoluteFillObject}
-          />
-          <View style={styles.detailsHeader}>
-            <Text style={styles.detailsTitle}>Client Details</Text>
-            <TouchableOpacity onPress={() => setShowDetails(false)}>
-              <Text style={styles.closeText}>Close</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.detailsGrid}>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Client ID</Text>
-              <Text style={styles.detailValue}>{clientDetails.actid || 'N/A'}</Text>
-            </View>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Account Name</Text>
-              <Text style={styles.detailValue}>{clientDetails.uname || 'N/A'}</Text>
-            </View>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Broker</Text>
-              <Text style={styles.detailValue}>Shoonya (Finvasia)</Text>
-            </View>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Email</Text>
-              <Text style={styles.detailValue}>{clientDetails.email || 'N/A'}</Text>
-            </View>
-          </View>
-        </Animated.View>
-      )}
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -328,16 +290,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 10,
   },
-  infoBtn: {
-    width: 44,
-    height: 44,
-    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-    borderRadius: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(59, 130, 246, 0.15)',
-  },
   logoutBtn: {
     width: 44,
     height: 44,
@@ -347,57 +299,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: 'rgba(239, 68, 68, 0.15)',
-  },
-  detailsCard: {
-    marginHorizontal: 20,
-    marginTop: -10,
-    marginBottom: 20,
-    padding: 20,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    overflow: 'hidden',
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-  },
-  detailsHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
-    paddingBottom: 10,
-  },
-  detailsTitle: {
-    color: Theme.colors.text,
-    fontSize: 18,
-    fontWeight: '900',
-    letterSpacing: -0.5,
-  },
-  closeText: {
-    color: Theme.colors.primary,
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  detailsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 20,
-  },
-  detailItem: {
-    width: '45%',
-  },
-  detailLabel: {
-    color: Theme.colors.textDim,
-    fontSize: 11,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: 4,
   },
   detailValue: {
     color: Theme.colors.text,
