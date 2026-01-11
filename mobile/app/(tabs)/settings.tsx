@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { StyleSheet, View, Text, ScrollView, RefreshControl, TouchableOpacity, TextInput, Switch, Alert, Platform, KeyboardAvoidingView } from 'react-native';
-import { Settings, Clock, Target, Shield, Bell, Save, Trash2, Calendar, ShieldCheck, Database, Info } from 'lucide-react-native';
+import { Settings, Clock, Target, Shield, Bell, Save, Trash2, Calendar, ShieldCheck, Database, Info, ChevronRight } from 'lucide-react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { strategyApi } from '@/src/services/api';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -19,6 +20,8 @@ export default function SettingsScreen() {
         isVirtual: true
     });
     const [manualExpiries, setManualExpiries] = useState('');
+    const [showEntryPicker, setShowEntryPicker] = useState(false);
+    const [showExitPicker, setShowExitPicker] = useState(false);
 
     const fetchSettings = useCallback(async () => {
         try {
@@ -90,6 +93,33 @@ export default function SettingsScreen() {
         setSettings(prev => ({ ...prev, [field]: value }));
     };
 
+    const parseTimeToDate = (timeStr: string) => {
+        const [hours, minutes] = timeStr.split(':').map(Number);
+        const date = new Date();
+        date.setHours(hours || 0, minutes || 0, 0, 0);
+        return date;
+    };
+
+    const formatTimeToString = (date: Date) => {
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        return `${hours}:${minutes}`;
+    };
+
+    const onEntryTimeChange = (event: any, selectedDate?: Date) => {
+        setShowEntryPicker(Platform.OS === 'ios');
+        if (selectedDate) {
+            updateField('entryTime', formatTimeToString(selectedDate));
+        }
+    };
+
+    const onExitTimeChange = (event: any, selectedDate?: Date) => {
+        setShowExitPicker(Platform.OS === 'ios');
+        if (selectedDate) {
+            updateField('exitTime', formatTimeToString(selectedDate));
+        }
+    };
+
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -118,23 +148,41 @@ export default function SettingsScreen() {
                     <View style={styles.grid}>
                         <View style={styles.inputGroup}>
                             <Text style={styles.label}>ENTRY TIME</Text>
-                            <TextInput
-                                style={styles.input}
-                                value={settings.entryTime}
-                                onChangeText={(v) => updateField('entryTime', v)}
-                                placeholder="12:59"
-                                placeholderTextColor={Theme.colors.textDim}
-                            />
+                            <TouchableOpacity
+                                style={styles.timePickerBtn}
+                                onPress={() => setShowEntryPicker(true)}
+                            >
+                                <Text style={styles.timeValue}>{settings.entryTime}</Text>
+                                <ChevronRight size={16} color={Theme.colors.textDim} />
+                            </TouchableOpacity>
+                            {showEntryPicker && (
+                                <DateTimePicker
+                                    value={parseTimeToDate(settings.entryTime)}
+                                    mode="time"
+                                    is24Hour={true}
+                                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                    onChange={onEntryTimeChange}
+                                />
+                            )}
                         </View>
                         <View style={styles.inputGroup}>
                             <Text style={styles.label}>EXIT TIME</Text>
-                            <TextInput
-                                style={styles.input}
-                                value={settings.exitTime}
-                                onChangeText={(v) => updateField('exitTime', v)}
-                                placeholder="15:15"
-                                placeholderTextColor={Theme.colors.textDim}
-                            />
+                            <TouchableOpacity
+                                style={styles.timePickerBtn}
+                                onPress={() => setShowExitPicker(true)}
+                            >
+                                <Text style={styles.timeValue}>{settings.exitTime}</Text>
+                                <ChevronRight size={16} color={Theme.colors.textDim} />
+                            </TouchableOpacity>
+                            {showExitPicker && (
+                                <DateTimePicker
+                                    value={parseTimeToDate(settings.exitTime)}
+                                    mode="time"
+                                    is24Hour={true}
+                                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                    onChange={onExitTimeChange}
+                                />
+                            )}
                         </View>
                     </View>
                 </Animated.View>
@@ -201,7 +249,7 @@ export default function SettingsScreen() {
                             onChangeText={(v) => updateField('telegramToken', v)}
                             placeholder="Bot Token..."
                             placeholderTextColor={Theme.colors.textDim}
-                            secureTextEntry
+                            secureTextEntry={true}
                         />
                     </View>
                     <View style={styles.inputGroupFull}>
@@ -230,7 +278,7 @@ export default function SettingsScreen() {
                             onChangeText={setManualExpiries}
                             placeholder='{"expiryDates": ["13-JAN-2026"]}'
                             placeholderTextColor={Theme.colors.textDim}
-                            multiline
+                            multiline={true}
                             numberOfLines={4}
                         />
                     </View>
@@ -352,6 +400,23 @@ const styles = StyleSheet.create({
         color: Theme.colors.text,
         borderWidth: 1,
         borderColor: 'rgba(255, 255, 255, 0.05)',
+    },
+    timePickerBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: 'rgba(255, 255, 255, 0.03)',
+        borderRadius: 14,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.05)',
+    },
+    timeValue: {
+        fontSize: 15,
+        fontWeight: '800',
+        color: Theme.colors.text,
+        fontFamily: Platform.OS === 'android' ? 'monospace' : 'Menlo',
     },
     mono: {
         fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
