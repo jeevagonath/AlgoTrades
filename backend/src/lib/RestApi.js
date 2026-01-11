@@ -91,6 +91,7 @@ var NorenRestApi = function (params) {
     if (self.__susertoken)
       payload = payload + `&jKey=${self.__susertoken}`;
 
+    console.log(`[Shoonya] POST ${url} payload: ${payload}`);
     return axios.post(url, payload);
   }
 
@@ -472,6 +473,7 @@ var NorenRestApi = function (params) {
   self.get_user_details = function () {
     let values = {};
     values["uid"] = self.__username;
+    values["actid"] = self.__accountid;
 
     let reply = post_request("user_details", values, self.__susertoken);
     return reply;
@@ -480,6 +482,7 @@ var NorenRestApi = function (params) {
   self.get_client_details = function () {
     let values = {};
     values["uid"] = self.__username;
+    values["actid"] = self.__accountid;
 
     let reply = post_request("client_details", values, self.__susertoken);
     return reply;
