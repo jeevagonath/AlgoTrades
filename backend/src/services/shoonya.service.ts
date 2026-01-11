@@ -284,6 +284,42 @@ class ShoonyaService {
                 .catch(reject);
         });
     }
+
+    async getUserDetails() {
+        return new Promise((resolve, reject) => {
+            if (!this.api.get_user_details) {
+                reject('API get_user_details not defined');
+                return;
+            }
+            this.api.get_user_details()
+                .then((res: any) => {
+                    if (res.stat === 'Ok') {
+                        resolve(res);
+                    } else {
+                        reject(res);
+                    }
+                })
+                .catch(reject);
+        });
+    }
+
+    async getClientDetails() {
+        return new Promise((resolve, reject) => {
+            if (!this.api.get_client_details) {
+                reject('API get_client_details not defined');
+                return;
+            }
+            this.api.get_client_details()
+                .then((res: any) => {
+                    if (res.stat === 'Ok') {
+                        resolve(res);
+                    } else {
+                        reject(res);
+                    }
+                })
+                .catch(reject);
+        });
+    }
 }
 
 export const shoonya = new ShoonyaService();

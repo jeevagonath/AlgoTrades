@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Activity, ListOrdered, History, Bell, LogOut, TrendingUp, TrendingDown, Clock, Play, Pause, Octagon, Power, Search, Shield, Settings, Save, X, BarChart3 } from 'lucide-react';
 import { socketService } from '@/services/socket.service';
-import { strategyApi } from '@/services/api.service';
+import { strategyApi, authApi } from '@/services/api.service';
 import { formatTradingViewSymbol, getNiftySpotChartUrl, openTradingViewChart } from '@/utils/tradingview';
 import { useAnimatedValue, useFlashOnChange } from '@/hooks/useAnimations';
 
@@ -184,6 +184,9 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
     const [isPaused, setIsPaused] = useState(false);
     const [manualExpiriesText, setManualExpiriesText] = useState('');
     const [niftyData, setNiftyData] = useState<{ price: number, change: number, changePercent: number, prevClose?: number } | null>(null);
+    const [clientName, setClientName] = useState('Trade User');
+    const [clientDetails, setClientDetails] = useState<any>(null);
+    const [showClientModal, setShowClientModal] = useState(false);
 
     useEffect(() => {
         socketService.connect();
@@ -249,6 +252,17 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                     }
                 } catch (err) {
                     console.error('Failed to fetch NIFTY spot:', err);
+                }
+
+                // Fetch Client Info
+                try {
+                    const clientRes = await authApi.getClient();
+                    if (clientRes.status === 'success' && clientRes.data) {
+                        setClientName(clientRes.data.uname || clientRes.data.mname || 'Trade User');
+                        setClientDetails(clientRes.data);
+                    }
+                } catch (err) {
+                    console.error('Failed to fetch client details:', err);
                 }
 
                 // 5. Fetch Orders
@@ -580,6 +594,13 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
 
                             <div className="flex items-center gap-2">
                                 <button
+                                    onClick={() => setShowClientModal(true)}
+                                    className="p-2 rounded-lg border bg-white border-slate-200 text-slate-500 hover:bg-slate-50"
+                                    title="Account Details"
+                                >
+                                    <Shield className="w-4 h-4" />
+                                </button>
+                                <button
                                     onClick={() => setShowSettings(!showSettings)}
                                     className={`p-2 rounded-lg border transition-all ${showSettings
                                         ? 'bg-blue-50 border-blue-200 text-blue-600'
@@ -732,8 +753,15 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
             <main className="flex-1 max-w-[1600px] mx-auto w-full p-6 space-y-6 relative z-10">
                 {/* Header Info Row */}
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                    <div>
-                        <h1 className="text-2xl font-black text-slate-900 tracking-tight">Strategy Dashboard</h1>
+                    <div className="flex flex-col">
+                        <div className="flex items-center gap-3 mb-1">
+                            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white text-xs font-black shadow-lg shadow-blue-200">
+                                {(clientName || 'U').charAt(0).toUpperCase()}
+                            </div>
+                            <h1 className="text-2xl font-black text-slate-900 tracking-tight leading-none uppercase">
+                                Welcome, {clientName}
+                            </h1>
+                        </div>
                         <div className="flex items-center gap-2 mt-1">
                             <span className="text-slate-500 text-xs font-medium">Monitoring</span>
                             <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-[10px] font-bold border border-blue-100 uppercase">Iron Condor</span>
@@ -1000,6 +1028,51 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                     </div>
                 </div>
             </main>
+
+            {/* Client Details Modal */}
+            {showClientModal && clientDetails && (
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl border border-slate-200 animate-in fade-in zoom-in duration-200">
+                        <div className="bg-slate-900 p-6 flex justify-between items-center text-white">
+                            <div>
+                                <h2 className="text-xl font-black tracking-tight leading-none italic uppercase">Account Info</h2>
+                                <p className="text-xs text-slate-400 mt-2 font-bold uppercase tracking-wider">Shoonya Pro Trader</p>
+                            </div>
+                            <button onClick={() => setShowClientModal(false)} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="p-8 space-y-6">
+                            <div className="grid grid-cols-2 gap-8">
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Client ID</label>
+                                    <p className="font-black text-slate-900 leading-none">{clientDetails.actid || 'N/A'}</p>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">User Name</label>
+                                    <p className="font-black text-slate-900 leading-none">{clientDetails.uname || 'N/A'}</p>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Email</label>
+                                    <p className="font-bold text-slate-900 leading-none break-all">{clientDetails.email || 'N/A'}</p>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Broker</label>
+                                    <p className="font-black text-slate-900 leading-none italic">FINVASIA</p>
+                                </div>
+                            </div>
+                            <div className="pt-6 border-t border-slate-100 flex justify-end">
+                                <button
+                                    onClick={() => setShowClientModal(false)}
+                                    className="px-6 py-2.5 bg-slate-900 text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-slate-800 transition-all shadow-md active:scale-95"
+                                >
+                                    Dismiss
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

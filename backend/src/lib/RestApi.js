@@ -46,6 +46,8 @@ var NorenRestApi = function (params) {
     'scripinfo': '/GetSecurityInfo',
     'getquotes': '/GetQuotes',
     'basket_margin': '/MarginCalculator/BasketMargin',
+    'user_details': '/UserDetails',
+    'client_details': '/ClientDetails',
   }
 
   axios.defaults.timeout = API.timeout || 10000;
@@ -464,6 +466,22 @@ var NorenRestApi = function (params) {
     values["list"] = params.list;
 
     let reply = post_request("basket_margin", values, self.__susertoken);
+    return reply;
+  };
+
+  self.get_user_details = function () {
+    let values = {};
+    values["uid"] = self.__username;
+
+    let reply = post_request("user_details", values, self.__susertoken);
+    return reply;
+  };
+
+  self.get_client_details = function () {
+    let values = {};
+    values["uid"] = self.__username;
+
+    let reply = post_request("client_details", values, self.__susertoken);
     return reply;
   };
   /**

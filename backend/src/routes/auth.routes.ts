@@ -25,4 +25,22 @@ export async function authRoutes(app: FastifyInstance) {
             return reply.status(500).send({ status: 'error', message: err.message });
         }
     });
+
+    app.get('/user', async (request, reply) => {
+        try {
+            const res = await shoonya.getUserDetails();
+            return { status: 'success', data: res };
+        } catch (err) {
+            return reply.status(500).send({ status: 'error', message: 'Failed to fetch user details', detail: err });
+        }
+    });
+
+    app.get('/client', async (request, reply) => {
+        try {
+            const res = await shoonya.getClientDetails();
+            return { status: 'success', data: res };
+        } catch (err) {
+            return reply.status(500).send({ status: 'error', message: 'Failed to fetch client details', detail: err });
+        }
+    });
 }
