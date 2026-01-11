@@ -43,4 +43,13 @@ export async function authRoutes(app: FastifyInstance) {
             return reply.status(500).send({ status: 'error', message: 'Failed to fetch client details', detail: err });
         }
     });
+
+    app.get('/margins', async (request, reply) => {
+        try {
+            const res = await shoonya.getLimits();
+            return { status: 'success', data: res };
+        } catch (err) {
+            return reply.status(500).send({ status: 'error', message: 'Failed to fetch account margins', detail: err });
+        }
+    });
 }

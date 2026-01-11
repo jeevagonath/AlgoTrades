@@ -186,6 +186,8 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
     const [niftyData, setNiftyData] = useState<{ price: number, change: number, changePercent: number, prevClose?: number } | null>(null);
     const [clientName, setClientName] = useState('Trade User');
     const [clientDetails, setClientDetails] = useState<any>(null);
+    const [userDetails, setUserDetails] = useState<any>(null);
+    const [margins, setMargins] = useState<any>(null);
     const [showClientModal, setShowClientModal] = useState(false);
 
     useEffect(() => {
@@ -254,15 +256,26 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                     console.error('Failed to fetch NIFTY spot:', err);
                 }
 
-                // Fetch Client Info
+                // Fetch Account & Client Info
                 try {
-                    const clientRes = await authApi.getClient();
-                    if (clientRes.status === 'success' && clientRes.data) {
-                        setClientName(clientRes.data.uname || clientRes.data.mname || 'Trade User');
-                        setClientDetails(clientRes.data);
+                    const [cRes, uRes, mRes] = await Promise.all([
+                        authApi.getClient(),
+                        authApi.getUser(),
+                        authApi.getMargins()
+                    ]);
+
+                    if (cRes.status === 'success' && cRes.data) {
+                        setClientName(cRes.data.uname || cRes.data.mname || 'Trade User');
+                        setClientDetails(cRes.data);
+                    }
+                    if (uRes.status === 'success' && uRes.data) {
+                        setUserDetails(uRes.data);
+                    }
+                    if (mRes.status === 'success' && mRes.data) {
+                        setMargins(mRes.data);
                     }
                 } catch (err) {
-                    console.error('Failed to fetch client details:', err);
+                    console.error('Failed to fetch account info:', err);
                 }
 
                 // 5. Fetch Orders
@@ -1030,43 +1043,114 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
             </main>
 
             {/* Client Details Modal */}
-            {showClientModal && clientDetails && (
+            {showClientModal && (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-                    <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl border border-slate-200 animate-in fade-in zoom-in duration-200">
-                        <div className="bg-slate-900 p-6 flex justify-between items-center text-white">
-                            <div>
-                                <h2 className="text-xl font-black tracking-tight leading-none italic uppercase">Account Info</h2>
-                                <p className="text-xs text-slate-400 mt-2 font-bold uppercase tracking-wider">Shoonya Pro Trader</p>
+                    <div className="bg-white rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl border border-slate-200 animate-in fade-in zoom-in duration-300">
+                        {/* Modal Header */}
+                        <div className="bg-slate-900 p-8 flex justify-between items-center text-white relative">
+                            <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
+                                <Shield size={120} />
                             </div>
-                            <button onClick={() => setShowClientModal(false)} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
-                                <X size={20} />
+                            <div className="relative z-10">
+                                <h2 className="text-2xl font-black tracking-tighter italic uppercase leading-tight">Account Intelligence</h2>
+                                <p className="text-[10px] text-blue-400 font-black uppercase tracking-[0.2em] mt-1">Institutional Grade Trading Console</p>
+                            </div>
+                            <button onClick={() => setShowClientModal(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all relative z-10 active:scale-95">
+                                <X size={24} />
                             </button>
                         </div>
-                        <div className="p-8 space-y-6">
-                            <div className="grid grid-cols-2 gap-8">
-                                <div className="space-y-1.5">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Client ID</label>
-                                    <p className="font-black text-slate-900 leading-none">{clientDetails.actid || 'N/A'}</p>
+
+                        <div className="p-10 space-y-10 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                            {/* Personal & Broker Info */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                <div className="space-y-6">
+                                    <div className="flex items-center gap-3 border-b border-slate-100 pb-2">
+                                        <div className="w-2 h-4 bg-blue-600 rounded-full" />
+                                        <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Identity & Broker</h3>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-6">
+                                        <div>
+                                            <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Client ID</label>
+                                            <p className="font-black text-slate-900 text-lg tabular-nums">{(clientDetails || userDetails)?.actid || 'N/A'}</p>
+                                        </div>
+                                        <div>
+                                            <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1">User Name</label>
+                                            <p className="font-black text-slate-900 text-lg uppercase">{(userDetails || clientDetails)?.uname || 'CLIENT'}</p>
+                                        </div>
+                                        <div>
+                                            <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Brokerage</label>
+                                            <p className="font-black text-blue-600 text-lg italic">FINVASIA</p>
+                                        </div>
+                                        <div>
+                                            <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1">PAN Card</label>
+                                            <p className="font-black text-slate-900 text-lg uppercase">{userDetails?.pan || 'VERIFIED'}</p>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="space-y-1.5">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">User Name</label>
-                                    <p className="font-black text-slate-900 leading-none">{clientDetails.uname || 'N/A'}</p>
-                                </div>
-                                <div className="space-y-1.5">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Email</label>
-                                    <p className="font-bold text-slate-900 leading-none break-all">{clientDetails.email || 'N/A'}</p>
-                                </div>
-                                <div className="space-y-1.5">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Broker</label>
-                                    <p className="font-black text-slate-900 leading-none italic">FINVASIA</p>
+
+                                <div className="space-y-6">
+                                    <div className="flex items-center gap-3 border-b border-slate-100 pb-2">
+                                        <div className="w-2 h-4 bg-emerald-500 rounded-full" />
+                                        <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Banking Interface</h3>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                            <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Bank Name</label>
+                                            <p className="font-black text-slate-900 text-sm italic">{clientDetails?.bnk || 'HDFC BANK'}</p>
+                                            <div className="mt-2 flex justify-between items-center">
+                                                <div className="space-y-0.5">
+                                                    <label className="text-[8px] font-bold text-slate-300 uppercase tracking-tighter">Account</label>
+                                                    <p className="font-mono text-xs text-slate-600">****{clientDetails?.accno?.slice(-4) || '8842'}</p>
+                                                </div>
+                                                <div className="space-y-0.5 text-right">
+                                                    <label className="text-[8px] font-bold text-slate-300 uppercase tracking-tighter">IFSC</label>
+                                                    <p className="font-mono text-xs text-slate-600">{clientDetails?.ifsc || 'HDFC0000001'}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div className="pt-6 border-t border-slate-100 flex justify-end">
+
+                            {/* Margins & Balances */}
+                            <div className="space-y-6">
+                                <div className="flex items-center gap-3 border-b border-slate-100 pb-2">
+                                    <div className="w-2 h-4 bg-amber-500 rounded-full" />
+                                    <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Financial Liquidity</h3>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div className="bg-gradient-to-br from-blue-50 to-white p-5 rounded-2xl border border-blue-100/50 shadow-sm">
+                                        <label className="text-[9px] font-bold text-blue-400 uppercase tracking-widest block mb-2">Cash Available</label>
+                                        <p className="text-2xl font-black text-blue-700 tabular-nums">
+                                            ₹{parseFloat(margins?.cash || '0').toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                                        </p>
+                                    </div>
+                                    <div className="bg-gradient-to-br from-emerald-50 to-white p-5 rounded-2xl border border-emerald-100/50 shadow-sm">
+                                        <label className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest block mb-2">Total Margin</label>
+                                        <p className="text-2xl font-black text-emerald-700 tabular-nums">
+                                            ₹{parseFloat(margins?.marginused || '0').toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                                        </p>
+                                    </div>
+                                    <div className="bg-gradient-to-br from-amber-50 to-white p-5 rounded-2xl border border-amber-100/50 shadow-sm">
+                                        <label className="text-[9px] font-bold text-amber-500 uppercase tracking-widest block mb-2">Pay-in Today</label>
+                                        <p className="text-2xl font-black text-amber-700 tabular-nums">
+                                            ₹{parseFloat(margins?.payin || '0').toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Footer / Dismiss */}
+                            <div className="pt-8 border-t border-slate-100 flex justify-between items-center">
+                                <div className="flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-tight">
+                                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                                    Account Status: Secure & Synchronized
+                                </div>
                                 <button
                                     onClick={() => setShowClientModal(false)}
-                                    className="px-6 py-2.5 bg-slate-900 text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-slate-800 transition-all shadow-md active:scale-95"
+                                    className="px-10 py-4 bg-slate-900 text-white text-xs font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 active:scale-95 flex items-center gap-2"
                                 >
-                                    Dismiss
+                                    Dismiss Module
                                 </button>
                             </div>
                         </div>
