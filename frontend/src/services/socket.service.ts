@@ -2,7 +2,7 @@ import { io, Socket } from 'socket.io-client';
 
 class SocketService {
     private socket: Socket | null = null;
-    connect(url: string = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001') {
+    connect(url: string = import.meta.env.VITE_SOCKET_URL || 'https://algotradesservice.onrender.com/') {
         this.socket = io(url, {
             transports: ['websocket']
         });
