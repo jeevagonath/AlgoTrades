@@ -151,10 +151,16 @@ class ShoonyaService {
                 console.log('[Shoonya] WebSocket Connected');
                 // Auto subscribe to Nifty spot
                 if (this.api.web_socket) {
+                    console.log('[Shoonya] Subscribing to Nifty Spot (NSE|26000)');
                     this.api.subscribe(['NSE|26000']);
                 }
             },
             quote: (tick: any) => {
+                // Log only important ticks to avoid flooding
+                if (tick.tk === '26000') {
+                    // console.log('[Shoonya] Nifty Spot Tick:', tick.lp);
+                }
+
                 this.tickListeners.forEach(cb => cb(tick));
                 // Also emit globally for UI convenience
                 import('./socket.service').then(({ socketService }) => {
@@ -162,6 +168,7 @@ class ShoonyaService {
                 }).catch(() => { });
             },
             order: (order: any) => {
+                console.log('[Shoonya] Order Update:', order);
                 this.orderListeners.forEach(cb => cb(order));
             }
         });
@@ -177,6 +184,7 @@ class ShoonyaService {
         setTimeout(() => {
             if (this.api && this.api.web_socket) {
                 try {
+                    console.log('[Shoonya] Subscribing to tokens:', tokens);
                     this.api.subscribe(tokens);
                 } catch (e) {
                     console.error('[Shoonya] Subscription error:', e);

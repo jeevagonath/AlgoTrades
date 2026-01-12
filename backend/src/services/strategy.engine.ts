@@ -876,6 +876,7 @@ class StrategyEngine {
 
         // 1. Always emit NIFTY updates (token 26000) for the frontend ticker
         if (token === '26000') {
+            // console.log('[Strategy] Nifty Tick Emitted:', ltp);
             socketService.emit('price_update', {
                 token,
                 lp: tick.lp,
