@@ -3,7 +3,7 @@ import { io, Socket } from 'socket.io-client';
 class SocketService {
     private socket: Socket | null = null;
 
-    connect(url: string = 'http://192.168.1.10:3001') {
+    connect(url: string = 'https://algotradesservice.onrender.com/') {
         if (this.socket) return;
 
         this.socket = io(url, {

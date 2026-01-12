@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // For production: 'https://algotradesservice.onrender.com/api'
 // For local testing: 'http://10.0.2.2:3001/api' (Android Emulator) or your computer's local IP
-const API_BASE_URL = 'http://192.168.1.10:3001/api';
+const API_BASE_URL = 'https://algotradesservice.onrender.com/api';
 
 const apiClient = axios.create({
     baseURL: API_BASE_URL,

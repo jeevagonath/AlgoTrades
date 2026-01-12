@@ -1328,3 +1328,80 @@ Payload: jData={"uid":"FA22136","exch":"NSE","token":"26000"}&jKey=82fafcd6d07a1
 Status: 200
 Data: {"request_time":"20:06:07 07-01-2026","stat":"Ok","exch":"NSE","tsym":"Nifty 50","cname":"NIFTY INDEX","symname":"NIFTY","seg":"EQT","instname":"UNDIND","pp":"2","ls":"1","ti":"0.05","mult":"1","lut":"1767785957","wk52_h":"26373.20","wk52_l":"21743.65","toi":"57178400","cutof_all":"false","prcftr_d":"(1 / 1 ) * (1 / 1)","token":"26000","lp":"26140.75","c":"26178.70","h":"26187.15","l":"26067.90","o":"26143.10"}
 ---
+[2026-01-12T03:48:46.148Z] REQUEST: post https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Payload: [object Object]
+---
+[2026-01-12T03:48:47.205Z] RESPONSE: https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Status: 200
+Data: {"ok":true,"result":{"message_id":164,"from":{"id":8494833053,"is_bot":true,"first_name":"OptionSellingVercel","username":"Option_Selling_Vercel_Bot"},"chat":{"id":5177480141,"first_name":"Gonath","username":"itsmegonath","type":"private"},"date":1768189726,"text":"🚀 Strategy Engine Resumed\nStatus: IDLE\nActivity: Idle\nMode: VIRTUAL","entities":[{"offset":3,"length":23,"type":"bold"}]}}
+---
+[2026-01-12T03:53:37.095Z] REQUEST: post https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Payload: [object Object]
+---
+[2026-01-12T03:53:37.955Z] RESPONSE: https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Status: 200
+Data: {"ok":true,"result":{"message_id":165,"from":{"id":8494833053,"is_bot":true,"first_name":"OptionSellingVercel","username":"Option_Selling_Vercel_Bot"},"chat":{"id":5177480141,"first_name":"Gonath","username":"itsmegonath","type":"private"},"date":1768190017,"text":"🚀 Strategy Engine Resumed\nStatus: IDLE\nActivity: Idle\nMode: VIRTUAL","entities":[{"offset":3,"length":23,"type":"bold"}]}}
+---
+[2026-01-12T03:54:27.184Z] REQUEST: post https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Payload: [object Object]
+---
+[2026-01-12T03:54:27.935Z] RESPONSE: https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Status: 200
+Data: {"ok":true,"result":{"message_id":166,"from":{"id":8494833053,"is_bot":true,"first_name":"OptionSellingVercel","username":"Option_Selling_Vercel_Bot"},"chat":{"id":5177480141,"first_name":"Gonath","username":"itsmegonath","type":"private"},"date":1768190067,"text":"🚀 Strategy Engine Resumed\nStatus: IDLE\nActivity: Idle\nMode: VIRTUAL","entities":[{"offset":3,"length":23,"type":"bold"}]}}
+---
+[2026-01-12T03:54:54.915Z] REQUEST: post https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Payload: [object Object]
+---
+[2026-01-12T03:54:55.753Z] RESPONSE: https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Status: 200
+Data: {"ok":true,"result":{"message_id":167,"from":{"id":8494833053,"is_bot":true,"first_name":"OptionSellingVercel","username":"Option_Selling_Vercel_Bot"},"chat":{"id":5177480141,"first_name":"Gonath","username":"itsmegonath","type":"private"},"date":1768190095,"text":"🚀 Strategy Engine Resumed\nStatus: IDLE\nActivity: Idle\nMode: VIRTUAL","entities":[{"offset":3,"length":23,"type":"bold"}]}}
+---
+[2026-01-12T03:55:09.586Z] REQUEST: post https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Payload: [object Object]
+---
+[2026-01-12T03:55:10.372Z] RESPONSE: https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Status: 200
+Data: {"ok":true,"result":{"message_id":168,"from":{"id":8494833053,"is_bot":true,"first_name":"OptionSellingVercel","username":"Option_Selling_Vercel_Bot"},"chat":{"id":5177480141,"first_name":"Gonath","username":"itsmegonath","type":"private"},"date":1768190110,"text":"🚀 Strategy Engine Resumed\nStatus: IDLE\nActivity: Idle\nMode: VIRTUAL","entities":[{"offset":3,"length":23,"type":"bold"}]}}
+---
+[2026-01-12T03:55:48.721Z] REQUEST: post https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Payload: [object Object]
+---
+[2026-01-12T03:55:49.517Z] RESPONSE: https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Status: 200
+Data: {"ok":true,"result":{"message_id":169,"from":{"id":8494833053,"is_bot":true,"first_name":"OptionSellingVercel","username":"Option_Selling_Vercel_Bot"},"chat":{"id":5177480141,"first_name":"Gonath","username":"itsmegonath","type":"private"},"date":1768190149,"text":"🚀 Strategy Engine Resumed\nStatus: IDLE\nActivity: Idle\nMode: VIRTUAL","entities":[{"offset":3,"length":23,"type":"bold"}]}}
+---
+[2026-01-12T03:57:24.924Z] REQUEST: post https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Payload: [object Object]
+---
+[2026-01-12T03:57:25.734Z] RESPONSE: https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Status: 200
+Data: {"ok":true,"result":{"message_id":170,"from":{"id":8494833053,"is_bot":true,"first_name":"OptionSellingVercel","username":"Option_Selling_Vercel_Bot"},"chat":{"id":5177480141,"first_name":"Gonath","username":"itsmegonath","type":"private"},"date":1768190245,"text":"🚀 Strategy Engine Resumed\nStatus: IDLE\nActivity: Idle\nMode: VIRTUAL","entities":[{"offset":3,"length":23,"type":"bold"}]}}
+---
+[2026-01-12T03:58:12.607Z] REQUEST: post https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Payload: [object Object]
+---
+[2026-01-12T03:58:13.405Z] RESPONSE: https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Status: 200
+Data: {"ok":true,"result":{"message_id":171,"from":{"id":8494833053,"is_bot":true,"first_name":"OptionSellingVercel","username":"Option_Selling_Vercel_Bot"},"chat":{"id":5177480141,"first_name":"Gonath","username":"itsmegonath","type":"private"},"date":1768190293,"text":"🚀 Strategy Engine Resumed\nStatus: IDLE\nActivity: Idle\nMode: VIRTUAL","entities":[{"offset":3,"length":23,"type":"bold"}]}}
+---
+[2026-01-12T03:59:53.739Z] REQUEST: post https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Payload: [object Object]
+---
+[2026-01-12T03:59:54.599Z] RESPONSE: https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Status: 200
+Data: {"ok":true,"result":{"message_id":172,"from":{"id":8494833053,"is_bot":true,"first_name":"OptionSellingVercel","username":"Option_Selling_Vercel_Bot"},"chat":{"id":5177480141,"first_name":"Gonath","username":"itsmegonath","type":"private"},"date":1768190394,"text":"🚀 Strategy Engine Resumed\nStatus: IDLE\nActivity: Idle\nMode: VIRTUAL","entities":[{"offset":3,"length":23,"type":"bold"}]}}
+---
+[2026-01-12T04:10:53.897Z] REQUEST: post https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Payload: [object Object]
+---
+[2026-01-12T04:10:54.785Z] RESPONSE: https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Status: 200
+Data: {"ok":true,"result":{"message_id":174,"from":{"id":8494833053,"is_bot":true,"first_name":"OptionSellingVercel","username":"Option_Selling_Vercel_Bot"},"chat":{"id":5177480141,"first_name":"Gonath","username":"itsmegonath","type":"private"},"date":1768191054,"text":"🚀 Strategy Engine Resumed\nStatus: IDLE\nActivity: Idle\nMode: VIRTUAL","entities":[{"offset":3,"length":23,"type":"bold"}]}}
+---
+[2026-01-12T04:14:15.725Z] REQUEST: post https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Payload: [object Object]
+---
+[2026-01-12T04:14:16.533Z] RESPONSE: https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Status: 200
+Data: {"ok":true,"result":{"message_id":175,"from":{"id":8494833053,"is_bot":true,"first_name":"OptionSellingVercel","username":"Option_Selling_Vercel_Bot"},"chat":{"id":5177480141,"first_name":"Gonath","username":"itsmegonath","type":"private"},"date":1768191256,"text":"🚀 Strategy Engine Resumed\nStatus: IDLE\nActivity: Idle\nMode: VIRTUAL","entities":[{"offset":3,"length":23,"type":"bold"}]}}
+---
