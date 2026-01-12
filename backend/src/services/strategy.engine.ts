@@ -131,7 +131,6 @@ class StrategyEngine {
                 }
                 this.state.isTradePlaced = true;
                 this.state.isActive = true;
-                this.startMonitoring();
                 this.calculatePnL();
                 this.addLog(`[Strategy] Resumed ACTIVE: Found ${positions.length} positions.`);
             } else {
@@ -158,7 +157,8 @@ class StrategyEngine {
                 `Mode: ${this.state.isVirtual ? 'VIRTUAL' : 'LIVE'}`;
             telegramService.sendMessage(startupMsg);
 
-            // 4. Initial sync and scheduler
+            // 4. Initial sync, monitoring and scheduler
+            this.startMonitoring();
             await this.syncToDb(true);
             this.initScheduler();
 
@@ -874,20 +874,17 @@ class StrategyEngine {
         const ltp = parseFloat(tick.lp);
         if (!token || isNaN(ltp)) return;
 
-        // 1. Always emit NIFTY updates (token 26000) for the frontend ticker
-        if (token === '26000') {
-            // console.log('[Strategy] Nifty Tick Emitted:', ltp);
-            socketService.emit('price_update', {
-                token,
-                lp: tick.lp,
-                pc: tick.pc,
-                h: tick.h,
-                l: tick.l,
-                c: tick.c,
-                v: tick.v,
-                ltp: ltp // Unified field
-            });
-        }
+        // 1. ALWAYS emit ANY tick received for UI-wide updates (Option Chain, Ticker, etc.)
+        socketService.emit('price_update', {
+            token,
+            lp: tick.lp,
+            pc: tick.pc,
+            h: tick.h,
+            l: tick.l,
+            c: tick.c,
+            v: tick.v,
+            ltp: ltp
+        });
 
         const legIdx = this.state.selectedStrikes.findIndex(s => s.token === token);
         if (legIdx !== -1) {
