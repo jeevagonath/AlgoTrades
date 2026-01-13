@@ -359,6 +359,18 @@ class StrategyEngine {
         return this.state;
     }
 
+    public async setEngineActivity(activity: string) {
+        this.state.engineActivity = activity;
+        await this.syncToDb(true);
+        this.addLog(`🛠️ [Manual] Engine Activity overridden to: ${activity}`);
+    }
+
+    public async setStatus(status: StrategyStatus) {
+        this.state.status = status;
+        await this.syncToDb(true);
+        this.addLog(`🛠️ [Manual] Engine Status overridden to: ${status}`);
+    }
+
     public async getAvailableExpiries() {
         try {
             // Use manual expiries from database

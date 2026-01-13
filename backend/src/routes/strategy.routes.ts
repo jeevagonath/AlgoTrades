@@ -66,6 +66,28 @@ export async function strategyRoutes(app: FastifyInstance) {
         }
     });
 
+    app.post('/activity', async (request, reply) => {
+        try {
+            const { activity } = request.body as { activity: string };
+            if (activity === undefined) throw new Error('Activity is required');
+            await strategyEngine.setEngineActivity(activity);
+            return { status: 'success' };
+        } catch (err: any) {
+            return reply.status(500).send({ status: 'error', message: err.message });
+        }
+    });
+
+    app.post('/status', async (request, reply) => {
+        try {
+            const { status } = request.body as { status: any };
+            if (!status) throw new Error('Status is required');
+            await strategyEngine.setStatus(status);
+            return { status: 'success' };
+        } catch (err: any) {
+            return reply.status(500).send({ status: 'error', message: err.message });
+        }
+    });
+
     app.post('/manual-expiries', async (request, reply) => {
         try {
             const { expiries } = request.body as { expiries: string[] };
