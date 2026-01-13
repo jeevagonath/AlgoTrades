@@ -114,6 +114,30 @@ class StrategyEngine {
             const positions = await db.getPositions();
             this.state.selectedStrikes = positions;
 
+            // 2.5. Fetch fresh LTP for existing positions via GetQuotes API
+            if (positions.length > 0) {
+                try {
+                    this.addLog(`📊 [System] Fetching live prices for ${positions.length} existing positions...`);
+                    for (const leg of positions) {
+                        try {
+                            const quote: any = await shoonya.getQuotes('NFO', leg.token);
+                            if (quote && quote.lp) {
+                                leg.ltp = parseFloat(quote.lp);
+                                this.addLog(`✅ [Price] ${leg.symbol}: LTP=₹${quote.lp}, Entry=₹${leg.entryPrice}`);
+                            }
+                        } catch (quoteErr) {
+                            console.error(`[Strategy] GetQuote Error for ${leg.symbol}:`, quoteErr);
+                            this.addLog(`⚠️ [Price] Could not fetch LTP for ${leg.symbol}, using last known price`);
+                        }
+                    }
+                    this.calculatePnL(); // Recalculate PnL with fresh LTPs
+                    await db.syncPositions(positions); // Update database with fresh LTPs
+                } catch (err) {
+                    console.error('[Strategy] GetQuotes Error on resume:', err);
+                    this.addLog('⚠️ [System] Could not fetch initial LTPs, using stored prices');
+                }
+            }
+
             // 3. Determine Lifecycle State
             const isExpiry = await this.isExpiryDay();
             const now = new Date();
