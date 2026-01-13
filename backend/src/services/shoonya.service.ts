@@ -107,11 +107,11 @@ class ShoonyaService {
     }
 
     async getQuotes(exchange: string, token: string) {
-        console.log(`[GetQuotes] REQUEST: exchange=${exchange}, token=${token}`);
+        //console.log(`[GetQuotes] REQUEST: exchange=${exchange}, token=${token}`);
         return new Promise((resolve, reject) => {
             this.api.get_quotes(exchange, token)
                 .then((res: any) => {
-                    console.log(`[GetQuotes] RESPONSE for token ${token}:`, JSON.stringify(res, null, 2));
+                    //console.log(`[GetQuotes] RESPONSE for token ${token}:`, JSON.stringify(res, null, 2));
                     if (res.stat === 'Ok') {
                         resolve(res);
                     } else {
