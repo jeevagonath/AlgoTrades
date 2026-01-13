@@ -1,4 +1,5 @@
 import fastify from 'fastify';
+process.env.TZ = 'Asia/Kolkata';
 import cors from '@fastify/cors';
 import { Server } from 'socket.io';
 import { createServer } from 'http';
@@ -39,7 +40,8 @@ app.get('/health', async (request, reply) => {
     return { status: 'active', timestamp: new Date(), uptime: process.uptime() };
 });
 
-const PORT = Number(process.env.PORT) || 3001;
+const PORT = Number(process.env.PORT) || 
+;
 
 const start = async () => {
     try {

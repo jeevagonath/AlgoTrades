@@ -220,6 +220,9 @@ class StrategyEngine {
         this.schedulers.forEach(s => s.stop());
         this.schedulers = [];
 
+        const tzOption = { timezone: 'Asia/Kolkata' };
+        this.addLog('⚙️ [Scheduler] Initializing engine timers (IST)...');
+
         // 1. Daily Reset at 9:00 AM
         this.schedulers.push(cron.schedule('0 9 * * *', async () => {
             this.addLog('🌅 [System] Daily 9 AM Reset - evaluating today...');
@@ -239,7 +242,7 @@ class StrategyEngine {
 
             await this.syncToDb(true);
             await this.initScheduler();
-        }));
+        }, tzOption));
 
         const isExpiry = await this.isExpiryDay();
         if (!isExpiry) {
@@ -253,8 +256,8 @@ class StrategyEngine {
 
         // 12:45 PM - Exit positions (Transition to EXIT_DONE)
         this.schedulers.push(cron.schedule('45 12 * * *', async () => {
-            if (this.state.status !== 'WAITING_FOR_EXPIRY') {
-                this.addLog(`⚠️ [Scheduler] Skipped 12:45 exit. Status is ${this.state.status} (expected WAITING_FOR_EXPIRY)`);
+            if (this.state.status !== 'WAITING_FOR_EXPIRY' && this.state.status !== 'ACTIVE') {
+                this.addLog(`⚠️ [Scheduler] Skipped 12:45 exit. Status is ${this.state.status} (expected WAITING_FOR_EXPIRY or ACTIVE)`);
                 return;
             }
 
@@ -275,7 +278,7 @@ class StrategyEngine {
             this.state.nextAction = '12:59 PM Strike Selection';
             await this.syncToDb(true);
             telegramService.sendMessage('📤 <b>Expiry Day Exit</b>\nAll positions squared off successfully.');
-        }));
+        }, tzOption));
 
         // 12:59:00 PM - Pre-selection
         this.schedulers.push(cron.schedule('59 12 * * *', async () => {
@@ -288,7 +291,7 @@ class StrategyEngine {
             this.state.nextAction = '1:00 PM Order Placement';
             this.addLog('🎯 [Expiry] 12:59 PM: Selecting strikes for next week...');
             await this.selectStrikes();
-        }));
+        }, tzOption));
 
         // 01:00:00 PM - Entry (Transition to ENTRY_DONE then ACTIVE)
         this.schedulers.push(cron.schedule('0 13 * * *', async () => {
@@ -321,7 +324,7 @@ class StrategyEngine {
                 await this.syncToDb(true);
                 this.addLog('❌ [System] Entry Failed. System LOCKED in FORCE_EXITED.');
             }
-        }));
+        }, tzOption));
     }
     public async updateSettings(settings: {
         entryTime?: string,
