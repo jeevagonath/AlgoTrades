@@ -126,9 +126,9 @@ class StrategyEngine {
             const exitMinutes = exitH * 60 + exitM;
 
             if (positions.length > 0) {
-                // Check if we already passed Daily Exit Time
-                if (currentMinutes >= exitMinutes) {
-                    this.addLog('⏰ [Recovery] Startup is after daily exit time. Closing positions...');
+                // Check if we already passed Daily Exit Time (Expiry ONLY)
+                if (isExpiry && currentMinutes >= exitMinutes) {
+                    this.addLog('⏰ [Recovery] Startup is after daily exit time on Expiry. Closing positions...');
                     await this.exitAllPositions('Late Daily Exit');
                 } else if (isExpiry && currentMinutes >= entryMinutes) {
                     // It's Expiry and we have positions but it's already past entry time
@@ -267,17 +267,17 @@ class StrategyEngine {
             await this.initScheduler();
         }, tzOption));
 
-        // 2. Daily Exit at exitTime
+        const isExpiry = await this.isExpiryDay();
+        if (!isExpiry) return;
+
+        // --- EXPIRY DAY ACTIONS ---
+
+        // 2. Daily Exit at exitTime (On Expiry Day Only)
         const [exitH, exitM] = this.state.exitTime.split(':').map(Number);
         this.schedulers.push(cron.schedule(`${exitM} ${exitH} * * *`, async () => {
             this.addLog(`⏰ [System] Daily Exit Time reached (${this.state.exitTime}). Squaring off...`);
             await this.exitAllPositions(`Daily Exit Time reached`);
         }, tzOption));
-
-        const isExpiry = await this.isExpiryDay();
-        if (!isExpiry) return;
-
-        // --- EXPIRY DAY ACTIONS ---
 
         // Unified Rollover at entryTime
         const [entryH, entryM] = this.state.entryTime.split(':').map(Number);
