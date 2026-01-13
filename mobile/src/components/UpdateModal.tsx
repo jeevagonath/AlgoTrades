@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, StyleSheet, Linking, Platform, Modal, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, Linking, Platform, Modal, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Text, Button, IconButton } from 'react-native-paper';
 import { Download, ExternalLink, X } from 'lucide-react-native';
 import { Theme } from '@/src/constants/Theme';
@@ -18,10 +18,37 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
     currentVersion,
     onDismiss,
 }) => {
+    const [downloading, setDownloading] = useState(false);
+    const [downloadProgress, setDownloadProgress] = useState(0);
+
     if (!versionInfo) return null;
 
-    const handleUpdate = () => {
-        Linking.openURL(versionInfo.url);
+    const handleUpdate = async () => {
+        if (Platform.OS === 'android') {
+            try {
+                setDownloading(true);
+                const { updateService } = await import('@/src/services/update.service');
+                const apkUrl = await updateService.getApkDownloadUrl(versionInfo.url);
+
+                if (apkUrl) {
+                    await updateService.downloadAndInstallApk(apkUrl, (progress) => {
+                        setDownloadProgress(Math.round(progress));
+                    });
+                } else {
+                    // Fallback to browser if APK not found
+                    Linking.openURL(versionInfo.url);
+                }
+            } catch (error) {
+                console.error('Update error:', error);
+                // Fallback to browser on error
+                Linking.openURL(versionInfo.url);
+            } finally {
+                setDownloading(false);
+                setDownloadProgress(0);
+            }
+        } else {
+            Linking.openURL(versionInfo.url);
+        }
     };
 
     return (
@@ -61,15 +88,22 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
                         <Button
                             mode="contained"
                             onPress={handleUpdate}
+                            disabled={downloading}
                             style={styles.updateButton}
                             contentStyle={styles.buttonContent}
-                            icon={() => <ExternalLink size={18} color="#fff" />}
+                            icon={() => downloading ? null : <ExternalLink size={18} color="#fff" />}
                         >
-                            Update Now
+                            {downloading ? `Downloading ${downloadProgress}%` : 'Download Update'}
                         </Button>
+                        {downloading && (
+                            <View style={styles.progressContainer}>
+                                <View style={[styles.progressBar, { width: `${downloadProgress}%` }]} />
+                            </View>
+                        )}
                         <Button
                             mode="text"
                             onPress={onDismiss}
+                            disabled={downloading}
                             textColor={Theme.colors.textMuted}
                             style={styles.laterButton}
                         >
@@ -162,5 +196,17 @@ const styles = StyleSheet.create({
     },
     laterButton: {
         borderRadius: 12,
+    },
+    progressContainer: {
+        height: 4,
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        borderRadius: 2,
+        overflow: 'hidden',
+        marginTop: 8,
+    },
+    progressBar: {
+        height: '100%',
+        backgroundColor: Theme.colors.primary,
+        borderRadius: 2,
     },
 });

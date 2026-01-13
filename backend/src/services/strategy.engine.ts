@@ -560,6 +560,25 @@ class StrategyEngine {
             this.state.peakLoss = 0;
             this.state.pnl = 0;
 
+            // Fetch real-time LTP via GetQuotes API before WebSocket updates
+            try {
+                for (const leg of selectedLegs) {
+                    try {
+                        const quote: any = await shoonya.getQuotes('NFO', leg.token);
+                        if (quote && quote.lp) {
+                            leg.ltp = parseFloat(quote.lp);
+                            this.addLog(`📊 Initial LTP for ${leg.symbol}: ₹${quote.lp} (Entry: ₹${leg.entryPrice})`);
+                        }
+                    } catch (quoteErr) {
+                        console.error(`[Strategy] GetQuote Error for ${leg.symbol}:`, quoteErr);
+                    }
+                }
+                this.calculatePnL(); // Recalculate PnL with real LTPs
+            } catch (err) {
+                console.error('[Strategy] GetQuotes Error:', err);
+                this.addLog('⚠️ Could not fetch initial LTP, using entry prices');
+            }
+
             this.startMonitoring();
             await db.syncPositions(selectedLegs);
             await this.syncToDb(true);

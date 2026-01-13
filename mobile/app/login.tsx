@@ -10,6 +10,46 @@ import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { useAuth } from '@/src/context/AuthContext';
 import { Theme } from '@/src/constants/Theme';
 
+interface InputFieldProps {
+    label: string;
+    name: string;
+    placeholder: string;
+    icon: any;
+    secure?: boolean;
+    keyboard?: string;
+    value: string;
+    focusedInput: string | null;
+    onChangeText: (v: string) => void;
+    onFocus: () => void;
+    onBlur: () => void;
+}
+
+const InputField = ({ label, name, placeholder, icon: Icon, secure = false, keyboard = 'default', value, focusedInput, onChangeText, onFocus, onBlur }: InputFieldProps) => (
+    <View style={styles.inputGroup}>
+        <Text style={styles.label}>{label}</Text>
+        <View
+            style={[
+                styles.inputWrapper,
+                focusedInput === name && styles.inputWrapperFocused
+            ]}
+        >
+            <Icon size={18} color={focusedInput === name ? Theme.colors.primary : Theme.colors.textDim} style={styles.inputIcon} />
+            <TextInput
+                style={styles.input}
+                placeholder={placeholder}
+                placeholderTextColor={Theme.colors.textDim}
+                value={value}
+                onChangeText={onChangeText}
+                secureTextEntry={secure}
+                keyboardType={keyboard as any}
+                autoCapitalize="none"
+                onFocus={onFocus}
+                onBlur={onBlur}
+            />
+        </View>
+    </View>
+);
+
 export default function LoginScreen() {
     const { setIsAuthenticated } = useAuth();
     const router = useRouter();
@@ -75,30 +115,20 @@ export default function LoginScreen() {
         }
     };
 
-    const InputField = ({ label, name, placeholder, icon: Icon, secure = false, keyboard = 'default' }: any) => (
-        <View style={styles.inputGroup}>
-            <Text style={styles.label}>{label}</Text>
-            <View
-                style={[
-                    styles.inputWrapper,
-                    focusedInput === name && styles.inputWrapperFocused
-                ]}
-            >
-                <Icon size={18} color={focusedInput === name ? Theme.colors.primary : Theme.colors.textDim} style={styles.inputIcon} />
-                <TextInput
-                    style={styles.input}
-                    placeholder={placeholder}
-                    placeholderTextColor={Theme.colors.textDim}
-                    value={(formData as any)[name]}
-                    onChangeText={(v) => handleChange(name, v)}
-                    secureTextEntry={secure}
-                    keyboardType={keyboard as any}
-                    autoCapitalize="none"
-                    onFocus={() => setFocusedInput(name)}
-                    onBlur={() => setFocusedInput(null)}
-                />
-            </View>
-        </View>
+    const renderInput = (label: string, name: keyof typeof formData, placeholder: string, icon: any, secure = false, keyboard = 'default') => (
+        <InputField
+            label={label}
+            name={name}
+            placeholder={placeholder}
+            icon={icon}
+            secure={secure}
+            keyboard={keyboard}
+            value={formData[name]}
+            focusedInput={focusedInput}
+            onChangeText={(v) => handleChange(name, v)}
+            onFocus={() => setFocusedInput(name)}
+            onBlur={() => setFocusedInput(null)}
+        />
     );
 
     return (
@@ -138,20 +168,20 @@ export default function LoginScreen() {
                                 </Animated.View>
                             )}
 
-                            <InputField label="USER IDENTITY" name="userid" placeholder="Broker User ID" icon={User} />
-                            <InputField label="AUTHENTICATION" name="password" placeholder="Password" icon={Lock} secure />
+                            {renderInput("USER IDENTITY", "userid", "Broker User ID", User)}
+                            {renderInput("AUTHENTICATION", "password", "Password", Lock, true)}
 
                             <View style={styles.row}>
                                 <View style={{ flex: 1, marginRight: 8 }}>
-                                    <InputField label="2FA OTP" name="twoFA" placeholder="123456" icon={Key} keyboard="numeric" />
+                                    {renderInput("2FA OTP", "twoFA", "123456", Key, false, "numeric")}
                                 </View>
                                 <View style={{ flex: 1, marginLeft: 8 }}>
-                                    <InputField label="VENDOR CODE" name="vendor_code" placeholder="VCode" icon={ShieldCheck} />
+                                    {renderInput("VENDOR CODE", "vendor_code", "VCode", ShieldCheck)}
                                 </View>
                             </View>
 
-                            <InputField label="API SECRET" name="api_secret" placeholder="Enter API Secret" icon={ShieldCheck} />
-                            <InputField label="MACHINE ID" name="imei" placeholder="IMEI / UUID" icon={Smartphone} />
+                            {renderInput("API SECRET", "api_secret", "Enter API Secret", ShieldCheck)}
+                            {renderInput("MACHINE ID", "imei", "IMEI / UUID", Smartphone)}
 
                             <TouchableOpacity
                                 style={[styles.button, loading && styles.buttonDisabled]}
