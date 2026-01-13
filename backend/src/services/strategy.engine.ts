@@ -120,7 +120,7 @@ class StrategyEngine {
                     this.addLog(`📊 [System] Fetching live prices for ${positions.length} existing positions...`);
                     for (const leg of positions) {
                         try {
-                            const quote: any = await shoonya.getQuotes('NFO', leg.token);
+                            const quote: any = await shoonya.getQuotes('NFO', String(leg.token));
                             if (quote && quote.lp) {
                                 leg.ltp = parseFloat(quote.lp);
                                 this.addLog(`✅ [Price] ${leg.symbol}: LTP=₹${quote.lp}, Entry=₹${leg.entryPrice}`);
