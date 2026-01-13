@@ -42,17 +42,17 @@ let WebSocketClient = function (cred, params) {
                     values["actid"] = params.actid;
                     values["susertoken"] = params.apikey;
                     values["source"] = "API";
-                    console.log('[Shoonya WS] Sending connect request:', JSON.stringify(values));
+                    //console.log('[Shoonya WS] Sending connect request:', JSON.stringify(values));
                     ws.send(JSON.stringify(values));
                     resolve()
 
                };
                ws.onmessage = function (evt) {
-                    console.log('[Shoonya WS] RECEIVED:', evt.data);
+                    //console.log('[Shoonya WS] RECEIVED:', evt.data);
                     var result = JSON.parse(evt.data);
 
                     if (result.t == 'ck') {
-                         console.log('[Shoonya WS] Connect Acknowledgement:', result);
+                         //console.log('[Shoonya WS] Connect Acknowledgement:', result);
                          trigger("open", [result]);
                     }
                     if (result.t == 'tk' || result.t == 'tf') {

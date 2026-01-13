@@ -163,24 +163,24 @@ export async function strategyRoutes(app: FastifyInstance) {
 
     app.get('/orders', async (request, reply) => {
         try {
-            console.log('[Routes] GET /orders - Fetching state...');
+            //console.log('[Routes] GET /orders - Fetching state...');
             const state = strategyEngine.getState();
 
             if (state.isVirtual) {
-                console.log('[Routes] GET /orders - Mode: VIRTUAL. Fetching from DB...');
+                //console.log('[Routes] GET /orders - Mode: VIRTUAL. Fetching from DB...');
                 const orders = await db.getOrders();
-                console.log(`[Routes] GET /orders - Found ${orders.length} virtual orders.`);
+                //console.log(`[Routes] GET /orders - Found ${orders.length} virtual orders.`);
                 return { status: 'success', data: orders };
             } else {
-                console.log('[Routes] GET /orders - Mode: LIVE. Fetching from Shoonya...');
+                //console.log('[Routes] GET /orders - Mode: LIVE. Fetching from Shoonya...');
                 const rawOrders: any = await shoonya.getOrderBook();
 
                 if (!rawOrders || !Array.isArray(rawOrders)) {
-                    console.log('[Routes] GET /orders - Shoonya returned no orders or non-array data.');
+                    //console.log('[Routes] GET /orders - Shoonya returned no orders or non-array data.');
                     return { status: 'success', data: [] };
                 }
 
-                console.log(`[Routes] GET /orders - Processing ${rawOrders.length} Shoonya orders...`);
+                //console.log(`[Routes] GET /orders - Processing ${rawOrders.length} Shoonya orders...`);
                 const orders = rawOrders.map((o: any) => {
                     let isoTime = new Date().toISOString();
 
@@ -214,14 +214,14 @@ export async function strategyRoutes(app: FastifyInstance) {
                     };
                 });
 
-                console.log('[Routes] GET /orders - Sorting orders...');
+                //console.log('[Routes] GET /orders - Sorting orders...');
                 orders.sort((a: any, b: any) => {
                     const timeA = new Date(a.created_at).getTime();
                     const timeB = new Date(b.created_at).getTime();
                     return (timeB || 0) - (timeA || 0);
                 });
 
-                console.log('[Routes] GET /orders - Success.');
+                //console.log('[Routes] GET /orders - Success.');
                 return { status: 'success', data: orders };
             }
         } catch (err: any) {

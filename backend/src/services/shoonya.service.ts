@@ -15,7 +15,7 @@ class ShoonyaService {
 
     private async resumeSession() {
         try {
-            console.log('[Shoonya] Attempting to resume session from database...');
+            //console.log('[Shoonya] Attempting to resume session from database...');
             const { data, error } = await db.getSession();
             if (data && data.susertoken) {
                 // Check if the session is from today
@@ -23,14 +23,14 @@ class ShoonyaService {
                 const today = new Date().toDateString();
 
                 if (sessionDate === today) {
-                    console.log('[Shoonya] Resuming session for UID:', data.uid);
+                    //console.log('[Shoonya] Resuming session for UID:', data.uid);
                     this.api.setSessionDetails(data);
                     this.session = data;
                 } else {
-                    console.log('[Shoonya] Stale session found (Date:', sessionDate, '). Ignoring.');
+                    //console.log('[Shoonya] Stale session found (Date:', sessionDate, '). Ignoring.');
                 }
             } else {
-                console.log('[Shoonya] No active session found in database.');
+                //console.log('[Shoonya] No active session found in database.');
             }
         } catch (err) {
             console.error('[Shoonya] Failed to resume session:', err);
@@ -71,9 +71,9 @@ class ShoonyaService {
             this.session = null;
             this.api.setSessionDetails({});
             await db.clearSession();
-            console.log('[Shoonya] Logged out successfully and session cleared from DB.');
+            //console.log('[Shoonya] Logged out successfully and session cleared from DB.');
         } catch (err) {
-            console.error('[Shoonya] Logout failed:', err);
+            //console.error('[Shoonya] Logout failed:', err);
             throw err;
         }
     }
@@ -148,10 +148,10 @@ class ShoonyaService {
         this.wsStarted = true;
         this.api.start_websocket({
             socket_open: () => {
-                console.log('[Shoonya] WebSocket Connected');
+                //console.log('[Shoonya] WebSocket Connected');
                 // Auto subscribe to Nifty spot
                 if (this.api.web_socket) {
-                    console.log('[Shoonya] Subscribing to Nifty Spot (NSE|26000)');
+                    //console.log('[Shoonya] Subscribing to Nifty Spot (NSE|26000)');
                     this.api.subscribe(['NSE|26000']);
                 }
             },
@@ -168,7 +168,7 @@ class ShoonyaService {
                 }).catch(() => { });
             },
             order: (order: any) => {
-                console.log('[Shoonya] Order Update:', order);
+                //console.log('[Shoonya] Order Update:', order);
                 this.orderListeners.forEach(cb => cb(order));
             }
         });
@@ -176,7 +176,7 @@ class ShoonyaService {
 
     subscribe(tokens: string[]) {
         if (!this.wsStarted) {
-            console.log('[Shoonya] Subscribe called but WS not started. Initializing...');
+            //console.log('[Shoonya] Subscribe called but WS not started. Initializing...');
             this.startWebSocket();
         }
 
@@ -184,7 +184,7 @@ class ShoonyaService {
         setTimeout(() => {
             if (this.api && this.api.web_socket) {
                 try {
-                    console.log('[Shoonya] Subscribing to tokens:', tokens);
+                    //console.log('[Shoonya] Subscribing to tokens:', tokens);
                     this.api.subscribe(tokens);
                 } catch (e) {
                     console.error('[Shoonya] Subscription error:', e);

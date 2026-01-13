@@ -91,7 +91,7 @@ var NorenRestApi = function (params) {
     if (self.__susertoken)
       payload = payload + `&jKey=${self.__susertoken}`;
 
-    console.log(`[Shoonya] POST ${url} payload: ${payload}`);
+    //console.log(`[Shoonya] POST ${url} payload: ${payload}`);
     return axios.post(url, payload);
   }
 
