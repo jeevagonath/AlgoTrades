@@ -115,31 +115,53 @@ class StrategyEngine {
 
             // 3. Determine Lifecycle State
             const isExpiry = await this.isExpiryDay();
+            const now = new Date();
+            const istNow = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+            const currentMinutes = istNow.getHours() * 60 + istNow.getMinutes();
+
+            const [entryH, entryM] = this.state.entryTime.split(':').map(Number);
+            const [exitH, exitM] = this.state.exitTime.split(':').map(Number);
+            const entryMinutes = entryH * 60 + entryM;
+            const exitMinutes = exitH * 60 + exitM;
 
             if (positions.length > 0) {
-                // If we have positions, we MUST be in a state that monitors them
-                // Usually ACTIVE, but could be FORCE_EXITED if we crashed during exit
-                const currentStatus = savedState?.status || 'IDLE';
-                if (currentStatus === 'FORCE_EXITED') {
-                    this.state.status = 'FORCE_EXITED';
-                    this.state.engineActivity = 'System Locked';
-                    this.state.nextAction = 'Manual Reset Required';
+                // Check if we already passed Daily Exit Time
+                if (currentMinutes >= exitMinutes) {
+                    this.addLog('⏰ [Recovery] Startup is after daily exit time. Closing positions...');
+                    await this.exitAllPositions('Late Daily Exit');
+                } else if (isExpiry && currentMinutes >= entryMinutes) {
+                    // It's Expiry and we have positions but it's already past entry time
+                    // This means these are OLD positions that weren't rolled over
+                    this.addLog('⏰ [Recovery] Startup is past Entry Time on Expiry Day. Rolling over now...');
+                    await this.executeRolloverSequence();
                 } else {
-                    this.state.status = 'ACTIVE';
-                    this.state.engineActivity = 'Monitoring Positions';
-                    this.state.nextAction = 'Target/SL or 12:45 Expiry Exit';
+                    const currentStatus = savedState?.status || 'IDLE';
+                    if (currentStatus === 'FORCE_EXITED') {
+                        this.state.status = 'FORCE_EXITED';
+                        this.state.engineActivity = 'System Locked';
+                        this.state.nextAction = 'Manual Reset Required';
+                    } else {
+                        this.state.status = 'ACTIVE';
+                        this.state.engineActivity = 'Monitoring Positions';
+                        this.state.nextAction = `Daily Exit at ${this.state.exitTime}`;
+                    }
+                    this.state.isTradePlaced = true;
+                    this.state.isActive = true;
+                    this.calculatePnL();
+                    this.addLog(`[Strategy] Resumed ACTIVE: Found ${positions.length} positions.`);
                 }
-                this.state.isTradePlaced = true;
-                this.state.isActive = true;
-                this.calculatePnL();
-                this.addLog(`[Strategy] Resumed ACTIVE: Found ${positions.length} positions.`);
             } else {
-                // No positions - Check if we should be waiting for expiry or idle
+                // No positions - Check if we should have entered already on Expiry Day
                 if (isExpiry) {
-                    this.state.status = 'WAITING_FOR_EXPIRY';
-                    this.state.engineActivity = 'Waiting for Expiry Time';
-                    this.state.nextAction = '12:45 PM Exit';
-                    this.addLog('🔔 [Strategy] Resumed: Today is EXPIRY DAY. Waiting for 12:45 PM.');
+                    if (currentMinutes >= entryMinutes && currentMinutes < exitMinutes) {
+                        this.addLog('⏰ [Recovery] No positions found after Entry Time. Triggering rollover/entry...');
+                        await this.executeRolloverSequence();
+                    } else {
+                        this.state.status = 'WAITING_FOR_EXPIRY';
+                        this.state.engineActivity = 'Waiting for Entry Time';
+                        this.state.nextAction = `Entry at ${this.state.entryTime}`;
+                        this.addLog(`🔔 [Strategy] Resumed: Today is EXPIRY. Waiting for ${this.state.entryTime}.`);
+                    }
                 } else {
                     this.state.status = 'IDLE';
                     this.state.engineActivity = 'Idle';
@@ -230,8 +252,8 @@ class StrategyEngine {
 
             if (isExpiry) {
                 this.state.status = 'WAITING_FOR_EXPIRY';
-                this.state.engineActivity = 'Waiting for Expiry Sequence';
-                this.state.nextAction = '12:45 PM Exit';
+                this.state.engineActivity = 'Waiting for Entry Sequence';
+                this.state.nextAction = `Entry at ${this.state.entryTime}`;
                 telegramService.sendMessage('🔔 <b>Expiry Day Detected</b>\nAutomated rollover sequence armed.');
             } else {
                 this.state.status = 'IDLE';
@@ -244,109 +266,68 @@ class StrategyEngine {
             await this.initScheduler();
         }, tzOption));
 
+        // 2. Daily Exit at exitTime
+        const [exitH, exitM] = this.state.exitTime.split(':').map(Number);
+        this.schedulers.push(cron.schedule(`${exitM} ${exitH} * * *`, async () => {
+            this.addLog(`⏰ [System] Daily Exit Time reached (${this.state.exitTime}). Squaring off...`);
+            await this.exitAllPositions(`Daily Exit Time reached`);
+        }, tzOption));
+
         const isExpiry = await this.isExpiryDay();
-        if (!isExpiry) {
-            if (this.state.selectedStrikes.length > 0) {
-                this.addLog('ℹ️ Not expiry day - Positions will be held');
-            }
-            return;
-        }
+        if (!isExpiry) return;
 
-        // --- EXPIRY DAY TIMERS ---
+        // --- EXPIRY DAY ACTIONS ---
 
-        // 12:45 PM - Exit positions (Transition to EXIT_DONE)
-        this.schedulers.push(cron.schedule('45 12 * * *', async () => {
-            if (this.state.status !== 'WAITING_FOR_EXPIRY' && this.state.status !== 'ACTIVE') {
-                this.addLog(`⚠️ [Scheduler] Skipped 12:45 exit. Status is ${this.state.status} (expected WAITING_FOR_EXPIRY or ACTIVE)`);
-                return;
-            }
-
-            // Check if positions exist before exiting
-            if (this.state.selectedStrikes.length === 0) {
-                this.addLog('ℹ️ [Expiry] No positions to exit. Skipping square-off.');
-                this.state.status = 'EXIT_DONE';
-                this.state.engineActivity = 'No Positions to Exit';
-                this.state.nextAction = '12:59 PM Strike Selection';
-                await this.syncToDb(true);
-                return;
-            }
-
-            this.addLog('⏰ [Expiry] 12:45 PM reached. Squaring off positions...');
-            await this.exitAllPositions('Expiry Day Rollover');
-            this.state.status = 'EXIT_DONE';
-            this.state.engineActivity = 'Exit Sequence Complete';
-            this.state.nextAction = '12:59 PM Strike Selection';
-            await this.syncToDb(true);
-            telegramService.sendMessage('📤 <b>Expiry Day Exit</b>\nAll positions squared off successfully.');
-        }, tzOption));
-
-        // 12:59:00 PM - Pre-selection
-        this.schedulers.push(cron.schedule('59 12 * * *', async () => {
-            // Recovery logic: if 12:45 was missed, exit now
-            if (this.state.status === 'WAITING_FOR_EXPIRY' || this.state.status === 'ACTIVE') {
-                this.addLog('⏰ [Recovery] 12:59 PM: Missed 12:45 exit. Clearing positions now...');
-                await this.exitAllPositions('Late Expiry Exit');
-                this.state.status = 'EXIT_DONE';
-            }
-
-            if (this.state.status !== 'EXIT_DONE') {
-                this.addLog(`⚠️ [Scheduler] Skipped strike selection. Status is ${this.state.status} (expected EXIT_DONE)`);
-                return;
-            }
-
-            this.state.engineActivity = 'Selecting Strikes...';
-            this.state.nextAction = '1:00 PM Order Placement';
-            this.addLog('🎯 [Expiry] 12:59 PM: Selecting strikes for next week...');
-            await this.selectStrikes();
-        }, tzOption));
-
-        // 01:00:00 PM - Entry (Transition to ENTRY_DONE then ACTIVE)
-        this.schedulers.push(cron.schedule('0 13 * * *', async () => {
-            // Recovery logic: if we missed 12:45 or 12:59
-            if (this.state.status === 'WAITING_FOR_EXPIRY' || this.state.status === 'ACTIVE') {
-                this.addLog('⏰ [Recovery] 1:00 PM: Missed previous tasks. Clearing positions now...');
-                await this.exitAllPositions('Late Expiry Exit (1:00 catch-up)');
-                this.state.status = 'EXIT_DONE';
-            }
-
-            if (this.state.status === 'EXIT_DONE') {
-                if (this.state.selectedStrikes.length === 0) {
-                    this.addLog('🎯 [Recovery] 1:00 PM: Selecting strikes now...');
-                    await this.selectStrikes();
-                }
-            }
-
-            if (this.state.status !== 'EXIT_DONE') {
-                this.addLog(`⚠️ [Scheduler] Skipped 1:00 PM entry. Status is ${this.state.status} (expected EXIT_DONE)`);
-                return;
-            }
-
-            this.state.engineActivity = 'Placing Orders...';
-            this.state.nextAction = 'Verifying Execution';
-            this.addLog('🚀 [Expiry] 1:00 PM: Placing orders for new cycle...');
-            const res = await this.placeOrder();
-            if (res && res.status === 'success') {
-                this.state.status = 'ENTRY_DONE';
-                this.state.engineActivity = 'Verifying Entry';
-                this.state.nextAction = 'Transition to ACTIVE';
-                await this.syncToDb(true);
-
-                setTimeout(async () => {
-                    this.state.status = 'ACTIVE';
-                    this.state.engineActivity = 'Monitoring Iron Condor';
-                    this.state.nextAction = 'Target/SL or Weekly Expiry';
-                    await this.syncToDb(true);
-                    this.addLog('✅ [System] Transitioned to ACTIVE Monitoring.');
-                }, 5000);
-            } else {
-                this.state.status = 'FORCE_EXITED';
-                this.state.engineActivity = 'Entry Failed';
-                this.state.nextAction = 'Manual Reset Required';
-                await this.syncToDb(true);
-                this.addLog('❌ [System] Entry Failed. System LOCKED in FORCE_EXITED.');
-            }
+        // Unified Rollover at entryTime
+        const [entryH, entryM] = this.state.entryTime.split(':').map(Number);
+        this.schedulers.push(cron.schedule(`${entryM} ${entryH} * * *`, async () => {
+            this.addLog(`🚀 [Expiry] Entry Time reached (${this.state.entryTime}). Starting rollover sequence...`);
+            await this.executeRolloverSequence();
         }, tzOption));
     }
+
+    private async executeRolloverSequence() {
+        // 1. Exit current positions if any
+        if (this.state.selectedStrikes.length > 0) {
+            this.addLog('📤 [Rollover] Clearing existing positions...');
+            await this.exitAllPositions('Expiry Rollover');
+        }
+
+        this.state.status = 'EXIT_DONE';
+        this.state.engineActivity = 'Selecting Strikes...';
+        await this.syncToDb(true);
+
+        // 2. Select New Strikes
+        this.addLog('🎯 [Rollover] Selecting new strikes...');
+        await this.selectStrikes();
+
+        // 3. Place New Orders
+        this.state.engineActivity = 'Placing Orders...';
+        this.state.nextAction = 'Verifying Execution';
+        const res = await this.placeOrder();
+
+        if (res && res.status === 'success') {
+            this.state.status = 'ENTRY_DONE';
+            this.state.engineActivity = 'Verifying Entry';
+            this.state.nextAction = 'Transition to ACTIVE';
+            await this.syncToDb(true);
+
+            setTimeout(async () => {
+                this.state.status = 'ACTIVE';
+                this.state.engineActivity = 'Monitoring Iron Condor';
+                this.state.nextAction = `Daily Exit at ${this.state.exitTime}`;
+                await this.syncToDb(true);
+                this.addLog('✅ [System] Rollover Complete. ACTIVE Monitoring.');
+            }, 5000);
+        } else {
+            this.state.status = 'FORCE_EXITED';
+            this.state.engineActivity = 'Entry Failed';
+            this.state.nextAction = 'Manual Reset Required';
+            await this.syncToDb(true);
+            this.addLog('❌ [System] Rollover Failed at Entry stage.');
+        }
+    }
+
     public async updateSettings(settings: {
         entryTime?: string,
         exitTime?: string,
