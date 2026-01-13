@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { StyleSheet, View, Text, ScrollView, RefreshControl, TouchableOpacity, SafeAreaView, Platform, Linking } from 'react-native';
-import { Activity, Bell, Play, Pause, Octagon, Settings, LogOut, Info, Clock, TrendingUp, TrendingDown, ChevronRight, Calendar, Zap } from 'lucide-react-native';
+import { Activity, Bell, Play, Pause, Octagon, Settings, LogOut, Info, Clock, TrendingUp, TrendingDown, ChevronRight, Calendar, Zap, CheckCircle } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MetricCard } from '@/src/components/MetricCard';
@@ -10,6 +10,79 @@ import { socketService } from '@/src/services/socket';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useAuth } from '@/src/context/AuthContext';
 import { Theme } from '@/src/constants/Theme';
+
+const EngineWorkflow = ({ status, activity }: { status: string, activity: string }) => {
+  const steps = [
+    { id: 'EVAL', label: 'Evaluation', desc: '9:00 AM' },
+    { id: 'WAIT', label: 'Waiting', desc: 'Non-Expiry' },
+    { id: 'EXIT', label: 'Square-off', desc: 'Exit Time' },
+    { id: 'SELECT', label: 'Strikes', desc: 'Selection' },
+    { id: 'ENTRY', label: 'Entry', desc: 'Orders' },
+    { id: 'ACTIVE', label: 'Active', desc: 'Monitoring' },
+  ];
+
+  let currentStepIndex = -1;
+  const lowerActivity = activity.toLowerCase();
+
+  if (lowerActivity.includes('9 am') || lowerActivity.includes('evaluat')) currentStepIndex = 0;
+  else if (status === 'IDLE' && lowerActivity.includes('waiting for expiry')) currentStepIndex = 1;
+  else if (status === 'WAITING_FOR_EXPIRY') currentStepIndex = 1;
+  else if (status === 'EXIT_DONE' || lowerActivity.includes('exting') || lowerActivity.includes('square-off')) currentStepIndex = 2;
+  else if (lowerActivity.includes('select') || lowerActivity.includes('picker')) currentStepIndex = 3;
+  else if (status === 'ENTRY_DONE' || lowerActivity.includes('plac') || lowerActivity.includes('entry')) {
+    if (status === 'ACTIVE') currentStepIndex = 5;
+    else currentStepIndex = 4;
+  }
+  else if (status === 'ACTIVE') currentStepIndex = 5;
+
+  return (
+    <View style={styles.workflowContainer}>
+      <Text style={styles.workflowTitle}>Engine Workflow</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.workflowSteps}>
+        {steps.map((step, idx) => {
+          const isDone = idx < currentStepIndex;
+          const isCurrent = idx === currentStepIndex;
+          return (
+            <View key={step.id} style={styles.workflowStep}>
+              <View style={styles.stepIndicator}>
+                <View style={[
+                  styles.stepDot,
+                  isDone ? { backgroundColor: '#10b981', borderColor: '#10b981' } :
+                    isCurrent ? { backgroundColor: '#fff', borderColor: '#3b82f6', borderWidth: 2 } :
+                      { backgroundColor: '#fff', borderColor: '#e2e8f0', borderWidth: 1 }
+                ]}>
+                  {isDone ? <CheckCircle size={10} color="#fff" /> :
+                    isCurrent ? <View style={styles.currentDotInner} /> :
+                      null}
+                </View>
+                {idx !== steps.length - 1 && (
+                  <View style={[
+                    styles.stepLine,
+                    { backgroundColor: isDone ? '#10b981' : '#f1f5f9' }
+                  ]} />
+                )}
+              </View>
+              <View style={styles.stepContent}>
+                <Text style={[
+                  styles.stepLabel,
+                  isCurrent ? { color: '#3b82f6' } : isDone ? { color: '#1e293b' } : { color: '#94a3b8' }
+                ]}>
+                  {step.label}
+                </Text>
+                <Text style={[
+                  styles.stepDesc,
+                  isCurrent && { color: '#3b82f6', opacity: 1 }
+                ]} numberOfLines={1}>
+                  {isCurrent ? activity.split(' ')[0] : step.desc}
+                </Text>
+              </View>
+            </View>
+          );
+        })}
+      </ScrollView>
+    </View>
+  );
+};
 
 const TaskTimer = ({ taskText }: { taskText: string }) => {
   const [timeLeft, setTimeLeft] = useState<string | null>(null);
@@ -308,6 +381,11 @@ export default function DashboardScreen() {
           />
         </Animated.View>
 
+        {/* Engine Workflow (NEW) */}
+        <Animated.View entering={FadeInDown.delay(350).duration(800)}>
+          <EngineWorkflow status={status} activity={engineActivity} />
+        </Animated.View>
+
         {/* Engine Activity Info */}
         <Animated.View entering={FadeInDown.delay(400).duration(800)} style={styles.activityCard}>
           <View style={styles.activityItem}>
@@ -581,5 +659,74 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: Theme.colors.text,
     marginTop: 1,
+  },
+  workflowContainer: {
+    backgroundColor: Theme.colors.surface,
+    marginHorizontal: 16,
+    marginTop: 12,
+    borderRadius: 24,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  workflowTitle: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: Theme.colors.textDim,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 16,
+  },
+  workflowSteps: {
+    flexDirection: 'row',
+    paddingRight: 20,
+  },
+  workflowStep: {
+    width: 80,
+    alignItems: 'center',
+    marginRight: 4,
+  },
+  stepIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  stepDot: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 2,
+  },
+  stepLine: {
+    height: 2,
+    width: 62,
+    position: 'absolute',
+    left: 49,
+    zIndex: 1,
+  },
+  currentDotInner: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#3b82f6',
+  },
+  stepContent: {
+    alignItems: 'center',
+  },
+  stepLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    marginBottom: 2,
+  },
+  stepDesc: {
+    fontSize: 8,
+    fontWeight: '600',
+    color: '#94a3b8',
+    opacity: 0.7,
+    textAlign: 'center',
   },
 });

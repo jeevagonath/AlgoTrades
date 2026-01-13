@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Activity, ListOrdered, History, Bell, LogOut, TrendingUp, TrendingDown, Clock, Play, Pause, Octagon, Power, Search, Shield, Settings, Save, X, BarChart3 } from 'lucide-react';
+import { Activity, ListOrdered, History, Bell, LogOut, TrendingUp, TrendingDown, Clock, Play, Pause, Octagon, Power, Search, Shield, Settings, Save, X, BarChart3, CheckCircle2, Circle } from 'lucide-react';
 import { socketService } from '@/services/socket.service';
 import { strategyApi, authApi } from '@/services/api.service';
 import { formatTradingViewSymbol, getNiftySpotChartUrl, openTradingViewChart } from '@/utils/tradingview';
@@ -146,6 +146,70 @@ const PositionRow = ({ leg }: { leg: LegState }) => {
                 </button>
             </td>
         </tr>
+    );
+};
+
+const EngineWorkflow = ({ status, activity }: { status: string, activity: string }) => {
+    const steps = [
+        { id: 'EVAL', label: 'Daily Evaluation', desc: '9:00 AM Check' },
+        { id: 'WAIT', label: 'Waiting for Expiry', desc: 'Non-expiry Day' },
+        { id: 'EXIT', label: 'Square-off', desc: 'Exit Time' },
+        { id: 'SELECT', label: 'Strike Selection', desc: 'Strike Picker' },
+        { id: 'ENTRY', label: 'Strategy Entry', desc: 'Order Placement' },
+        { id: 'ACTIVE', label: 'Monitoring PnL', desc: 'Active Trade' },
+    ];
+
+    let currentStepIndex = -1;
+    const lowerActivity = activity.toLowerCase();
+
+    if (lowerActivity.includes('9 am') || lowerActivity.includes('evaluat')) currentStepIndex = 0;
+    else if (status === 'IDLE' && lowerActivity.includes('waiting for expiry')) currentStepIndex = 1;
+    else if (status === 'WAITING_FOR_EXPIRY') currentStepIndex = 1;
+    else if (status === 'EXIT_DONE' || lowerActivity.includes('exting') || lowerActivity.includes('square-off')) currentStepIndex = 2;
+    else if (lowerActivity.includes('select') || lowerActivity.includes('picker')) currentStepIndex = 3;
+    else if (status === 'ENTRY_DONE' || lowerActivity.includes('plac') || lowerActivity.includes('entry')) {
+        if (status === 'ACTIVE') currentStepIndex = 5;
+        else currentStepIndex = 4;
+    }
+    else if (status === 'ACTIVE') currentStepIndex = 5;
+
+    return (
+        <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm flex flex-col h-full">
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-6 border-b border-slate-50 pb-2">Engine Workflow</h3>
+            <div className="space-y-6 flex-1">
+                {steps.map((step, idx) => {
+                    const isDone = idx < currentStepIndex;
+                    const isCurrent = idx === currentStepIndex;
+                    return (
+                        <div key={step.id} className="flex items-start gap-3 relative">
+                            {idx !== steps.length - 1 && (
+                                <div className={`absolute left-[9px] top-6 w-[2px] h-6 ${isDone ? 'bg-emerald-500' : 'bg-slate-100'}`} />
+                            )}
+                            <div className={`mt-0.5 w-5 h-5 rounded-full border flex items-center justify-center z-10 transition-all duration-500 ${isDone ? 'bg-emerald-500 border-emerald-500 shadow-sm shadow-emerald-100' :
+                                isCurrent ? 'bg-white border-blue-500 ring-4 ring-blue-50' :
+                                    'bg-white border-slate-200'
+                                }`}>
+                                {isDone ? (
+                                    <CheckCircle2 className="w-3 h-3 text-white" />
+                                ) : isCurrent ? (
+                                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                                ) : (
+                                    <div className="w-1.5 h-1.5 rounded-full bg-slate-200" />
+                                )}
+                            </div>
+                            <div className="flex-1">
+                                <div className={`text-xs font-bold leading-none transition-colors duration-300 ${isCurrent ? 'text-blue-600' : isDone ? 'text-slate-900' : 'text-slate-400'}`}>
+                                    {step.label}
+                                </div>
+                                <div className={`text-[9px] font-medium mt-1 uppercase tracking-tighter truncate max-w-[150px] ${isCurrent ? 'text-blue-400 animate-pulse' : 'text-slate-400'}`}>
+                                    {isCurrent ? activity : step.desc}
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
     );
 };
 
@@ -1068,9 +1132,11 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                         </div>
                     </div>
 
-                    {/* Sidebar: System Logs */}
+                    {/* Sidebar: Workflow & Logs */}
                     <div className="lg:col-span-1 space-y-4">
-                        <div className="bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col h-[600px] overflow-hidden">
+                        <EngineWorkflow status={status} activity={engineActivity} />
+
+                        <div className="bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col h-[400px] overflow-hidden">
                             <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                                 <div className="flex flex-col">
                                     <h2 className="font-bold text-xs uppercase tracking-wider flex items-center gap-2 text-slate-700">
