@@ -182,6 +182,7 @@ export const db = {
         if (error && error.code !== 'PGRST116') console.error('Supabase State Load Error:', error);
         if (data) {
             return {
+                status: data.status,
                 isActive: data.is_active,
                 isVirtual: data.is_virtual,
                 isTradePlaced: data.is_trade_placed,

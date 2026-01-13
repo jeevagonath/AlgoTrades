@@ -97,6 +97,7 @@ class StrategyEngine {
                 this.state.stopLossPnl = savedState.stopLossPnl || -1500;
                 this.state.entryTime = savedState.entryTime || '12:59';
                 this.state.exitTime = savedState.exitTime || '15:15';
+                this.addLog(`📥 [System] Loaded Settings: Entry=${this.state.entryTime}, Exit=${this.state.exitTime}`);
 
                 this.state.pnl = savedState.pnl || 0;
                 this.state.peakProfit = savedState.peakProfit || 0;
@@ -1041,6 +1042,8 @@ class StrategyEngine {
                 pnl: this.state.pnl,
                 peakProfit: this.state.peakProfit,
                 peakLoss: this.state.peakLoss,
+                entryTime: this.state.entryTime,
+                exitTime: this.state.exitTime,
                 nextAction: this.state.nextAction,
                 engineActivity: this.state.engineActivity,
                 isPaused: this.state.isPaused,
