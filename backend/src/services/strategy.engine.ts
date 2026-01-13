@@ -126,42 +126,63 @@ class StrategyEngine {
             const exitMinutes = exitH * 60 + exitM;
 
             if (positions.length > 0) {
-                // Check if we already passed Daily Exit Time (Expiry ONLY)
-                if (isExpiry && currentMinutes >= exitMinutes) {
-                    this.addLog('⏰ [Recovery] Startup is after daily exit time on Expiry. Closing positions...');
-                    await this.exitAllPositions('Late Daily Exit');
-                } else if (isExpiry && currentMinutes >= entryMinutes) {
-                    // It's Expiry and we have positions but it's already past entry time
-                    // This means these are OLD positions that weren't rolled over
-                    this.addLog('⏰ [Recovery] Startup is past Entry Time on Expiry Day. Rolling over now...');
-                    await this.executeRolloverSequence();
-                } else {
-                    const currentStatus = savedState?.status || 'IDLE';
-                    if (currentStatus === 'FORCE_EXITED') {
-                        this.state.status = 'FORCE_EXITED';
-                        this.state.engineActivity = 'System Locked';
-                        this.state.nextAction = 'Manual Reset Required';
+                if (isExpiry) {
+                    // Logic for Expiry Day recovery
+                    if (currentMinutes >= entryMinutes) {
+                        if (exitMinutes > entryMinutes && currentMinutes >= exitMinutes) {
+                            // Past BOTH, and Exit was latest. Be flat.
+                            this.addLog('⏰ [Recovery] Startup is past both entry and exit time. Squaring off...');
+                            await this.exitAllPositions('Late Expiry Square-off');
+                        } else {
+                            // Past Entry time. Should be in the trade or rolling over.
+                            // If we have positions, we check status.
+                            const currentStatus = savedState?.status || 'IDLE';
+                            if (currentStatus !== 'ACTIVE') {
+                                this.addLog('⏰ [Recovery] Startup past entry time but not active. Triggering Rollover...');
+                                await this.executeRolloverSequence();
+                            } else {
+                                this.state.status = 'ACTIVE';
+                                this.state.engineActivity = 'Monitoring Iron Condor';
+                                this.state.nextAction = `Daily Exit at ${this.state.exitTime}`;
+                            }
+                        }
+                    } else if (currentMinutes >= exitMinutes) {
+                        // Past Exit, but not yet at Entry.
+                        this.addLog('⏰ [Recovery] Startup past exit time. Squaring off old positions...');
+                        await this.exitAllPositions('Late Week Exit');
+                        // After exit, we should be waiting for entry
+                        this.state.status = 'WAITING_FOR_EXPIRY';
+                        this.state.engineActivity = 'Waiting for Entry Time';
+                        this.state.nextAction = `Entry at ${this.state.entryTime}`;
                     } else {
+                        // Before both. Monitor old positions.
                         this.state.status = 'ACTIVE';
-                        this.state.engineActivity = 'Monitoring Positions';
+                        this.state.engineActivity = 'Monitoring Old Positions';
                         this.state.nextAction = `Daily Exit at ${this.state.exitTime}`;
                     }
-                    this.state.isTradePlaced = true;
+                } else {
+                    // Normal day. Just monitor.
+                    this.state.status = 'ACTIVE';
+                    this.state.engineActivity = 'Monitoring iron Condor';
+                    this.state.nextAction = `Watching Target/SL`;
+                }
+
+                if (this.state.status === 'ACTIVE') {
                     this.state.isActive = true;
+                    this.state.isTradePlaced = true;
                     this.calculatePnL();
-                    this.addLog(`[Strategy] Resumed ACTIVE: Found ${positions.length} positions.`);
                 }
             } else {
-                // No positions - Check if we should have entered already on Expiry Day
+                // No positions - Check if we should be in a trade already
                 if (isExpiry) {
-                    if (currentMinutes >= entryMinutes && currentMinutes < exitMinutes) {
-                        this.addLog('⏰ [Recovery] No positions found after Entry Time. Triggering rollover/entry...');
+                    if (currentMinutes >= entryMinutes && (exitMinutes <= entryMinutes || currentMinutes < exitMinutes)) {
+                        this.addLog('⏰ [Recovery] No positions found but past Entry Time. Triggering rollover...');
                         await this.executeRolloverSequence();
                     } else {
                         this.state.status = 'WAITING_FOR_EXPIRY';
                         this.state.engineActivity = 'Waiting for Entry Time';
                         this.state.nextAction = `Entry at ${this.state.entryTime}`;
-                        this.addLog(`🔔 [Strategy] Resumed: Today is EXPIRY. Waiting for ${this.state.entryTime}.`);
+                        this.addLog(`🔔 [Strategy] Resumed: Waiting for ${this.state.entryTime}.`);
                     }
                 } else {
                     this.state.status = 'IDLE';
