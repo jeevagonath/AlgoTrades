@@ -127,8 +127,8 @@ const PositionRow = ({ leg }: { leg: LegState }) => {
                 </span>
             </td>
             <td className="px-6 py-4 text-center font-mono text-sm text-slate-600">{leg.strike}</td>
-            <td className="px-6 py-4 text-center font-mono text-sm text-slate-800">₹{leg.entryPrice || '0.00'}</td>
             <td className="px-6 py-4 text-center font-mono text-sm font-bold text-slate-700">{leg.quantity}</td>
+            <td className="px-6 py-4 text-center font-mono text-sm text-slate-800">₹{leg.entryPrice || '0.00'}</td>
             <td className={`px-6 py-4 text-right font-mono text-sm font-bold tracking-tight transition-colors duration-300 ${leg.ltp > leg.entryPrice ? (leg.side === 'BUY' ? 'text-emerald-600' : 'text-rose-600') : (leg.side === 'BUY' ? 'text-rose-600' : 'text-emerald-600')}`}>
                 ₹{animatedLtp.toFixed(2)}
             </td>
