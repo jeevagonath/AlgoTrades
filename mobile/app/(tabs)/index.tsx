@@ -51,7 +51,7 @@ export default function DashboardScreen() {
       try {
         const clientRes = await authApi.getClient();
         if (clientRes.status === 'success' && clientRes.data) {
-          setClientName(clientRes.data.uname || clientRes.data.mname || 'Trade User');
+          setClientName(clientRes.data.cliname || clientRes.data.uname || clientRes.data.mname || 'Trade User');
         }
       } catch (err) {
         console.warn('Could not fetch client info:', err);

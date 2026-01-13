@@ -104,13 +104,13 @@ export default function AccountScreen() {
                                     style={styles.avatarGradient}
                                 >
                                     <Text style={styles.avatarText}>
-                                        {(clientDetails?.uname || 'U').charAt(0).toUpperCase()}
+                                        {(clientDetails?.cliname || clientDetails?.uname || 'U').charAt(0).toUpperCase()}
                                     </Text>
                                 </LinearGradient>
                                 <View style={styles.onlineBadge} />
                             </View>
                             <View>
-                                <Text style={styles.userName}>{(userDetails || clientDetails)?.uname || 'Trade User'}</Text>
+                                <Text style={styles.userName}>{(clientDetails || userDetails)?.cliname || (userDetails || clientDetails)?.uname || 'Trade User'}</Text>
                                 <View style={styles.idBadge}>
                                     <Text style={styles.idBadgeText}>{(clientDetails || userDetails)?.actid || 'N/A'}</Text>
                                 </View>

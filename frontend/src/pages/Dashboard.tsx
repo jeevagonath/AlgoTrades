@@ -265,7 +265,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                     ]);
 
                     if (cRes.status === 'success' && cRes.data) {
-                        setClientName(cRes.data.uname || cRes.data.mname || 'Trade User');
+                        setClientName(cRes.data.cliname || cRes.data.uname || cRes.data.mname || 'Trade User');
                         setClientDetails(cRes.data);
                     }
                     if (uRes.status === 'success' && uRes.data) {

@@ -1405,3 +1405,10 @@ Payload: [object Object]
 Status: 200
 Data: {"ok":true,"result":{"message_id":175,"from":{"id":8494833053,"is_bot":true,"first_name":"OptionSellingVercel","username":"Option_Selling_Vercel_Bot"},"chat":{"id":5177480141,"first_name":"Gonath","username":"itsmegonath","type":"private"},"date":1768191256,"text":"🚀 Strategy Engine Resumed\nStatus: IDLE\nActivity: Idle\nMode: VIRTUAL","entities":[{"offset":3,"length":23,"type":"bold"}]}}
 ---
+[2026-01-12T14:58:44.265Z] REQUEST: post https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Payload: [object Object]
+---
+[2026-01-12T14:58:45.104Z] RESPONSE: https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Status: 200
+Data: {"ok":true,"result":{"message_id":190,"from":{"id":8494833053,"is_bot":true,"first_name":"OptionSellingVercel","username":"Option_Selling_Vercel_Bot"},"chat":{"id":5177480141,"first_name":"Gonath","username":"itsmegonath","type":"private"},"date":1768229924,"text":"🚀 Strategy Engine Resumed\nStatus: IDLE\nActivity: Idle\nMode: VIRTUAL","entities":[{"offset":3,"length":23,"type":"bold"}]}}
+---
