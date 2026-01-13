@@ -302,7 +302,20 @@ class StrategyEngine {
 
         // 01:00:00 PM - Entry (Transition to ENTRY_DONE then ACTIVE)
         this.schedulers.push(cron.schedule('0 13 * * *', async () => {
-            // Recovery logic: allow entry even if selection was just done or status is slightly off
+            // Recovery logic: if we missed 12:45 or 12:59
+            if (this.state.status === 'WAITING_FOR_EXPIRY' || this.state.status === 'ACTIVE') {
+                this.addLog('⏰ [Recovery] 1:00 PM: Missed previous tasks. Clearing positions now...');
+                await this.exitAllPositions('Late Expiry Exit (1:00 catch-up)');
+                this.state.status = 'EXIT_DONE';
+            }
+
+            if (this.state.status === 'EXIT_DONE') {
+                if (this.state.selectedStrikes.length === 0) {
+                    this.addLog('🎯 [Recovery] 1:00 PM: Selecting strikes now...');
+                    await this.selectStrikes();
+                }
+            }
+
             if (this.state.status !== 'EXIT_DONE') {
                 this.addLog(`⚠️ [Scheduler] Skipped 1:00 PM entry. Status is ${this.state.status} (expected EXIT_DONE)`);
                 return;
