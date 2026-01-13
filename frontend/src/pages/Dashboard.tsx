@@ -296,7 +296,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
     const [nextWeekExpiry, setNextWeekExpiry] = useState<string>('');
     const [isExpiryDay, setIsExpiryDay] = useState(false);
 
-    const [activeTab, setActiveTab] = useState<'positions' | 'orders' | 'alerts'>('positions');
+    const [activeTab, setActiveTab] = useState<'positions' | 'orders' | 'alerts' | 'logs'>('positions');
     const [showSettings, setShowSettings] = useState(false);
     const [settings, setSettings] = useState({
         entryTime: '12:59',
@@ -712,9 +712,10 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                             {/* Navigation Tabs */}
                             <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
                                 {[
-                                    { id: 'positions', label: 'Positions' },
-                                    { id: 'orders', label: 'Orders' },
-                                    { id: 'alerts', label: 'Alerts', icon: Bell }
+                                    { id: 'positions', label: 'Positions', icon: ListOrdered },
+                                    { id: 'orders', label: 'Orders', icon: History },
+                                    { id: 'alerts', label: 'Alerts', icon: Bell },
+                                    { id: 'logs', label: 'Logs', icon: Activity }
                                 ].map((tab) => (
                                     <button
                                         key={tab.id}
@@ -1013,8 +1014,17 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                     {activeTab === 'positions' && <ListOrdered className="w-4 h-4 text-blue-600" />}
                                     {activeTab === 'orders' && <History className="w-4 h-4 text-blue-600" />}
                                     {activeTab === 'alerts' && <Bell className="w-4 h-4 text-blue-600" />}
-                                    {activeTab === 'positions' ? 'Active Positions' : activeTab === 'orders' ? 'Order History' : 'System Alerts'}
+                                    {activeTab === 'logs' && <Activity className="w-4 h-4 text-blue-600" />}
+                                    {activeTab === 'positions' ? 'Active Positions' : activeTab === 'orders' ? 'Order History' : activeTab === 'alerts' ? 'System Alerts' : 'Engine Logs'}
                                 </h2>
+                                {activeTab === 'logs' && (
+                                    <button
+                                        onClick={() => setLogs([])}
+                                        className="text-[10px] font-bold text-slate-400 hover:text-rose-500 transition-colors uppercase tracking-widest"
+                                    >
+                                        Clear Logs
+                                    </button>
+                                )}
                             </div>
 
                             {activeTab === 'positions' ? (
@@ -1128,6 +1138,26 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                         </div>
                                     </div>
                                 )
+                            ) : activeTab === 'logs' ? (
+                                <div className="flex-1 overflow-y-auto p-6 space-y-2 font-mono scrollbar-thin scrollbar-thumb-slate-200 max-h-[600px]">
+                                    {logs.length > 0 ? (
+                                        logs.map((log, i) => {
+                                            const logMsg = typeof log === 'object' && log !== null ? (log as any).msg || JSON.stringify(log) : String(log);
+                                            const logTime = typeof log === 'object' && log !== null ? (log as any).time || new Date().toLocaleTimeString() : new Date().toLocaleTimeString();
+
+                                            return (
+                                                <div key={i} className="text-[11px] leading-relaxed animate-in slide-in-from-left-2 duration-300 py-1 border-b border-slate-50 last:border-0">
+                                                    <span className="text-blue-500 font-bold mr-2">[{logTime}]</span>
+                                                    <span className="text-slate-600">{logMsg}</span>
+                                                </div>
+                                            );
+                                        })
+                                    ) : (
+                                        <div className="py-20 flex items-center justify-center text-[10px] font-bold text-slate-300 uppercase tracking-widest">
+                                            No recent activity detected
+                                        </div>
+                                    )}
+                                </div>
                             ) : null}
                         </div>
                     </div>
@@ -1135,43 +1165,6 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                     {/* Sidebar: Workflow & Logs */}
                     <div className="lg:col-span-1 space-y-4">
                         <EngineWorkflow status={status} activity={engineActivity} />
-
-                        <div className="bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col h-[400px] overflow-hidden">
-                            <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                                <div className="flex flex-col">
-                                    <h2 className="font-bold text-xs uppercase tracking-wider flex items-center gap-2 text-slate-700">
-                                        <ListOrdered className="w-4 h-4 text-blue-600" />
-                                        System Logs
-                                    </h2>
-                                    <span className="text-[8px] font-bold text-slate-300 uppercase tracking-widest ml-6">v1.0.6</span>
-                                </div>
-                                <button
-                                    onClick={() => setLogs([])}
-                                    className="text-[10px] font-bold text-slate-400 hover:text-rose-500 transition-colors uppercase tracking-widest"
-                                >
-                                    Clear
-                                </button>
-                            </div>
-                            <div className="flex-1 overflow-y-auto p-4 space-y-2 font-mono scrollbar-thin scrollbar-thumb-slate-200">
-                                {logs.length > 0 ? (
-                                    logs.map((log, i) => {
-                                        const logMsg = typeof log === 'object' && log !== null ? (log as any).msg || JSON.stringify(log) : String(log);
-                                        const logTime = typeof log === 'object' && log !== null ? (log as any).time || new Date().toLocaleTimeString() : new Date().toLocaleTimeString();
-
-                                        return (
-                                            <div key={i} className="text-[11px] leading-relaxed animate-in slide-in-from-left-2 duration-300">
-                                                <span className="text-slate-400 mr-2">[{logTime}]</span>
-                                                <span className="text-slate-600">{logMsg}</span>
-                                            </div>
-                                        );
-                                    })
-                                ) : (
-                                    <div className="h-full flex items-center justify-center text-[10px] font-bold text-slate-300 uppercase tracking-widest">
-                                        No recent activity
-                                    </div>
-                                )}
-                            </div>
-                        </div>
                     </div>
                 </div>
             </main>

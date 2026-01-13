@@ -410,6 +410,13 @@ export default function DashboardScreen() {
               </View>
             </View>
           </View>
+          <TouchableOpacity
+            onPress={() => router.push('/logs')}
+            style={styles.viewLogsBtn}
+          >
+            <Text style={styles.viewLogsText}>View System Logs</Text>
+            <ChevronRight size={14} color="#3b82f6" />
+          </TouchableOpacity>
         </Animated.View>
 
         {/* Control Center */}
@@ -655,10 +662,25 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   expiryValue: {
-    fontSize: 12,
-    fontWeight: '900',
     color: Theme.colors.text,
     marginTop: 1,
+  },
+  viewLogsBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    gap: 4,
+    backgroundColor: 'rgba(59, 130, 246, 0.03)',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.03)',
+  },
+  viewLogsText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#3b82f6',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   workflowContainer: {
     backgroundColor: Theme.colors.surface,
