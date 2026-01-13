@@ -976,7 +976,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                     <AnimatedMetricCard
                         label="Total PnL"
                         value={pnl}
-                        icon={TrendingUp}
+                        icon={pnl >= 0 ? TrendingUp : TrendingDown}
                         type={pnl >= 0 ? 'positive' : 'negative'}
                         isSignificant={Math.abs(pnl) > 100}
                     />
