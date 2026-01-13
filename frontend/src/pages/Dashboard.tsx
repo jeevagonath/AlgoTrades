@@ -132,6 +132,9 @@ const PositionRow = ({ leg }: { leg: LegState }) => {
             <td className={`px-6 py-4 text-right font-mono text-sm font-bold tracking-tight transition-colors duration-300 ${leg.ltp > leg.entryPrice ? (leg.side === 'BUY' ? 'text-emerald-600' : 'text-rose-600') : (leg.side === 'BUY' ? 'text-rose-600' : 'text-emerald-600')}`}>
                 ₹{animatedLtp.toFixed(2)}
             </td>
+            <td className={`px-6 py-4 text-right font-mono text-sm font-bold ${((leg.ltp - leg.entryPrice) * (leg.side === 'BUY' ? 1 : -1)) >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                ₹{((leg.ltp - leg.entryPrice) * leg.quantity * (leg.side === 'BUY' ? 1 : -1)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </td>
             <td className="px-6 py-4 text-center">
                 <button
                     onClick={() => {
@@ -1040,6 +1043,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                                     <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Qty</th>
                                                     <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Avg Price</th>
                                                     <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">LTP</th>
+                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">PnL</th>
                                                     <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Chart</th>
                                                 </tr>
                                             </thead>

@@ -48,6 +48,9 @@ export const PositionRow: React.FC<PositionRowProps> = ({ leg }) => {
                     <Text style={[styles.ltp, { color: accentColor }]}>₹{leg.ltp.toFixed(2)}</Text>
                     {isProfit ? <TrendingUp size={14} color={accentColor} /> : <TrendingDown size={14} color={accentColor} />}
                 </View>
+                <Text style={[styles.pnlRow, { color: accentColor }]}>
+                    {isProfit ? '+' : ''}₹{((leg.ltp - leg.entryPrice) * leg.quantity * (leg.side === 'BUY' ? 1 : -1)).toFixed(2)}
+                </Text>
             </View>
         </View>
     );
@@ -129,5 +132,11 @@ const styles = StyleSheet.create({
         fontWeight: '900',
         letterSpacing: -0.5,
         fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    },
+    pnlRow: {
+        fontSize: 12,
+        fontWeight: '900',
+        marginTop: 4,
+        letterSpacing: -0.5,
     },
 });
