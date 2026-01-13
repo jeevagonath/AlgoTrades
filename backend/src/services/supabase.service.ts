@@ -1,9 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL = 'https://anuhnacfmzyjqmoxmubg.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_UHsUNkJQRw5cwn7H9EeKxg_hRc0GCG_';
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://anuhnacfmzyjqmoxmubg.supabase.co';
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'sb_publishable_UHsUNkJQRw5cwn7H9EeKxg_hRc0GCG_';
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: {
+        autoRefreshToken: false,
+        persistSession: false
+    }
+});
 
 export const db = {
     async updateState(state: any) {
@@ -58,7 +63,7 @@ export const db = {
             const { data, error } = await supabase
                 .from('positions')
                 .insert(legs.map(l => ({
-                    token: l.token,
+                    instrument_token: l.token,
                     symbol: l.symbol,
                     type: l.type,
                     side: l.side,
@@ -86,7 +91,7 @@ export const db = {
         const { data, error } = await supabase
             .from('order_book')
             .insert({
-                token: order.token,
+                instrument_token: order.token,
                 symbol: order.symbol,
                 side: order.side,
                 price: order.price,
@@ -116,7 +121,10 @@ export const db = {
             .order('created_at', { ascending: false }) // Newest first
             .limit(100);
         if (error) console.error('Supabase Orders Load Error:', error);
-        return data || [];
+        return (data || []).map(o => ({
+            ...o,
+            token: o.instrument_token
+        }));
     },
 
     async addLog(msg: string) {
@@ -208,7 +216,7 @@ export const db = {
             .select('*');
         if (error) console.error('Supabase Positions Load Error:', error);
         return (data || []).map(p => ({
-            token: p.token,
+            token: p.instrument_token,
             symbol: p.symbol,
             type: p.type,
             side: p.side,
@@ -249,7 +257,7 @@ export const db = {
                     .from('position_history_log')
                     .insert(legs.map(l => ({
                         history_id: historyData.id,
-                        token: l.token,
+                        instrument_token: l.token,
                         symbol: l.symbol,
                         type: l.type,
                         side: l.side,
