@@ -11,6 +11,80 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useAuth } from '@/src/context/AuthContext';
 import { Theme } from '@/src/constants/Theme';
 
+const TaskTimer = ({ taskText }: { taskText: string }) => {
+  const [timeLeft, setTimeLeft] = useState<string | null>(null);
+
+  useEffect(() => {
+    const parseTaskTime = (text: string) => {
+      if (!text) return null;
+      const match = text.match(/(\d{1,2}):(\d{2})\s?(AM|PM)/i);
+      if (!match) return null;
+
+      let [_, hours, minutes, ampm] = match;
+      let h = parseInt(hours);
+      const m = parseInt(minutes);
+
+      if (ampm.toUpperCase() === 'PM' && h < 12) h += 12;
+      if (ampm.toUpperCase() === 'AM' && h === 12) h = 0;
+
+      const target = new Date();
+      target.setHours(h, m, 0, 0);
+      return target;
+    };
+
+    const updateTimer = () => {
+      const target = parseTaskTime(taskText);
+      if (!target) {
+        setTimeLeft(null);
+        return;
+      }
+
+      const now = new Date();
+      const diff = target.getTime() - now.getTime();
+
+      if (diff <= 0) {
+        setTimeLeft('Due');
+        return;
+      }
+
+      const h = Math.floor(diff / (1000 * 60 * 60));
+      const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const s = Math.floor((diff % (1000 * 60)) / 1000);
+
+      setTimeLeft(
+        `${h > 0 ? h + ':' : ''}${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
+      );
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [taskText]);
+
+  if (!timeLeft) return null;
+
+  return (
+    <View style={{
+      marginLeft: 8,
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 4,
+      borderWidth: 1,
+      backgroundColor: timeLeft === 'Due' ? '#fff1f2' : '#f0f9ff',
+      borderColor: timeLeft === 'Due' ? '#fecaca' : '#bae6fd',
+    }}>
+      <Text style={{
+        fontSize: 10,
+        fontWeight: 'bold',
+        fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+        color: timeLeft === 'Due' ? '#e11d48' : '#0284c7',
+      }}>
+        {timeLeft !== 'Due' ? `[${timeLeft}]` : timeLeft}
+      </Text>
+    </View>
+  );
+};
+
 export default function DashboardScreen() {
   const { logout } = useAuth();
   const router = useRouter();
@@ -252,7 +326,10 @@ export default function DashboardScreen() {
             </View>
             <View>
               <Text style={styles.activityLabel}>NEXT TASK</Text>
-              <Text style={styles.activityValue}>{nextAction}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Text style={styles.activityValue}>{nextAction}</Text>
+                <TaskTimer taskText={nextAction} />
+              </View>
             </View>
           </View>
         </Animated.View>

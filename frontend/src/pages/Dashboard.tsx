@@ -149,6 +149,71 @@ const PositionRow = ({ leg }: { leg: LegState }) => {
     );
 };
 
+const TaskTimer = ({ taskText }: { taskText: string }) => {
+    const [timeLeft, setTimeLeft] = useState<string | null>(null);
+
+    useEffect(() => {
+        const parseTaskTime = (text: string) => {
+            const match = text.match(/(\d{1,2}):(\d{2})\s?(AM|PM)/i);
+            if (!match) return null;
+
+            let [_, hours, minutes, ampm] = match;
+            let h = parseInt(hours);
+            const m = parseInt(minutes);
+
+            if (ampm.toUpperCase() === 'PM' && h < 12) h += 12;
+            if (ampm.toUpperCase() === 'AM' && h === 12) h = 0;
+
+            const target = new Date();
+            target.setHours(h, m, 0, 0);
+
+            // If target time has already passed today, assume it's for tomorrow? 
+            // In trading context, usually we just show it's passed or it refers to today's schedule.
+            // For 12:45 PM, if it's 1:00 PM, it's passed.
+            return target;
+        };
+
+        const updateTimer = () => {
+            const target = parseTaskTime(taskText);
+            if (!target) {
+                setTimeLeft(null);
+                return;
+            }
+
+            const now = new Date();
+            const diff = target.getTime() - now.getTime();
+
+            if (diff <= 0) {
+                setTimeLeft('Due');
+                return;
+            }
+
+            const h = Math.floor(diff / (1000 * 60 * 60));
+            const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const s = Math.floor((diff % (1000 * 60)) / 1000);
+
+            setTimeLeft(
+                `${h > 0 ? h + ':' : ''}${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
+            );
+        };
+
+        updateTimer();
+        const interval = setInterval(updateTimer, 1000);
+        return () => clearInterval(interval);
+    }, [taskText]);
+
+    if (!timeLeft) return null;
+
+    return (
+        <span className={`ml-2 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold border animate-pulse ${timeLeft === 'Due'
+            ? 'bg-rose-50 text-rose-600 border-rose-100'
+            : 'bg-blue-50 text-blue-600 border-blue-100'
+            }`}>
+            {timeLeft !== 'Due' ? `[${timeLeft}]` : timeLeft}
+        </span>
+    );
+};
+
 const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
     const [pnl, setPnl] = useState(0);
     const [peakProfit, setPeakProfit] = useState(0);
@@ -825,7 +890,10 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                             </div>
                             <div>
                                 <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Next Task</div>
-                                <div className="text-sm font-bold text-slate-700">{nextAction || 'Pending'}</div>
+                                <div className="text-sm font-bold text-slate-700">
+                                    {nextAction || 'Pending'}
+                                    <TaskTimer taskText={nextAction} />
+                                </div>
                             </div>
                         </div>
                     </div>
