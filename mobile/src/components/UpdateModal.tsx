@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, StyleSheet, Linking, Platform } from 'react-native';
-import { Modal, Portal, Text, Button, IconButton } from 'react-native-paper';
+import { View, StyleSheet, Linking, Platform, Modal, TouchableOpacity } from 'react-native';
+import { Text, Button, IconButton } from 'react-native-paper';
 import { Download, ExternalLink, X } from 'lucide-react-native';
 import { Theme } from '@/src/constants/Theme';
 import { VersionInfo } from '@/src/services/update.service';
@@ -25,61 +25,70 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
     };
 
     return (
-        <Portal>
-            <Modal
-                visible={visible}
-                onDismiss={onDismiss}
-                contentContainerStyle={styles.container}
-            >
-                <View style={styles.header}>
-                    <View style={styles.iconContainer}>
-                        <Download size={24} color={Theme.colors.primary} />
+        <Modal
+            visible={visible}
+            transparent
+            animationType="fade"
+            onRequestClose={onDismiss}
+        >
+            <View style={styles.overlay}>
+                <View style={styles.container}>
+                    <View style={styles.header}>
+                        <View style={styles.iconContainer}>
+                            <Download size={24} color={Theme.colors.primary} />
+                        </View>
+                        <IconButton
+                            icon={() => <X size={20} color={Theme.colors.textMuted} />}
+                            onPress={onDismiss}
+                        />
                     </View>
-                    <IconButton
-                        icon={() => <X size={20} color={Theme.colors.textMuted} />}
-                        onPress={onDismiss}
-                    />
-                </View>
 
-                <View style={styles.content}>
-                    <Text style={styles.title}>Update Available!</Text>
-                    <Text style={styles.versionRow}>
-                        Current: <Text style={styles.version}>{currentVersion}</Text>  →  Latest: <Text style={styles.latestVersion}>{versionInfo.version}</Text>
-                    </Text>
-
-                    <View style={styles.notesContainer}>
-                        <Text style={styles.notesLabel}>What's New:</Text>
-                        <Text style={styles.notes} numberOfLines={5}>
-                            {versionInfo.notes || 'Performance improvements and bug fixes.'}
+                    <View style={styles.content}>
+                        <Text style={styles.title}>Update Available!</Text>
+                        <Text style={styles.versionRow}>
+                            Current: <Text style={styles.version}>{currentVersion}</Text>  →  Latest: <Text style={styles.latestVersion}>{versionInfo.version}</Text>
                         </Text>
+
+                        <View style={styles.notesContainer}>
+                            <Text style={styles.notesLabel}>What's New:</Text>
+                            <Text style={styles.notes} numberOfLines={5}>
+                                {versionInfo.notes || 'Performance improvements and bug fixes.'}
+                            </Text>
+                        </View>
+                    </View>
+
+                    <View style={styles.footer}>
+                        <Button
+                            mode="contained"
+                            onPress={handleUpdate}
+                            style={styles.updateButton}
+                            contentStyle={styles.buttonContent}
+                            icon={() => <ExternalLink size={18} color="#fff" />}
+                        >
+                            Update Now
+                        </Button>
+                        <Button
+                            mode="text"
+                            onPress={onDismiss}
+                            textColor={Theme.colors.textMuted}
+                            style={styles.laterButton}
+                        >
+                            Maybe Later
+                        </Button>
                     </View>
                 </View>
-
-                <View style={styles.footer}>
-                    <Button
-                        mode="contained"
-                        onPress={handleUpdate}
-                        style={styles.updateButton}
-                        contentStyle={styles.buttonContent}
-                        icon={() => <ExternalLink size={18} color="#fff" />}
-                    >
-                        Update Now
-                    </Button>
-                    <Button
-                        mode="text"
-                        onPress={onDismiss}
-                        textColor={Theme.colors.textMuted}
-                        style={styles.laterButton}
-                    >
-                        Maybe Later
-                    </Button>
-                </View>
-            </Modal>
-        </Portal>
+            </View>
+        </Modal>
     );
 };
 
 const styles = StyleSheet.create({
+    overlay: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    },
     container: {
         backgroundColor: Theme.colors.surface,
         margin: 20,
