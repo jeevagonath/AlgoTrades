@@ -584,7 +584,7 @@ class StrategyEngine {
             strike: picked.strprc,
             entryPrice: targetPrice,
             ltp: targetPrice,
-            quantity: picked.ls ? parseFloat(picked.ls) : 50,
+            quantity: picked.ls ? parseFloat(picked.ls) : 75,
             tier
         };
     }
@@ -995,6 +995,10 @@ class StrategyEngine {
             }
 
             if (targetScrip) {
+                // Fetch latest quotes for target scrip to get dynamic lot size (ls)
+                const quote: any = await shoonya.getQuotes('NFO', targetScrip.token);
+                const lotSize = quote && quote.ls ? parseFloat(quote.ls) : (triggeredLeg.quantity || 75);
+
                 const adjustmentLeg: LegState = {
                     token: targetScrip.token,
                     symbol: targetScrip.tsym,
@@ -1003,7 +1007,7 @@ class StrategyEngine {
                     strike: targetScrip.strprc,
                     entryPrice: 0, // Market order
                     ltp: 0,
-                    quantity: 50,
+                    quantity: lotSize,
                     tier: 2 // Adjustments for Tier 2 Sell should maintain Tier 2 monitoring
                 };
 

@@ -12,6 +12,7 @@ interface PositionRowProps {
         strike: string;
         entryPrice: number;
         ltp: number;
+        quantity: number;
     };
 }
 
@@ -38,6 +39,7 @@ export const PositionRow: React.FC<PositionRowProps> = ({ leg }) => {
                     </Text>
                 </View>
                 <Text style={styles.strike}>{leg.strike}</Text>
+                <Text style={styles.quantity}>Qty: {leg.quantity}</Text>
             </View>
 
             <View style={styles.right}>
@@ -100,6 +102,12 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: Theme.colors.textMuted,
         fontWeight: '800',
+    },
+    quantity: {
+        fontSize: 10,
+        color: Theme.colors.textDim,
+        fontWeight: '700',
+        marginTop: 2,
     },
     right: {
         flex: 2,

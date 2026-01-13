@@ -54,7 +54,7 @@ export default function PositionsScreen() {
     const totalPnL = React.useMemo(() => {
         return positions.reduce((acc, leg) => {
             const pnl = leg.side === 'BUY' ? (leg.ltp - leg.entryPrice) : (leg.entryPrice - leg.ltp);
-            return acc + (pnl * 50);
+            return acc + (pnl * (leg.quantity || 75));
         }, 0);
     }, [positions]);
 
