@@ -40,8 +40,7 @@ app.get('/health', async (request, reply) => {
     return { status: 'active', timestamp: new Date(), uptime: process.uptime() };
 });
 
-const PORT = Number(process.env.PORT) || 
-;
+const PORT = Number(process.env.PORT) || 3001;
 
 const start = async () => {
     try {
