@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Activity, ListOrdered, History, Bell, LogOut, TrendingUp, TrendingDown, Clock, Play, Pause, Octagon, Power, Search, Shield, Settings, Save, X, BarChart3, CheckCircle2, Circle } from 'lucide-react';
 import { socketService } from '@/services/socket.service';
 import { strategyApi, authApi } from '@/services/api.service';
@@ -322,6 +322,16 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
     const [userDetails, setUserDetails] = useState<any>(null);
     const [margins, setMargins] = useState<any>(null);
     const [showClientModal, setShowClientModal] = useState(false);
+
+    // Dynamic PnL calculation from individual legs
+    const realTimePnL = useMemo(() => {
+        if (!testStrikes || testStrikes.length === 0) return pnl;
+        return testStrikes.reduce((acc, leg) => {
+            const multiplier = leg.side === 'BUY' ? 1 : -1;
+            const legPnL = (leg.ltp - (leg.entryPrice || 0)) * (leg.quantity || 0) * multiplier;
+            return acc + legPnL;
+        }, 0);
+    }, [testStrikes, pnl]);
 
     useEffect(() => {
         socketService.connect();
@@ -975,10 +985,10 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <AnimatedMetricCard
                         label="Total PnL"
-                        value={pnl}
-                        icon={pnl >= 0 ? TrendingUp : TrendingDown}
-                        type={pnl >= 0 ? 'positive' : 'negative'}
-                        isSignificant={Math.abs(pnl) > 100}
+                        value={realTimePnL}
+                        icon={realTimePnL >= 0 ? TrendingUp : TrendingDown}
+                        type={realTimePnL >= 0 ? 'positive' : 'negative'}
+                        isSignificant={Math.abs(realTimePnL) > 100}
                     />
                     <AnimatedMetricCard
                         label="Peak Profit"
