@@ -1,13 +1,44 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 import { PaperProvider } from 'react-native-paper';
 import { View, ActivityIndicator } from 'react-native';
 
 import { Theme } from '@/src/constants/Theme';
 import { AuthProvider, useAuth } from '@/src/context/AuthContext';
+import { updateService, VersionInfo } from '@/src/services/update.service';
+import { UpdateModal } from '@/src/components/UpdateModal';
+
+function UpdateChecker({ children }: { children: React.ReactNode }) {
+  const [modalVisible, setModalVisible] = useState(false);
+  const [versionInfo, setVersionInfo] = useState<VersionInfo | null>(null);
+  const currentVersion = updateService.getCurrentVersion();
+
+  useEffect(() => {
+    const checkUpdate = async () => {
+      const latest = await updateService.getLatestVersion();
+      if (latest && updateService.isNewerVersion(latest.version, currentVersion)) {
+        setVersionInfo(latest);
+        setModalVisible(true);
+      }
+    };
+    checkUpdate();
+  }, []);
+
+  return (
+    <>
+      {children}
+      <UpdateModal
+        visible={modalVisible}
+        versionInfo={versionInfo}
+        currentVersion={currentVersion}
+        onDismiss={() => setModalVisible(false)}
+      />
+    </>
+  );
+}
 
 function AuthContent() {
   const { isAuthenticated, loading } = useAuth();
@@ -50,7 +81,9 @@ export default function RootLayout() {
   return (
     <PaperProvider>
       <AuthProvider>
-        <AuthContent />
+        <UpdateChecker>
+          <AuthContent />
+        </UpdateChecker>
       </AuthProvider>
     </PaperProvider>
   );
