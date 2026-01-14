@@ -71,12 +71,12 @@ export function PositionDetailsModal({ isOpen, onClose, date, positions, totalPn
                                                     {position.side}
                                                 </span>
                                             </td>
-                                            <td className="px-4 py-3 text-sm text-slate-700 text-right font-mono">₹{position.strike?.toFixed(0)}</td>
-                                            <td className="px-4 py-3 text-sm text-slate-700 text-right font-mono">₹{position.entry_price?.toFixed(2)}</td>
-                                            <td className="px-4 py-3 text-sm text-slate-700 text-right font-mono">₹{position.exit_price?.toFixed(2)}</td>
-                                            <td className="px-4 py-3 text-sm text-slate-700 text-right font-mono">{position.quantity}</td>
+                                            <td className="px-4 py-3 text-sm text-slate-700 text-right font-mono">₹{position.strike ? Number(position.strike).toFixed(0) : 'N/A'}</td>
+                                            <td className="px-4 py-3 text-sm text-slate-700 text-right font-mono">₹{position.entry_price ? Number(position.entry_price).toFixed(2) : 'N/A'}</td>
+                                            <td className="px-4 py-3 text-sm text-slate-700 text-right font-mono">₹{position.exit_price ? Number(position.exit_price).toFixed(2) : 'N/A'}</td>
+                                            <td className="px-4 py-3 text-sm text-slate-700 text-right font-mono">{position.quantity || 0}</td>
                                             <td className={`px-4 py-3 text-sm font-bold text-right font-mono ${position.pnl >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                                {position.pnl >= 0 ? '+' : ''}₹{position.pnl?.toFixed(2)}
+                                                {position.pnl ? (position.pnl >= 0 ? '+' : '') + '₹' + Number(position.pnl).toFixed(2) : '₹0.00'}
                                             </td>
                                         </tr>
                                     ))}
