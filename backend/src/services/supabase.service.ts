@@ -378,5 +378,173 @@ export const db = {
             console.error('Failed to load alerts:', err);
             return [];
         }
+    },
+
+    // Analytics Methods
+    async getTradeHistory(filters: {
+        startDate?: string;
+        endDate?: string;
+        isVirtual?: boolean;
+    }) {
+        try {
+            let query = supabase
+                .from('trade_history')
+                .select(`
+                    *,
+                    position_history_log (*)
+                `)
+                .order('exit_time', { ascending: false });
+
+            if (filters.startDate) {
+                query = query.gte('exit_time', filters.startDate);
+            }
+            if (filters.endDate) {
+                query = query.lte('exit_time', filters.endDate);
+            }
+            if (filters.isVirtual !== undefined) {
+                query = query.eq('is_virtual', filters.isVirtual);
+            }
+
+            const { data, error } = await query;
+
+            if (error) {
+                console.error('Supabase Trade History Load Error:', error);
+                return [];
+            }
+
+            return data || [];
+        } catch (err) {
+            console.error('Failed to load trade history:', err);
+            return [];
+        }
+    },
+
+    async getDailyPnL(filters: {
+        startDate?: string;
+        endDate?: string;
+        isVirtual?: boolean;
+    }) {
+        try {
+            let query = supabase
+                .from('trade_history')
+                .select('exit_time, pnl, is_virtual');
+
+            if (filters.startDate) {
+                query = query.gte('exit_time', filters.startDate);
+            }
+            if (filters.endDate) {
+                query = query.lte('exit_time', filters.endDate);
+            }
+            if (filters.isVirtual !== undefined) {
+                query = query.eq('is_virtual', filters.isVirtual);
+            }
+
+            const { data, error } = await query;
+
+            if (error) {
+                console.error('Supabase Daily PnL Load Error:', error);
+                return [];
+            }
+
+            // Aggregate by date
+            const dailyMap = new Map<string, { pnl: number; tradeCount: number }>();
+
+            (data || []).forEach((trade: any) => {
+                const date = trade.exit_time.split('T')[0]; // Extract YYYY-MM-DD
+                const existing = dailyMap.get(date) || { pnl: 0, tradeCount: 0 };
+                dailyMap.set(date, {
+                    pnl: existing.pnl + (trade.pnl || 0),
+                    tradeCount: existing.tradeCount + 1
+                });
+            });
+
+            // Convert to array
+            return Array.from(dailyMap.entries()).map(([date, stats]) => ({
+                date,
+                pnl: stats.pnl,
+                tradeCount: stats.tradeCount
+            })).sort((a, b) => a.date.localeCompare(b.date));
+        } catch (err) {
+            console.error('Failed to load daily PnL:', err);
+            return [];
+        }
+    },
+
+    async getPnLSummary(filters: {
+        startDate?: string;
+        endDate?: string;
+        isVirtual?: boolean;
+    }) {
+        try {
+            let query = supabase
+                .from('trade_history')
+                .select('pnl, peak_profit, peak_loss, exit_time');
+
+            if (filters.startDate) {
+                query = query.gte('exit_time', filters.startDate);
+            }
+            if (filters.endDate) {
+                query = query.lte('exit_time', filters.endDate);
+            }
+            if (filters.isVirtual !== undefined) {
+                query = query.eq('is_virtual', filters.isVirtual);
+            }
+
+            const { data, error } = await query;
+
+            if (error) {
+                console.error('Supabase PnL Summary Load Error:', error);
+                return {
+                    totalRealizedPnL: 0,
+                    totalTrades: 0,
+                    winningTrades: 0,
+                    losingTrades: 0,
+                    winRate: 0,
+                    maxProfitDay: 0,
+                    maxLossDay: 0,
+                    avgProfit: 0,
+                    avgLoss: 0
+                };
+            }
+
+            const trades = data || [];
+            const totalRealizedPnL = trades.reduce((sum, t) => sum + (t.pnl || 0), 0);
+            const winningTrades = trades.filter(t => (t.pnl || 0) > 0).length;
+            const losingTrades = trades.filter(t => (t.pnl || 0) < 0).length;
+            const winRate = trades.length > 0 ? (winningTrades / trades.length) * 100 : 0;
+
+            const profits = trades.filter(t => (t.pnl || 0) > 0).map(t => t.pnl || 0);
+            const losses = trades.filter(t => (t.pnl || 0) < 0).map(t => t.pnl || 0);
+
+            const maxProfitDay = profits.length > 0 ? Math.max(...profits) : 0;
+            const maxLossDay = losses.length > 0 ? Math.min(...losses) : 0;
+            const avgProfit = profits.length > 0 ? profits.reduce((a, b) => a + b, 0) / profits.length : 0;
+            const avgLoss = losses.length > 0 ? losses.reduce((a, b) => a + b, 0) / losses.length : 0;
+
+            return {
+                totalRealizedPnL,
+                totalTrades: trades.length,
+                winningTrades,
+                losingTrades,
+                winRate,
+                maxProfitDay,
+                maxLossDay,
+                avgProfit,
+                avgLoss
+            };
+        } catch (err) {
+            console.error('Failed to load PnL summary:', err);
+            return {
+                totalRealizedPnL: 0,
+                totalTrades: 0,
+                winningTrades: 0,
+                losingTrades: 0,
+                winRate: 0,
+                maxProfitDay: 0,
+                maxLossDay: 0,
+                avgProfit: 0,
+                avgLoss: 0
+            };
+        }
     }
 };

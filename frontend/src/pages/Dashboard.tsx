@@ -4,6 +4,7 @@ import { socketService } from '@/services/socket.service';
 import { strategyApi, authApi } from '@/services/api.service';
 import { formatTradingViewSymbol, getNiftySpotChartUrl, openTradingViewChart } from '@/utils/tradingview';
 import { useAnimatedValue, useFlashOnChange } from '@/hooks/useAnimations';
+import PnL from './PnL';
 
 // --- Types ---
 
@@ -750,11 +751,19 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                 )}
                             </div>
 
+                            {/* P&L Analytics Page */}
+                            {activeTab === 'pnl' && (
+                                <div className="mt-6">
+                                    <PnL />
+                                </div>
+                            )}
+
                             {/* Navigation Tabs */}
                             <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
                                 {[
                                     { id: 'positions', label: 'Positions', icon: ListOrdered },
                                     { id: 'orders', label: 'Orders', icon: History },
+                                    { id: 'pnl', label: 'P&L Analytics', icon: BarChart3 },
                                     { id: 'alerts', label: 'Alerts', icon: Bell },
                                     { id: 'logs', label: 'Logs', icon: Activity }
                                 ].map((tab) => (

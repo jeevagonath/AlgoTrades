@@ -7,6 +7,7 @@ import { FastifyInstance } from 'fastify';
 
 import { authRoutes } from './routes/auth.routes';
 import { strategyRoutes } from './routes/strategy.routes';
+import { analyticsRoutes } from './routes/analytics.routes';
 import { strategyEngine } from './services/strategy.engine';
 
 const app: FastifyInstance = fastify({ logger: true });
@@ -35,6 +36,7 @@ app.setErrorHandler((error: any, request, reply) => {
 // Setup Routes
 app.register(authRoutes, { prefix: '/api/auth' });
 app.register(strategyRoutes, { prefix: '/api/strategy' });
+app.register(analyticsRoutes, { prefix: '/api/analytics' });
 
 app.get('/health', async (request, reply) => {
     return { status: 'active', timestamp: new Date(), uptime: process.uptime() };
