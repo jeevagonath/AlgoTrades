@@ -4,7 +4,7 @@ import { socketService } from '@/services/socket.service';
 import { strategyApi, authApi } from '@/services/api.service';
 import { formatTradingViewSymbol, getNiftySpotChartUrl, openTradingViewChart } from '@/utils/tradingview';
 import { useAnimatedValue, useFlashOnChange } from '@/hooks/useAnimations';
-import PnL from './PnL';
+import { CalendarHeatmap } from '@/components/CalendarHeatmap';
 
 // --- Types ---
 
@@ -302,6 +302,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
     const [isExpiryDay, setIsExpiryDay] = useState(false);
 
     const [activeTab, setActiveTab] = useState<'positions' | 'orders' | 'logs' | 'alerts' | 'pnl'>('positions');
+    const [dailyPnL, setDailyPnL] = useState<any[]>([]);
     const [showSettings, setShowSettings] = useState(false);
     const [settings, setSettings] = useState({
         entryTime: '12:59',
@@ -537,6 +538,26 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
         };
     }, []);
 
+    // Fetch daily P&L data when pnl tab is active
+    useEffect(() => {
+        if (activeTab === 'pnl') {
+            const fetchDailyPnL = async () => {
+                try {
+                    const start = new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0];
+                    const end = new Date().toISOString().split('T')[0];
+                    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://algotradesservice.onrender.com/api'}/analytics/daily-pnl?startDate=${start}&endDate=${end}&isVirtual=true`);
+                    const data = await res.json();
+                    if (data.status === 'success') {
+                        setDailyPnL(data.data || []);
+                    }
+                } catch (err) {
+                    console.error('Failed to fetch daily P&L:', err);
+                }
+            };
+            fetchDailyPnL();
+        }
+    }, [activeTab]);
+
     const handleLogout = () => {
         onLogout();
     };
@@ -753,8 +774,12 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
 
                             {/* P&L Analytics Page */}
                             {activeTab === 'pnl' && (
-                                <div className="mt-6">
-                                    <PnL />
+                                <div className="space-y-4">
+                                    <CalendarHeatmap
+                                        data={dailyPnL}
+                                        startDate={new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0]}
+                                        endDate={new Date().toISOString().split('T')[0]}
+                                    />
                                 </div>
                             )}
 
