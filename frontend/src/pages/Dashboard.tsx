@@ -572,19 +572,28 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
 
     // Handle calendar date click to show position details
     const handleDateClick = async (date: string, tradeIds: string[], pnl: number) => {
+        console.log('📅 Date clicked:', date, 'Trade IDs:', tradeIds, 'P&L:', pnl);
         try {
             if (tradeIds.length > 0) {
-                const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://algotradesservice.onrender.com/api'}/analytics/trade-positions/${tradeIds[0]}`);
+                const url = `${import.meta.env.VITE_API_BASE_URL || 'https://algotradesservice.onrender.com/api'}/analytics/trade-positions/${tradeIds[0]}`;
+                console.log('🔍 Fetching positions from:', url);
+                const res = await fetch(url);
                 const data = await res.json();
+                console.log('📊 Positions API response:', data);
                 if (data.status === 'success') {
+                    console.log('✅ Opening modal with positions:', data.data);
                     setSelectedDate(date);
                     setSelectedPositions(data.data || []);
                     setSelectedPnL(pnl);
                     setShowPositionModal(true);
+                } else {
+                    console.error('❌ API returned error:', data);
                 }
+            } else {
+                console.warn('⚠️ No trade IDs provided');
             }
         } catch (err) {
-            console.error('Failed to fetch positions:', err);
+            console.error('❌ Failed to fetch positions:', err);
         }
     };
 
