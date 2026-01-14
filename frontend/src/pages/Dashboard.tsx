@@ -312,7 +312,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
     // Date filter state
     const [startDate, setStartDate] = useState(() => {
         const d = new Date();
-        d.setMonth(d.getMonth() - 12);
+        d.setMonth(d.getMonth() - 4);
         return d.toISOString().split('T')[0];
     });
     const [endDate, setEndDate] = useState(() => new Date().toISOString().split('T')[0]);
