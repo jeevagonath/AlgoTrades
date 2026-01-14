@@ -308,6 +308,23 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
     const [selectedDate, setSelectedDate] = useState('');
     const [selectedPositions, setSelectedPositions] = useState<any[]>([]);
     const [selectedPnL, setSelectedPnL] = useState(0);
+
+    // Date filter state
+    const [startDate, setStartDate] = useState(() => {
+        const d = new Date();
+        d.setMonth(d.getMonth() - 12);
+        return d.toISOString().split('T')[0];
+    });
+    const [endDate, setEndDate] = useState(() => new Date().toISOString().split('T')[0]);
+
+    // Summary metrics state
+    const [pnlSummary, setPnlSummary] = useState({
+        totalPnl: 0,
+        charges: 0,
+        credits: 0,
+        netPnl: 0
+    });
+
     const [showSettings, setShowSettings] = useState(false);
     const [settings, setSettings] = useState({
         entryTime: '12:59',
@@ -1245,15 +1262,62 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                     </div>
                                 )
                             ) : activeTab === 'pnl' ? (
-                                <div className="p-6">
+                                <div className="p-6 space-y-6">
+                                    {/* Date Filter */}
+                                    <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                        <div className="flex items-center gap-2">
+                                            <label className="text-sm font-bold text-slate-600">Date from:</label>
+                                            <input
+                                                type="date"
+                                                value={startDate}
+                                                onChange={(e) => setStartDate(e.target.value)}
+                                                className="px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            />
+                                        </div>
+                                        <span className="text-slate-400">-</span>
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="date"
+                                                value={endDate}
+                                                onChange={(e) => setEndDate(e.target.value)}
+                                                className="px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Summary Metrics */}
+                                    <div className="grid grid-cols-4 gap-4">
+                                        <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-xl p-4">
+                                            <div className="text-xs font-bold text-green-700 uppercase tracking-wider mb-1">Realized P&L</div>
+                                            <div className={`text-2xl font-bold ${pnlSummary.totalPnl >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                                {pnlSummary.totalPnl >= 0 ? '+' : ''}₹{(pnlSummary.totalPnl / 1000).toFixed(2)}k
+                                            </div>
+                                        </div>
+                                        <div className="bg-gradient-to-br from-orange-50 to-orange-100 border border-orange-200 rounded-xl p-4">
+                                            <div className="text-xs font-bold text-orange-700 uppercase tracking-wider mb-1">Charges & taxes</div>
+                                            <div className="text-2xl font-bold text-orange-600">
+                                                ₹{pnlSummary.charges}
+                                            </div>
+                                        </div>
+                                        <div className="bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 rounded-xl p-4">
+                                            <div className="text-xs font-bold text-purple-700 uppercase tracking-wider mb-1">Other credits & debits</div>
+                                            <div className="text-2xl font-bold text-purple-600">
+                                                {pnlSummary.credits >= 0 ? '+' : ''}₹{pnlSummary.credits}
+                                            </div>
+                                        </div>
+                                        <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-4">
+                                            <div className="text-xs font-bold text-blue-700 uppercase tracking-wider mb-1">Net Realized P&L</div>
+                                            <div className={`text-2xl font-bold ${pnlSummary.netPnl >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                                                {pnlSummary.netPnl >= 0 ? '+' : ''}₹{(pnlSummary.netPnl / 1000).toFixed(2)}k
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Calendar */}
                                     <CalendarHeatmap
                                         data={dailyPnL}
-                                        startDate={(() => {
-                                            const d = new Date();
-                                            d.setMonth(d.getMonth() - 12);
-                                            return d.toISOString().split('T')[0];
-                                        })()}
-                                        endDate={new Date().toISOString().split('T')[0]}
+                                        startDate={startDate}
+                                        endDate={endDate}
                                         onDateClick={handleDateClick}
                                     />
                                 </div>
