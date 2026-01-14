@@ -309,7 +309,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
     const [selectedPositions, setSelectedPositions] = useState<any[]>([]);
     const [selectedPnL, setSelectedPnL] = useState(0);
 
-    // Date filter state
+    // Date filter state - default to last 4 months
     const [startDate, setStartDate] = useState(() => {
         const d = new Date();
         d.setMonth(d.getMonth() - 4);
