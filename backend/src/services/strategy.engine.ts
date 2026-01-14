@@ -79,9 +79,13 @@ class StrategyEngine {
     private lastPnlUpdateTime: number = 0;
     private PNL_UPDATE_INTERVAL = 5 * 60 * 1000;
     private isWebSocketStarted: boolean = false;
+    private lastPositionSyncTime: number = 0;
+    private POSITION_SYNC_INTERVAL = 60 * 60 * 1000; // 1 hour
+    private hourlySyncTimer: NodeJS.Timeout | null = null;
 
     constructor() {
         this.initScheduler();
+        this.startHourlyPositionSync();
     }
 
     async resume() {
@@ -951,48 +955,67 @@ class StrategyEngine {
         if (tokens.length > 0) shoonya.subscribe(tokens);
     }
 
+    private startHourlyPositionSync() {
+        // Clear existing timer if any
+        if (this.hourlySyncTimer) {
+            clearInterval(this.hourlySyncTimer);
+        }
+
+        // Sync positions to DB every hour
+        this.hourlySyncTimer = setInterval(async () => {
+            if (this.state.selectedStrikes.length > 0) {
+                try {
+                    await db.syncPositions(this.state.selectedStrikes);
+                    await this.syncToDb(true);
+                    this.addLog('💾 [System] Hourly position sync completed');
+                } catch (err) {
+                    console.error('[Strategy] Hourly position sync failed:', err);
+                }
+            }
+        }, this.POSITION_SYNC_INTERVAL);
+
+        this.addLog('⏰ [System] Hourly position sync timer started');
+    }
+
     private async handlePriceUpdate(tick: any) {
         const token = tick.tk;
         const ltp = parseFloat(tick.lp);
         if (!token || isNaN(ltp)) return;
 
-        // 1. ALWAYS emit ANY tick received for UI-wide updates (Option Chain, Ticker, etc.)
-        socketService.emit('price_update', {
-            token,
-            lp: tick.lp,
-            pc: tick.pc,
-            h: tick.h,
-            l: tick.l,
-            c: tick.c,
-            v: tick.v,
-            ltp: ltp
-        });
-
         const legIdx = this.state.selectedStrikes.findIndex(s => s.token === token);
+
+        // Update position LTP if this is a position token
         if (legIdx !== -1) {
             this.state.selectedStrikes[legIdx].ltp = ltp;
 
-            // 2. Perform strategy logic ONLY if ACTIVE
+            // Perform strategy logic ONLY if ACTIVE
             if (this.state.status === 'ACTIVE' && !this.state.isPaused) {
                 this.checkAdjustments(this.state.selectedStrikes[legIdx]);
                 this.checkExits();
             }
 
-            // 3. ALWAYS calculate PNL if we have strikes, to update UI
+            // Calculate PNL with updated prices
             this.calculatePnL();
+        }
 
-            // 4. ALWAYS emit leg updates for the frontend table
-            const emitData = {
-                token,
-                ltp,
+        // Emit single consolidated price_update event with all data
+        socketService.emit('price_update', {
+            token,
+            lp: tick.lp,
+            ltp: ltp,
+            pc: tick.pc,
+            h: tick.h,
+            l: tick.l,
+            c: tick.c,
+            v: tick.v,
+            // Include position-specific data if this is a position token
+            ...(legIdx !== -1 && {
                 symbol: this.state.selectedStrikes[legIdx].symbol,
                 pnl: this.state.pnl,
                 peakProfit: this.state.peakProfit,
                 peakLoss: this.state.peakLoss
-            };
-            socketService.emit('price_update', emitData);
-        }
-        await this.syncToDb();
+            })
+        });
     }
 
     private checkAdjustments(leg: LegState) {
