@@ -287,11 +287,11 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
     const [pnl, setPnl] = useState(0);
     const [peakProfit, setPeakProfit] = useState(0);
     const [peakLoss, setPeakLoss] = useState(0);
-    const [testStrikes, setTestStrikes] = useState<any[]>([]);
+    const [testStrikes, setTestStrikes] = useState<LegState[]>([]);
     const [testing, setTesting] = useState(false);
-    const [logs, setLogs] = useState<{ time: string, msg: string }[]>([]);
-    const [orders, setOrders] = useState<any[]>([]); // New Order State
-    const [alerts, setAlerts] = useState<any[]>([]); // Alerts State
+    const [logs, setLogs] = useState<LogEntry[]>([]);
+    const [orders, setOrders] = useState<Order[]>([]); // New Order State
+    const [alerts, setAlerts] = useState<Alert[]>([]); // Alerts State
 
 
     const [expiries, setExpiries] = useState<string[]>([]);
@@ -301,7 +301,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
     const [nextWeekExpiry, setNextWeekExpiry] = useState<string>('');
     const [isExpiryDay, setIsExpiryDay] = useState(false);
 
-    const [activeTab, setActiveTab] = useState<'positions' | 'orders' | 'alerts' | 'logs'>('positions');
+    const [activeTab, setActiveTab] = useState<'positions' | 'orders' | 'logs' | 'alerts' | 'pnl'>('positions');
     const [showSettings, setShowSettings] = useState(false);
     const [settings, setSettings] = useState({
         entryTime: '12:59',
