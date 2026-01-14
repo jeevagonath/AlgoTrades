@@ -515,11 +515,11 @@ export const db = {
 
             console.log('✅ Found history_id:', tradeData.history_id);
 
-            // Then, fetch all positions with this history_id
+            // Then, fetch all positions with this history_id (using tradeId directly)
             const { data: positions, error: positionsError } = await supabase
                 .from('position_history_log')
                 .select('*')
-                .eq('history_id', tradeData.history_id)
+                .eq('history_id', tradeId)
                 .order('created_at', { ascending: true });
 
             console.log('📊 Positions query result:', positions);
