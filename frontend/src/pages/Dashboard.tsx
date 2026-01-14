@@ -551,7 +551,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                     const startDate = start.toISOString().split('T')[0];
                     const endDate = end.toISOString().split('T')[0];
 
-                    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://algotradesservice.onrender.com/api'}/analytics/daily-pnl?startDate=${startDate}&endDate=${endDate}&isVirtual=true`);
+                    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://algotradesservice.onrender.com/api'}/analytics/daily-pnl?startDate=${startDate}&endDate=${endDate}`);
                     const data = await res.json();
                     if (data.status === 'success') {
                         setDailyPnL(data.data || []);
