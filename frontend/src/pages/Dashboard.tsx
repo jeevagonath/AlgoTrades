@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Activity, ListOrdered, History, Bell, LogOut, TrendingUp, TrendingDown, Clock, Play, Pause, Octagon, Power, Search, Shield, Settings, Save, X, BarChart3, CheckCircle2, Circle } from 'lucide-react';
+import { Activity, ListOrdered, History, Bell, LogOut, TrendingUp, TrendingDown, Clock, Play, Pause, Octagon, Power, Search, Shield, Settings, Save, X, BarChart3, CheckCircle2, Circle, RotateCcw } from 'lucide-react';
 import { socketService } from '@/services/socket.service';
 import { strategyApi, authApi } from '@/services/api.service';
 import { formatTradingViewSymbol, getNiftySpotChartUrl, openTradingViewChart } from '@/utils/tradingview';
@@ -721,6 +721,33 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                     <Octagon className="w-3.5 h-3.5" />
                                     KILL SWITCH
                                 </button>
+
+                                {/* Reset Engine - Only show when manual reset required */}
+                                {status === 'FORCE_EXITED' && nextAction === 'Manual Reset Required' && (
+                                    <button
+                                        onClick={async () => {
+                                            if (!confirm('🔄 Reset engine to IDLE state?\n\nThis will clear the FORCE_EXITED status and allow the strategy to resume normal operation.')) return;
+                                            try {
+                                                await strategyApi.resetEngine();
+                                                addLog('✅ Engine reset successfully');
+                                                // Refresh state
+                                                const d = await strategyApi.getState();
+                                                if (d) {
+                                                    setStatus(d.status || 'IDLE');
+                                                    setEngineActivity(d.engineActivity || 'Engine Ready');
+                                                    setNextAction(d.nextAction || 'Pending');
+                                                    setIsPaused(d.isPaused || false);
+                                                }
+                                            } catch (e: any) {
+                                                addLog(`❌ Reset failed: ${e.message}`);
+                                            }
+                                        }}
+                                        className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 transition-all text-[10px] font-bold"
+                                    >
+                                        <RotateCcw className="w-3.5 h-3.5" />
+                                        RESET ENGINE
+                                    </button>
+                                )}
                             </div>
 
                             {/* Navigation Tabs */}

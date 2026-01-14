@@ -261,6 +261,15 @@ export async function strategyRoutes(app: FastifyInstance) {
         }
     });
 
+    app.post('/reset', async (request, reply) => {
+        try {
+            await strategyEngine.resetEngine();
+            return { status: 'success', message: 'Engine reset to IDLE' };
+        } catch (err: any) {
+            return reply.status(400).send({ status: 'error', message: err.message });
+        }
+    });
+
     app.get('/alerts', async (request, reply) => {
         try {
             const alerts = await db.getAlerts();

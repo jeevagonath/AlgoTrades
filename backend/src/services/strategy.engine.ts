@@ -1265,6 +1265,42 @@ class StrategyEngine {
         this.state.status = 'FORCE_EXITED';
         await this.syncToDb(true);
     }
+
+    async resetEngine() {
+        // Only allow reset from FORCE_EXITED state
+        if (this.state.status !== 'FORCE_EXITED') {
+            throw new Error('Reset only allowed from FORCE_EXITED state');
+        }
+
+        this.addLog('🔄 [System] Manual engine reset initiated...');
+
+        // Clear any remaining positions (safety check)
+        if (this.state.selectedStrikes.length > 0) {
+            this.addLog('⚠️ [Reset] Clearing remaining positions...');
+            this.state.selectedStrikes = [];
+            await db.syncPositions([]);
+        }
+
+        // Reset to IDLE state
+        this.state.status = 'IDLE';
+        this.state.isActive = false;
+        this.state.isTradePlaced = false;
+        this.state.isPaused = false;
+        this.state.pnl = 0;
+        this.state.peakProfit = 0;
+        this.state.peakLoss = 0;
+        this.state.engineActivity = 'Engine Reset';
+        this.state.nextAction = 'Daily 9 AM Evaluation';
+        this.state.monitoring = {
+            profitTime: 0,
+            lossTime: 0,
+            adjustments: {}
+        };
+
+        await this.syncToDb(true);
+        this.addLog('✅ [System] Engine manually reset to IDLE state');
+        telegramService.sendMessage('🔄 <b>Engine Reset</b>\nStatus: IDLE\nReady for next cycle');
+    }
 }
 
 export const strategyEngine = new StrategyEngine();

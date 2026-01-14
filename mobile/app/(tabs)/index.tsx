@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { StyleSheet, View, Text, ScrollView, RefreshControl, TouchableOpacity, SafeAreaView, Platform, Linking } from 'react-native';
-import { Activity, Bell, Play, Pause, Octagon, Settings, LogOut, Info, Clock, TrendingUp, TrendingDown, ChevronRight, Calendar, Zap, CheckCircle } from 'lucide-react-native';
+import { Activity, Bell, Play, Pause, Octagon, Settings, LogOut, Info, Clock, TrendingUp, TrendingDown, ChevronRight, Calendar, Zap, CheckCircle, RotateCcw } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MetricCard } from '@/src/components/MetricCard';
@@ -289,6 +289,22 @@ export default function DashboardScreen() {
     }
   };
 
+  const handleResetEngine = async () => {
+    try {
+      await strategyApi.resetEngine();
+      // Refresh state
+      const d = await strategyApi.getState();
+      if (d) {
+        setStatus(d.status || 'IDLE');
+        setEngineActivity(d.engineActivity || 'Engine Ready');
+        setNextAction(d.nextAction || 'Pending');
+        setIsPaused(d.isPaused || false);
+      }
+    } catch (e) {
+      console.error('Reset engine failed:', e);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -451,6 +467,22 @@ export default function DashboardScreen() {
               </LinearGradient>
             </TouchableOpacity>
           </View>
+
+          {/* Reset Engine - Only show when manual reset required */}
+          {status === 'FORCE_EXITED' && nextAction === 'Manual Reset Required' && (
+            <TouchableOpacity
+              style={[styles.controlBtnWrapper, { marginTop: 12, height: 56 }]}
+              onPress={handleResetEngine}
+            >
+              <LinearGradient
+                colors={['#eff6ff', '#dbeafe']}
+                style={styles.controlBtn}
+              >
+                <RotateCcw size={22} color="#2563eb" />
+                <Text style={[styles.controlBtnText, { color: '#2563eb' }]}>RESET ENGINE</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          )}
         </Animated.View>
       </ScrollView>
     </SafeAreaView>

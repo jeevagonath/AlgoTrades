@@ -101,6 +101,10 @@ export const strategyApi = {
         const response = await apiClient.get('/strategy/alerts');
         return response.data;
     },
+    resetEngine: async () => {
+        const response = await apiClient.post('/strategy/reset');
+        return response.data;
+    },
 };
 
 export default apiClient;
