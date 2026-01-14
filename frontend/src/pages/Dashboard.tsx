@@ -547,6 +547,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                     const end = new Date();
                     const start = new Date();
                     start.setMonth(start.getMonth() - 12);
+                    end.setDate(end.getDate() + 1); // Add 1 day buffer to include today's trades
 
                     const startDate = start.toISOString().split('T')[0];
                     const endDate = end.toISOString().split('T')[0];
