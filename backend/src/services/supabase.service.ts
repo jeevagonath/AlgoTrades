@@ -441,7 +441,7 @@ export const db = {
         try {
             let query = supabase
                 .from('trade_history')
-                .select('exit_time, pnl, is_virtual');
+                .select('id, exit_time, pnl, is_virtual');
 
             if (filters.startDate) {
                 query = query.gte('exit_time', filters.startDate);
@@ -461,7 +461,7 @@ export const db = {
             }
 
             // Aggregate by date
-            const dailyMap = new Map<string, { pnl: number; tradeCount: number }>();
+            const dailyMap = new Map<string, { pnl: number; tradeCount: number; tradeIds: string[] }>();
 
             (data || []).forEach((trade: any) => {
                 // Convert UTC timestamp to local date
@@ -471,10 +471,11 @@ export const db = {
                 const day = String(exitDate.getDate()).padStart(2, '0');
                 const date = `${year}-${month}-${day}`;
 
-                const existing = dailyMap.get(date) || { pnl: 0, tradeCount: 0 };
+                const existing = dailyMap.get(date) || { pnl: 0, tradeCount: 0, tradeIds: [] };
                 dailyMap.set(date, {
                     pnl: existing.pnl + (trade.pnl || 0),
-                    tradeCount: existing.tradeCount + 1
+                    tradeCount: existing.tradeCount + 1,
+                    tradeIds: [...existing.tradeIds, trade.id]
                 });
             });
 
@@ -482,10 +483,44 @@ export const db = {
             return Array.from(dailyMap.entries()).map(([date, stats]) => ({
                 date,
                 pnl: stats.pnl,
-                tradeCount: stats.tradeCount
+                tradeCount: stats.tradeCount,
+                tradeIds: stats.tradeIds
             })).sort((a, b) => a.date.localeCompare(b.date));
         } catch (err) {
             console.error('Failed to load daily PnL:', err);
+            return [];
+        }
+    },
+
+    async getPositionsByTradeId(tradeId: string) {
+        try {
+            // First, get the history_id from trade_history
+            const { data: tradeData, error: tradeError } = await supabase
+                .from('trade_history')
+                .select('history_id')
+                .eq('id', tradeId)
+                .single();
+
+            if (tradeError || !tradeData) {
+                console.error('Error fetching trade history:', tradeError);
+                return [];
+            }
+
+            // Then, fetch all positions with this history_id
+            const { data: positions, error: positionsError } = await supabase
+                .from('position_history_log')
+                .select('*')
+                .eq('history_id', tradeData.history_id)
+                .order('created_at', { ascending: true });
+
+            if (positionsError) {
+                console.error('Error fetching positions:', positionsError);
+                return [];
+            }
+
+            return positions || [];
+        } catch (err) {
+            console.error('Failed to fetch positions by trade ID:', err);
             return [];
         }
     },

@@ -67,4 +67,15 @@ export async function analyticsRoutes(app: FastifyInstance) {
             return reply.status(500).send({ status: 'error', message: err.message });
         }
     });
+
+    // Get positions by trade ID
+    app.get('/trade-positions/:tradeId', async (request, reply) => {
+        try {
+            const { tradeId } = request.params as { tradeId: string };
+            const data = await db.getPositionsByTradeId(tradeId);
+            return { status: 'success', data };
+        } catch (err: any) {
+            return reply.status(500).send({ status: 'error', message: err.message });
+        }
+    });
 }
