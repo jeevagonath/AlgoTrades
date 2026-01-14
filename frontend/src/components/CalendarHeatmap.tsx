@@ -44,7 +44,8 @@ export function CalendarHeatmap({ data, startDate, endDate }: CalendarHeatmapPro
             // Add all days of the month
             for (let day = 1; day <= lastDay.getDate(); day++) {
                 const date = new Date(year, month, day);
-                const dateStr = date.toISOString().split('T')[0];
+                // Use local date string to avoid timezone issues
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 const dayData = data.find(d => d.date === dateStr);
 
                 const currentWeek = weeks[weeks.length - 1];
