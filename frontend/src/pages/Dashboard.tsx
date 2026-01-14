@@ -287,11 +287,11 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
     const [pnl, setPnl] = useState(0);
     const [peakProfit, setPeakProfit] = useState(0);
     const [peakLoss, setPeakLoss] = useState(0);
-    const [testStrikes, setTestStrikes] = useState<LegState[]>([]);
+    const [testStrikes, setTestStrikes] = useState<any[]>([]);
     const [testing, setTesting] = useState(false);
-    const [logs, setLogs] = useState<LogEntry[]>([]);
-    const [orders, setOrders] = useState<Order[]>([]); // New Order State
-    const [alerts, setAlerts] = useState<Alert[]>([]); // Alerts State
+    const [logs, setLogs] = useState<{ time: string, msg: string }[]>([]);
+    const [orders, setOrders] = useState<any[]>([]); // New Order State
+    const [alerts, setAlerts] = useState<any[]>([]); // Alerts State
 
 
     const [expiries, setExpiries] = useState<string[]>([]);
