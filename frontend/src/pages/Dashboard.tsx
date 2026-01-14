@@ -772,17 +772,6 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                 )}
                             </div>
 
-                            {/* P&L Analytics Page */}
-                            {activeTab === 'pnl' && (
-                                <div className="space-y-4">
-                                    <CalendarHeatmap
-                                        data={dailyPnL}
-                                        startDate={new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0]}
-                                        endDate={new Date().toISOString().split('T')[0]}
-                                    />
-                                </div>
-                            )}
-
                             {/* Navigation Tabs */}
                             <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
                                 {[
@@ -1090,7 +1079,8 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                     {activeTab === 'orders' && <History className="w-4 h-4 text-blue-600" />}
                                     {activeTab === 'alerts' && <Bell className="w-4 h-4 text-blue-600" />}
                                     {activeTab === 'logs' && <Activity className="w-4 h-4 text-blue-600" />}
-                                    {activeTab === 'positions' ? 'Active Positions' : activeTab === 'orders' ? 'Order History' : activeTab === 'alerts' ? 'System Alerts' : 'Engine Logs'}
+                                    {activeTab === 'pnl' && <BarChart3 className="w-4 h-4 text-blue-600" />}
+                                    {activeTab === 'positions' ? 'Active Positions' : activeTab === 'orders' ? 'Order History' : activeTab === 'alerts' ? 'System Alerts' : activeTab === 'pnl' ? 'P&L Analytics' : 'Engine Logs'}
                                 </h2>
                                 {activeTab === 'logs' && (
                                     <button
@@ -1215,6 +1205,14 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                         </div>
                                     </div>
                                 )
+                            ) : activeTab === 'pnl' ? (
+                                <div className="p-6">
+                                    <CalendarHeatmap
+                                        data={dailyPnL}
+                                        startDate={new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0]}
+                                        endDate={new Date().toISOString().split('T')[0]}
+                                    />
+                                </div>
                             ) : activeTab === 'logs' ? (
                                 <div className="flex-1 overflow-y-auto p-6 space-y-2 font-mono scrollbar-thin scrollbar-thumb-slate-200 max-h-[600px]">
                                     {logs.length > 0 ? (
