@@ -70,7 +70,8 @@ export function CalendarHeatmap({ data, startDate, endDate, onDateClick }: Calen
             current.setMonth(current.getMonth() + 1);
         }
 
-        setMonths(monthsData);
+        // Reverse to show latest month first
+        setMonths(monthsData.reverse());
     };
 
     const getPnLColor = (pnl: number, tradeCount: number) => {
