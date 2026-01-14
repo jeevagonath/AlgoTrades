@@ -543,9 +543,15 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
         if (activeTab === 'pnl') {
             const fetchDailyPnL = async () => {
                 try {
-                    const start = new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0];
-                    const end = new Date().toISOString().split('T')[0];
-                    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://algotradesservice.onrender.com/api'}/analytics/daily-pnl?startDate=${start}&endDate=${end}&isVirtual=true`);
+                    // Get last 12 months of data
+                    const end = new Date();
+                    const start = new Date();
+                    start.setMonth(start.getMonth() - 12);
+
+                    const startDate = start.toISOString().split('T')[0];
+                    const endDate = end.toISOString().split('T')[0];
+
+                    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://algotradesservice.onrender.com/api'}/analytics/daily-pnl?startDate=${startDate}&endDate=${endDate}&isVirtual=true`);
                     const data = await res.json();
                     if (data.status === 'success') {
                         setDailyPnL(data.data || []);
@@ -1209,7 +1215,11 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                 <div className="p-6">
                                     <CalendarHeatmap
                                         data={dailyPnL}
-                                        startDate={new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0]}
+                                        startDate={(() => {
+                                            const d = new Date();
+                                            d.setMonth(d.getMonth() - 12);
+                                            return d.toISOString().split('T')[0];
+                                        })()}
                                         endDate={new Date().toISOString().split('T')[0]}
                                     />
                                 </div>
