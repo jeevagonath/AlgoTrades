@@ -500,8 +500,7 @@ export const db = {
             const { data: positions, error: positionsError } = await supabase
                 .from('position_history_log')
                 .select('*')
-                .eq('history_id', tradeId)
-                .order('created_at', { ascending: true });
+                .eq('history_id', tradeId);
 
             console.log('📊 Positions query result:', positions);
             console.log('📊 Positions count:', positions?.length || 0);
