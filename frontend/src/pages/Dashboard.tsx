@@ -157,12 +157,12 @@ const PositionRow = ({ leg }: { leg: LegState }) => {
 
 const EngineWorkflow = ({ status, activity }: { status: string, activity: string }) => {
     const steps = [
-        { id: 'EVAL', label: 'Daily Evaluation', desc: '9:00 AM Check' },
-        { id: 'WAIT', label: 'Waiting for Expiry', desc: 'Non-expiry Day' },
-        { id: 'EXIT', label: 'Square-off', desc: 'Exit Time' },
-        { id: 'SELECT', label: 'Strike Selection', desc: 'Strike Picker' },
-        { id: 'ENTRY', label: 'Strategy Entry', desc: 'Order Placement' },
-        { id: 'ACTIVE', label: 'Monitoring PnL', desc: 'Active Trade' },
+        { id: 'EVAL', label: 'Daily Evaluation', desc: '9:00 AM Check', icon: '🔍', color: 'blue' },
+        { id: 'WAIT', label: 'Waiting for Expiry', desc: 'Non-expiry Day', icon: '⏳', color: 'amber' },
+        { id: 'EXIT', label: 'Square-off', desc: 'Exit Time', icon: '🚪', color: 'orange' },
+        { id: 'SELECT', label: 'Strike Selection', desc: 'Strike Picker', icon: '🎯', color: 'purple' },
+        { id: 'ENTRY', label: 'Strategy Entry', desc: 'Order Placement', icon: '📝', color: 'indigo' },
+        { id: 'ACTIVE', label: 'Monitoring PnL', desc: 'Active Trade', icon: '📊', color: 'green' },
     ];
 
     let currentStepIndex = -1;
@@ -179,37 +179,92 @@ const EngineWorkflow = ({ status, activity }: { status: string, activity: string
     }
     else if (status === 'ACTIVE') currentStepIndex = 5;
 
+    const getStepColor = (color: string, type: 'bg' | 'border' | 'text' | 'ring') => {
+        const colors: any = {
+            blue: { bg: 'bg-blue-500', border: 'border-blue-500', text: 'text-blue-600', ring: 'ring-blue-100' },
+            amber: { bg: 'bg-amber-500', border: 'border-amber-500', text: 'text-amber-600', ring: 'ring-amber-100' },
+            orange: { bg: 'bg-orange-500', border: 'border-orange-500', text: 'text-orange-600', ring: 'ring-orange-100' },
+            purple: { bg: 'bg-purple-500', border: 'border-purple-500', text: 'text-purple-600', ring: 'ring-purple-100' },
+            indigo: { bg: 'bg-indigo-500', border: 'border-indigo-500', text: 'text-indigo-600', ring: 'ring-indigo-100' },
+            green: { bg: 'bg-green-500', border: 'border-green-500', text: 'text-green-600', ring: 'ring-green-100' },
+        };
+        return colors[color]?.[type] || colors.blue[type];
+    };
+
     return (
-        <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm flex flex-col h-full">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-6 border-b border-slate-50 pb-2">Engine Workflow</h3>
-            <div className="space-y-6 flex-1">
+        <div className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-xl p-6 shadow-sm flex flex-col h-full">
+            <div className="flex items-center justify-between mb-6 border-b border-slate-100 pb-3">
+                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
+                    Engine Workflow
+                </h3>
+                <div className="text-[9px] font-bold px-2 py-1 rounded-full bg-blue-100 text-blue-700 uppercase tracking-wide">
+                    {status}
+                </div>
+            </div>
+
+            <div className="space-y-5 flex-1">
                 {steps.map((step, idx) => {
                     const isDone = idx < currentStepIndex;
                     const isCurrent = idx === currentStepIndex;
+                    const isPending = idx > currentStepIndex;
+
                     return (
-                        <div key={step.id} className="flex items-start gap-3 relative">
+                        <div key={step.id} className={`flex items-start gap-3 relative transition-all duration-300 ${isCurrent ? 'scale-105' : ''}`}>
                             {idx !== steps.length - 1 && (
-                                <div className={`absolute left-[9px] top-6 w-[2px] h-6 ${isDone ? 'bg-emerald-500' : 'bg-slate-100'}`} />
+                                <div className={`absolute left-[13px] top-7 w-[2px] h-5 transition-all duration-500 ${isDone ? 'bg-gradient-to-b from-emerald-500 to-emerald-400' :
+                                        isCurrent ? 'bg-gradient-to-b from-blue-500 to-blue-300' :
+                                            'bg-slate-200'
+                                    }`} />
                             )}
-                            <div className={`mt-0.5 w-5 h-5 rounded-full border flex items-center justify-center z-10 transition-all duration-500 ${isDone ? 'bg-emerald-500 border-emerald-500 shadow-sm shadow-emerald-100' :
-                                isCurrent ? 'bg-white border-blue-500 ring-4 ring-blue-50' :
-                                    'bg-white border-slate-200'
+
+                            <div className={`mt-0.5 w-7 h-7 rounded-full border-2 flex items-center justify-center z-10 transition-all duration-500 text-sm ${isDone ? 'bg-emerald-500 border-emerald-500 shadow-md shadow-emerald-200' :
+                                    isCurrent ? `bg-white ${getStepColor(step.color, 'border')} ring-4 ${getStepColor(step.color, 'ring')} shadow-md` :
+                                        'bg-white border-slate-200'
                                 }`}>
                                 {isDone ? (
-                                    <CheckCircle2 className="w-3 h-3 text-white" />
+                                    <CheckCircle2 className="w-4 h-4 text-white" />
                                 ) : isCurrent ? (
-                                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                                    <span className="animate-pulse">{step.icon}</span>
                                 ) : (
-                                    <div className="w-1.5 h-1.5 rounded-full bg-slate-200" />
+                                    <span className="opacity-30">{step.icon}</span>
                                 )}
                             </div>
-                            <div className="flex-1">
-                                <div className={`text-xs font-bold leading-none transition-colors duration-300 ${isCurrent ? 'text-blue-600' : isDone ? 'text-slate-900' : 'text-slate-400'}`}>
+
+                            <div className="flex-1 pt-0.5">
+                                <div className={`text-xs font-bold leading-tight transition-colors duration-300 ${isCurrent ? getStepColor(step.color, 'text') :
+                                        isDone ? 'text-slate-700' :
+                                            'text-slate-400'
+                                    }`}>
                                     {step.label}
                                 </div>
-                                <div className={`text-[9px] font-medium mt-1 uppercase tracking-tighter truncate max-w-[150px] ${isCurrent ? 'text-blue-400 animate-pulse' : 'text-slate-400'}`}>
-                                    {isCurrent ? activity : step.desc}
+
+                                <div className={`text-[10px] font-medium mt-1 leading-tight ${isCurrent ? 'text-slate-600' : 'text-slate-400'
+                                    }`}>
+                                    {isCurrent ? (
+                                        <div className="flex items-center gap-1">
+                                            <div className="w-1 h-1 rounded-full bg-blue-500 animate-ping"></div>
+                                            <span className="font-semibold">{activity}</span>
+                                        </div>
+                                    ) : (
+                                        step.desc
+                                    )}
                                 </div>
+
+                                {isCurrent && (
+                                    <div className="mt-2">
+                                        <div className="h-1 bg-slate-200 rounded-full overflow-hidden">
+                                            <div className={`h-full ${getStepColor(step.color, 'bg')} animate-pulse`} style={{ width: '60%' }}></div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {isDone && (
+                                    <div className="mt-1 text-[9px] text-emerald-600 font-semibold flex items-center gap-1">
+                                        <CheckCircle2 className="w-3 h-3" />
+                                        Completed
+                                    </div>
+                                )}
                             </div>
                         </div>
                     );
