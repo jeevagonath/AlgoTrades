@@ -464,7 +464,13 @@ export const db = {
             const dailyMap = new Map<string, { pnl: number; tradeCount: number }>();
 
             (data || []).forEach((trade: any) => {
-                const date = trade.exit_time.split('T')[0]; // Extract YYYY-MM-DD
+                // Convert UTC timestamp to local date
+                const exitDate = new Date(trade.exit_time);
+                const year = exitDate.getFullYear();
+                const month = String(exitDate.getMonth() + 1).padStart(2, '0');
+                const day = String(exitDate.getDate()).padStart(2, '0');
+                const date = `${year}-${month}-${day}`;
+
                 const existing = dailyMap.get(date) || { pnl: 0, tradeCount: 0 };
                 dailyMap.set(date, {
                     pnl: existing.pnl + (trade.pnl || 0),
