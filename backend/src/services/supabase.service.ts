@@ -57,22 +57,36 @@ export const db = {
     },
 
     async syncPositions(legs: any[]) {
+        // Fetch existing positions to preserve created_at timestamps
+        const { data: existingPositions } = await supabase
+            .from('positions')
+            .select('instrument_token, created_at');
+
+        const existingMap = new Map(
+            (existingPositions || []).map((p: any) => [p.instrument_token, p.created_at])
+        );
+
         // Clear old positions and insert new ones
         await supabase.from('positions').delete().neq('id', 0);
         if (legs.length > 0) {
             const { data, error } = await supabase
                 .from('positions')
-                .insert(legs.map(l => ({
-                    instrument_token: l.token,
-                    symbol: l.symbol,
-                    type: l.type,
-                    side: l.side,
-                    strike: l.strike,
-                    entry_price: l.entryPrice,
-                    ltp: l.ltp,
-                    quantity: l.quantity,
-                    tier: l.tier
-                })));
+                .insert(legs.map(l => {
+                    const existingCreatedAt = existingMap.get(l.token);
+                    return {
+                        instrument_token: l.token,
+                        symbol: l.symbol,
+                        type: l.type,
+                        side: l.side,
+                        strike: l.strike,
+                        entry_price: l.entryPrice,
+                        ltp: l.ltp,
+                        quantity: l.quantity,
+                        tier: l.tier,
+                        // Preserve original created_at if position existed before
+                        ...(existingCreatedAt && { created_at: existingCreatedAt })
+                    };
+                }));
 
             if (error) {
                 console.error('Supabase Positions Sync Error:', error);
