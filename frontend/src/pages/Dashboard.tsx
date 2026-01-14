@@ -5,6 +5,7 @@ import { strategyApi, authApi } from '@/services/api.service';
 import { formatTradingViewSymbol, getNiftySpotChartUrl, openTradingViewChart } from '@/utils/tradingview';
 import { useAnimatedValue, useFlashOnChange } from '@/hooks/useAnimations';
 import { CalendarHeatmap } from '@/components/CalendarHeatmap';
+import { PositionDetailsModal } from '@/components/PositionDetailsModal';
 
 // --- Types ---
 
@@ -303,6 +304,10 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
 
     const [activeTab, setActiveTab] = useState<'positions' | 'orders' | 'logs' | 'alerts' | 'pnl'>('positions');
     const [dailyPnL, setDailyPnL] = useState<any[]>([]);
+    const [showPositionModal, setShowPositionModal] = useState(false);
+    const [selectedDate, setSelectedDate] = useState('');
+    const [selectedPositions, setSelectedPositions] = useState<any[]>([]);
+    const [selectedPnL, setSelectedPnL] = useState(0);
     const [showSettings, setShowSettings] = useState(false);
     const [settings, setSettings] = useState({
         entryTime: '12:59',
@@ -564,6 +569,24 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
             fetchDailyPnL();
         }
     }, [activeTab]);
+
+    // Handle calendar date click to show position details
+    const handleDateClick = async (date: string, tradeIds: string[], pnl: number) => {
+        try {
+            if (tradeIds.length > 0) {
+                const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://algotradesservice.onrender.com/api'}/analytics/trade-positions/${tradeIds[0]}`);
+                const data = await res.json();
+                if (data.status === 'success') {
+                    setSelectedDate(date);
+                    setSelectedPositions(data.data || []);
+                    setSelectedPnL(pnl);
+                    setShowPositionModal(true);
+                }
+            }
+        } catch (err) {
+            console.error('Failed to fetch positions:', err);
+        }
+    };
 
     const handleLogout = () => {
         onLogout();
@@ -1222,6 +1245,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                             return d.toISOString().split('T')[0];
                                         })()}
                                         endDate={new Date().toISOString().split('T')[0]}
+                                        onDateClick={handleDateClick}
                                     />
                                 </div>
                             ) : activeTab === 'logs' ? (
@@ -1370,6 +1394,15 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                     </div>
                 </div>
             )}
+
+            {/* Position Details Modal */}
+            <PositionDetailsModal
+                isOpen={showPositionModal}
+                onClose={() => setShowPositionModal(false)}
+                date={selectedDate}
+                positions={selectedPositions}
+                totalPnl={selectedPnL}
+            />
         </div>
     );
 };

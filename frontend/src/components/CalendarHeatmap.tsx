@@ -4,15 +4,17 @@ interface DailyPnLData {
     date: string;
     pnl: number;
     tradeCount: number;
+    tradeIds?: string[];
 }
 
 interface CalendarHeatmapProps {
     data: DailyPnLData[];
     startDate?: string;
     endDate?: string;
+    onDateClick?: (date: string, tradeIds: string[], pnl: number) => void;
 }
 
-export function CalendarHeatmap({ data, startDate, endDate }: CalendarHeatmapProps) {
+export function CalendarHeatmap({ data, startDate, endDate, onDateClick }: CalendarHeatmapProps) {
     const [months, setMonths] = useState<any[]>([]);
 
     useEffect(() => {
@@ -142,11 +144,17 @@ export function CalendarHeatmap({ data, startDate, endDate }: CalendarHeatmapPro
                                                 <div
                                                     className={`
                                                         aspect-square rounded flex items-center justify-center
-                                                        text-[9px] font-bold cursor-pointer border border-slate-200
+                                                        text-[9px] font-bold border border-slate-200
                                                         transition-all hover:scale-110 hover:shadow-md hover:z-10
                                                         ${getPnLColor(cell.pnl, cell.tradeCount)}
+                                                        ${cell.tradeCount > 0 ? 'cursor-pointer' : ''}
                                                     `}
                                                     title={cell.tradeCount > 0 ? `${cell.date}: ${formatPnL(cell.pnl)} (${cell.tradeCount} trade${cell.tradeCount > 1 ? 's' : ''})` : cell.date}
+                                                    onClick={() => {
+                                                        if (cell.tradeCount > 0 && onDateClick && cell.tradeIds) {
+                                                            onDateClick(cell.date, cell.tradeIds, cell.pnl);
+                                                        }
+                                                    }}
                                                 >
                                                     {cell.day}
                                                 </div>
