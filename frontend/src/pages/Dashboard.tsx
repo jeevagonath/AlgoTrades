@@ -560,24 +560,33 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
         };
     }, []);
 
-    // Fetch daily P&L data when pnl tab is active
+    // Fetch daily P&L data when pnl tab is active or date filter changes
     useEffect(() => {
         if (activeTab === 'pnl') {
             const fetchDailyPnL = async () => {
                 try {
-                    // Get last 12 months of data
-                    const end = new Date();
-                    const start = new Date();
-                    start.setMonth(start.getMonth() - 12);
-                    end.setDate(end.getDate() + 1); // Add 1 day buffer to include today's trades
+                    // Add 1 day buffer to end date to include today's trades
+                    const adjustedEnd = new Date(endDate);
+                    adjustedEnd.setDate(adjustedEnd.getDate() + 1);
+                    const adjustedEndStr = adjustedEnd.toISOString().split('T')[0];
 
-                    const startDate = start.toISOString().split('T')[0];
-                    const endDate = end.toISOString().split('T')[0];
-
-                    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://algotradesservice.onrender.com/api'}/analytics/daily-pnl?startDate=${startDate}&endDate=${endDate}`);
+                    console.log('📅 Fetching P&L from:', startDate, 'to:', adjustedEndStr);
+                    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://algotradesservice.onrender.com/api'}/analytics/daily-pnl?startDate=${startDate}&endDate=${adjustedEndStr}`);
+                    console.log('Response status:', res.status);
                     const data = await res.json();
+                    console.log('API Response:', data);
                     if (data.status === 'success') {
                         setDailyPnL(data.data || []);
+
+                        // Calculate summary metrics from filtered data
+                        const totalPnl = (data.data || []).reduce((sum: number, day: any) => sum + (day.pnl || 0), 0);
+                        console.log('💰 Total P&L for date range:', totalPnl);
+                        setPnlSummary({
+                            totalPnl,
+                            charges: 0, // TODO: Add from database if tracked
+                            credits: 0, // TODO: Add from database if tracked
+                            netPnl: totalPnl
+                        });
                     }
                 } catch (err) {
                     console.error('Failed to fetch daily P&L:', err);
@@ -585,7 +594,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
             };
             fetchDailyPnL();
         }
-    }, [activeTab]);
+    }, [activeTab, startDate, endDate]);
 
     // Handle calendar date click to show position details
     const handleDateClick = async (date: string, tradeIds: string[], pnl: number) => {
