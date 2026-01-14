@@ -494,6 +494,8 @@ export const db = {
 
     async getPositionsByTradeId(tradeId: string) {
         try {
+            console.log('🔍 getPositionsByTradeId called with tradeId:', tradeId);
+
             // First, get the history_id from trade_history
             const { data: tradeData, error: tradeError } = await supabase
                 .from('trade_history')
@@ -501,10 +503,17 @@ export const db = {
                 .eq('id', tradeId)
                 .single();
 
+            console.log('📊 Trade data from trade_history:', tradeData);
+            if (tradeError) {
+                console.error('❌ Error fetching trade history:', tradeError);
+            }
+
             if (tradeError || !tradeData) {
                 console.error('Error fetching trade history:', tradeError);
                 return [];
             }
+
+            console.log('✅ Found history_id:', tradeData.history_id);
 
             // Then, fetch all positions with this history_id
             const { data: positions, error: positionsError } = await supabase
@@ -512,6 +521,12 @@ export const db = {
                 .select('*')
                 .eq('history_id', tradeData.history_id)
                 .order('created_at', { ascending: true });
+
+            console.log('📊 Positions query result:', positions);
+            console.log('📊 Positions count:', positions?.length || 0);
+            if (positionsError) {
+                console.error('❌ Error fetching positions:', positionsError);
+            }
 
             if (positionsError) {
                 console.error('Error fetching positions:', positionsError);
