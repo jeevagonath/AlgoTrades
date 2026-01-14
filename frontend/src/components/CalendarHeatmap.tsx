@@ -56,7 +56,8 @@ export function CalendarHeatmap({ data, startDate, endDate, onDateClick }: Calen
                     date: dateStr,
                     day,
                     pnl: dayData?.pnl || 0,
-                    tradeCount: dayData?.tradeCount || 0
+                    tradeCount: dayData?.tradeCount || 0,
+                    tradeIds: dayData?.tradeIds || []
                 });
 
                 // Start new week on Sunday
@@ -151,8 +152,12 @@ export function CalendarHeatmap({ data, startDate, endDate, onDateClick }: Calen
                                                     `}
                                                     title={cell.tradeCount > 0 ? `${cell.date}: ${formatPnL(cell.pnl)} (${cell.tradeCount} trade${cell.tradeCount > 1 ? 's' : ''})` : cell.date}
                                                     onClick={() => {
+                                                        console.log('🖱️ Calendar cell clicked:', cell);
                                                         if (cell.tradeCount > 0 && onDateClick && cell.tradeIds) {
+                                                            console.log('✅ Triggering onDateClick with:', cell.date, cell.tradeIds, cell.pnl);
                                                             onDateClick(cell.date, cell.tradeIds, cell.pnl);
+                                                        } else {
+                                                            console.log('❌ Click not triggered. tradeCount:', cell.tradeCount, 'onDateClick:', !!onDateClick, 'tradeIds:', cell.tradeIds);
                                                         }
                                                     }}
                                                 >
