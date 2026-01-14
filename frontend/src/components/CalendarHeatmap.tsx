@@ -16,6 +16,7 @@ export function CalendarHeatmap({ data, startDate, endDate }: CalendarHeatmapPro
     const [months, setMonths] = useState<any[]>([]);
 
     useEffect(() => {
+        console.log('CalendarHeatmap received data:', data);
         generateCalendar();
     }, [data, startDate, endDate]);
 
