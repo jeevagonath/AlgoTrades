@@ -23,6 +23,20 @@ export async function proxyRoutes(app: FastifyInstance) {
             payload.append('jData', JSON.stringify(data));
             payload.append('jKey', usertoken);
 
+            // Log the request being sent
+            const requestLog = {
+                url: url,
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                payload: {
+                    jData: data,
+                    jKey: usertoken.substring(0, 20) + '...' // Partial token for security
+                }
+            };
+            console.log('[Proxy] Sending request to Shoonya:', JSON.stringify(requestLog, null, 2));
+
             // Forward request to Shoonya API
             const response = await axios.post(url, payload.toString(), {
                 headers: {
@@ -32,7 +46,8 @@ export async function proxyRoutes(app: FastifyInstance) {
 
             return {
                 status: 'success',
-                data: response.data
+                data: response.data,
+                requestSent: requestLog // Include request details in response
             };
         } catch (err: any) {
             console.error('Proxy error:', err.message);

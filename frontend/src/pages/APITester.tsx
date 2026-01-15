@@ -57,8 +57,13 @@ const APITester = () => {
                 data: parsedRequest
             });
 
+            // Update request preview with actual request sent by backend
+            if (result.data.requestSent) {
+                setRequestPreview(JSON.stringify(result.data.requestSent, null, 2));
+            }
+
             // Display response
-            setResponse(JSON.stringify(result.data, null, 2));
+            setResponse(JSON.stringify(result.data.data || result.data, null, 2));
         } catch (err: any) {
             // Enhanced error handling
             let errorMessage = 'Request failed';
