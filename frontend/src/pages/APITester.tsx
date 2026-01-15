@@ -113,7 +113,50 @@ const APITester = () => {
         setApiUrl('');
         setRequestBody('');
         setResponse('');
+        setRequestPreview('');
         setError('');
+    };
+
+    const handleTestUserDetails = async () => {
+        setLoading(true);
+        setError('');
+        setResponse('');
+        setRequestPreview('');
+
+        try {
+            // Show what we're requesting
+            const requestInfo = {
+                endpoint: '/user',
+                method: 'GET',
+                description: 'Fetching user details from backend (calls Shoonya getUserDetails)'
+            };
+            setRequestPreview(JSON.stringify(requestInfo, null, 2));
+
+            // Call backend to get user details
+            const result = await axios.get('https://algotradesservice.onrender.com/user');
+
+            // Display response
+            setResponse(JSON.stringify(result.data, null, 2));
+        } catch (err: any) {
+            let errorMessage = 'Failed to fetch user details';
+            let errorDetails: any = {};
+
+            if (err.response) {
+                errorMessage = `HTTP ${err.response.status}: ${err.response.statusText}`;
+                errorDetails = {
+                    status: err.response.status,
+                    data: err.response.data
+                };
+            } else {
+                errorMessage = err.message || 'Unknown error';
+                errorDetails = { error: err.toString() };
+            }
+
+            setError(errorMessage);
+            setResponse(JSON.stringify(errorDetails, null, 2));
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -170,23 +213,33 @@ const APITester = () => {
                         </div>
 
                         {/* Send Button */}
-                        <button
-                            onClick={handleSendRequest}
-                            disabled={loading || !apiUrl}
-                            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-600/20 transition-all active:scale-[0.98] disabled:active:scale-100 flex items-center justify-center gap-2"
-                        >
-                            {loading ? (
-                                <>
-                                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                                    Sending...
-                                </>
-                            ) : (
-                                <>
-                                    <Send size={18} />
-                                    Send Request
-                                </>
-                            )}
-                        </button>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={handleSendRequest}
+                                disabled={loading || !apiUrl}
+                                className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-600/20 transition-all active:scale-[0.98] disabled:active:scale-100 flex items-center justify-center gap-2"
+                            >
+                                {loading ? (
+                                    <>
+                                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                        Sending...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Send size={18} />
+                                        Send Request
+                                    </>
+                                )}
+                            </button>
+                            <button
+                                onClick={handleTestUserDetails}
+                                disabled={loading}
+                                className="bg-purple-600 hover:bg-purple-700 disabled:bg-slate-300 text-white font-bold py-4 px-6 rounded-xl shadow-lg shadow-purple-600/20 transition-all active:scale-[0.98] disabled:active:scale-100 flex items-center justify-center gap-2"
+                            >
+                                <User size={18} />
+                                Test User
+                            </button>
+                        </div>
                     </div>
 
                     {/* Response Section */}
