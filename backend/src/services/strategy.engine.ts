@@ -34,6 +34,7 @@ interface StrategyState {
     peakLoss: number;
     entryTime: string;
     exitTime: string;
+    reEntryCutoffTime: string; // Cutoff time for re-entry eligibility (e.g., "13:45")
     targetPnl: number;
     stopLossPnl: number;
     telegramToken: string;
@@ -73,6 +74,7 @@ class StrategyEngine {
         peakLoss: 0,
         entryTime: '12:59',
         exitTime: '15:15',
+        reEntryCutoffTime: '13:45', // Default: 1:45 PM
         targetPnl: 2100,
         stopLossPnl: -1500,
         telegramToken: '',
@@ -420,6 +422,7 @@ class StrategyEngine {
     public async updateSettings(settings: {
         entryTime?: string,
         exitTime?: string,
+        reEntryCutoffTime?: string,
         targetPnl?: number,
         stopLossPnl?: number,
         telegramToken?: string,
@@ -428,6 +431,7 @@ class StrategyEngine {
     }) {
         if (settings.entryTime) this.state.entryTime = settings.entryTime;
         if (settings.exitTime) this.state.exitTime = settings.exitTime;
+        if (settings.reEntryCutoffTime) this.state.reEntryCutoffTime = settings.reEntryCutoffTime;
         if (settings.targetPnl !== undefined) this.state.targetPnl = settings.targetPnl;
         if (settings.stopLossPnl !== undefined) this.state.stopLossPnl = settings.stopLossPnl;
         if (settings.telegramToken !== undefined) this.state.telegramToken = settings.telegramToken;
@@ -440,7 +444,7 @@ class StrategyEngine {
 
         await db.updateState(this.state);
         this.initScheduler();
-        this.addLog(`Strategy settings updated. Entry: ${this.state.entryTime}, Exit: ${this.state.exitTime}, Target: ${this.state.targetPnl}, SL: ${this.state.stopLossPnl}, Mode: ${this.state.isVirtual ? 'Virtual' : 'LIVE'}`);
+        this.addLog(`Strategy settings updated. Entry: ${this.state.entryTime}, Exit: ${this.state.exitTime}, Re-Entry Cutoff: ${this.state.reEntryCutoffTime}, Target: ${this.state.targetPnl}, SL: ${this.state.stopLossPnl}, Mode: ${this.state.isVirtual ? 'Virtual' : 'LIVE'}`);
     }
 
     public getState() {
@@ -1293,11 +1297,14 @@ class StrategyEngine {
             const exitMinute = exitTime.getMinutes();
             const exitDate = exitTime.toISOString().split('T')[0]; // YYYY-MM-DD
 
-            // Check if exit is before 1:45 PM (13:45)
-            const isEarlyExit = exitHour < 13 || (exitHour === 13 && exitMinute < 45);
+            // Parse configurable cutoff time
+            const [cutoffHour, cutoffMinute] = this.state.reEntryCutoffTime.split(':').map(Number);
+
+            // Check if exit is before cutoff time
+            const isEarlyExit = exitHour < cutoffHour || (exitHour === cutoffHour && exitMinute < cutoffMinute);
 
             if (!isEarlyExit) {
-                this.addLog(`ℹ️ [Re-Entry] Exit after 1:45 PM, not eligible for re-entry`);
+                this.addLog(`ℹ️ [Re-Entry] Exit after ${this.state.reEntryCutoffTime}, not eligible for re-entry`);
                 return;
             }
 

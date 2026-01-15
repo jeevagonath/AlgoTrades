@@ -987,6 +987,19 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                             </div>
 
                             <div className="space-y-2">
+                                <label className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">
+                                    Re-Entry Cutoff Time
+                                    <span className="ml-2 text-[9px] normal-case text-slate-400">(Positions closed before this time are eligible for re-entry)</span>
+                                </label>
+                                <input
+                                    type="time"
+                                    value={settings.reEntryCutoffTime || '13:45'}
+                                    onChange={e => setSettings({ ...settings, reEntryCutoffTime: e.target.value })}
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm font-bold text-purple-600 outline-none focus:border-purple-500 transition-colors"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
                                 <label className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Target Profit (₹)</label>
                                 <input
                                     type="number"
