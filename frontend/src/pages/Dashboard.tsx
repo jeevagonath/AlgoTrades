@@ -1,11 +1,12 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Activity, ListOrdered, History, Bell, LogOut, TrendingUp, TrendingDown, Clock, Play, Pause, Octagon, Power, Search, Shield, Settings, Save, X, BarChart3, CheckCircle2, Circle, RotateCcw } from 'lucide-react';
+import { Activity, ListOrdered, History, Bell, LogOut, TrendingUp, TrendingDown, Clock, Play, Pause, Octagon, Power, Search, Shield, Settings, Save, X, BarChart3, CheckCircle2, Circle, RotateCcw, Code } from 'lucide-react';
 import { socketService } from '@/services/socket.service';
 import { strategyApi, authApi } from '@/services/api.service';
 import { formatTradingViewSymbol, getNiftySpotChartUrl, openTradingViewChart } from '@/utils/tradingview';
 import { useAnimatedValue, useFlashOnChange } from '@/hooks/useAnimations';
 import { CalendarHeatmap } from '@/components/CalendarHeatmap';
 import { PositionDetailsModal } from '@/components/PositionDetailsModal';
+import APITester from './APITester';
 
 // --- Types ---
 
@@ -213,14 +214,14 @@ const EngineWorkflow = ({ status, activity }: { status: string, activity: string
                         <div key={step.id} className={`flex items-start gap-3 relative transition-all duration-300 ${isCurrent ? 'scale-105' : ''}`}>
                             {idx !== steps.length - 1 && (
                                 <div className={`absolute left-[13px] top-7 w-[2px] h-5 transition-all duration-500 ${isDone ? 'bg-gradient-to-b from-emerald-500 to-emerald-400' :
-                                        isCurrent ? 'bg-gradient-to-b from-blue-500 to-blue-300' :
-                                            'bg-slate-200'
+                                    isCurrent ? 'bg-gradient-to-b from-blue-500 to-blue-300' :
+                                        'bg-slate-200'
                                     }`} />
                             )}
 
                             <div className={`mt-0.5 w-7 h-7 rounded-full border-2 flex items-center justify-center z-10 transition-all duration-500 text-sm ${isDone ? 'bg-emerald-500 border-emerald-500 shadow-md shadow-emerald-200' :
-                                    isCurrent ? `bg-white ${getStepColor(step.color, 'border')} ring-4 ${getStepColor(step.color, 'ring')} shadow-md` :
-                                        'bg-white border-slate-200'
+                                isCurrent ? `bg-white ${getStepColor(step.color, 'border')} ring-4 ${getStepColor(step.color, 'ring')} shadow-md` :
+                                    'bg-white border-slate-200'
                                 }`}>
                                 {isDone ? (
                                     <CheckCircle2 className="w-4 h-4 text-white" />
@@ -233,8 +234,8 @@ const EngineWorkflow = ({ status, activity }: { status: string, activity: string
 
                             <div className="flex-1 pt-0.5">
                                 <div className={`text-xs font-bold leading-tight transition-colors duration-300 ${isCurrent ? getStepColor(step.color, 'text') :
-                                        isDone ? 'text-slate-700' :
-                                            'text-slate-400'
+                                    isDone ? 'text-slate-700' :
+                                        'text-slate-400'
                                     }`}>
                                     {step.label}
                                 </div>
@@ -357,7 +358,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
     const [nextWeekExpiry, setNextWeekExpiry] = useState<string>('');
     const [isExpiryDay, setIsExpiryDay] = useState(false);
 
-    const [activeTab, setActiveTab] = useState<'positions' | 'orders' | 'logs' | 'alerts' | 'pnl'>('positions');
+    const [activeTab, setActiveTab] = useState<'positions' | 'orders' | 'logs' | 'alerts' | 'pnl' | 'api'>('positions');
     const [dailyPnL, setDailyPnL] = useState<any[]>([]);
     const [showPositionModal, setShowPositionModal] = useState(false);
     const [selectedDate, setSelectedDate] = useState('');
