@@ -20,7 +20,7 @@ export async function proxyRoutes(app: FastifyInstance) {
 
             // Get user details to inject uid if not provided
             try {
-                const userDetails = await shoonya.getUserDetails();
+                const userDetails: any = await shoonya.getUserDetails();
                 if (userDetails && userDetails.uid && !data.uid) {
                     data.uid = userDetails.uid;
                     console.log('[Proxy] Auto-injected uid:', userDetails.uid);
