@@ -9,6 +9,8 @@ interface LoginPageProps {
 const LoginPage = ({ onLogin }: LoginPageProps) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [passwordExpired, setPasswordExpired] = useState(false);
+    const [redirectUrl, setRedirectUrl] = useState<string>('');
     const [formData, setFormData] = useState({
         userid: localStorage.getItem('shoonya_userid') || '',
         password: '',
@@ -22,6 +24,7 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
         e.preventDefault();
         setLoading(true);
         setError(null);
+        setPasswordExpired(false);
 
         // Save persistent fields
         localStorage.setItem('shoonya_userid', formData.userid);
@@ -37,7 +40,16 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
                 setError(res.message || 'Login failed');
             }
         } catch (err: any) {
-            setError(err.response?.data?.message || 'Connection error to backend');
+            const errorData = err.response?.data;
+
+            // Check for password expiry
+            if (errorData?.code === 'PASSWORD_EXPIRED') {
+                setPasswordExpired(true);
+                setRedirectUrl(errorData.redirectUrl || 'https://shoonya.finvasia.com/change-password');
+                setError(errorData.message || 'Your password has expired. Please change your password.');
+            } else {
+                setError(errorData?.message || 'Connection error to backend');
+            }
         } finally {
             setLoading(false);
         }
@@ -194,6 +206,48 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
                     </p>
                 </div>
             </div>
+
+            {/* Password Expiry Modal */}
+            {passwordExpired && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+                    <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 space-y-6 animate-in zoom-in duration-300">
+                        <div className="flex flex-col items-center space-y-4">
+                            <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center">
+                                <Lock className="w-8 h-8 text-amber-600" />
+                            </div>
+                            <div className="text-center space-y-2">
+                                <h2 className="text-2xl font-bold text-slate-900">Password Expired</h2>
+                                <p className="text-slate-600 text-sm">
+                                    {error || 'Your Shoonya password has expired and needs to be changed.'}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-3">
+                            <button
+                                onClick={() => window.open(redirectUrl, '_blank')}
+                                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-2xl shadow-lg shadow-blue-600/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                            >
+                                Change Password on Shoonya
+                                <ArrowRight className="w-5 h-5" />
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setPasswordExpired(false);
+                                    setError(null);
+                                }}
+                                className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-4 rounded-2xl transition-all active:scale-[0.98]"
+                            >
+                                Close
+                            </button>
+                        </div>
+
+                        <p className="text-xs text-slate-400 text-center">
+                            After changing your password, return here to login with your new credentials.
+                        </p>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

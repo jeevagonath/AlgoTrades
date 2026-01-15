@@ -8,8 +8,31 @@ export async function authRoutes(app: FastifyInstance) {
         try {
             const res = await shoonya.login(credentials);
             return { status: 'success', data: res };
-        } catch (err) {
-            return reply.status(401).send({ status: 'error', message: 'Invalid credentials or API error', detail: err });
+        } catch (err: any) {
+            // Check for password expiry errors
+            const errorMessage = err?.data?.emsg || err?.message || 'Unknown error';
+
+            // Detect password expiry scenarios
+            const isPasswordExpired =
+                errorMessage.includes('Password Expired') ||
+                errorMessage.includes('Change Password');
+
+            if (isPasswordExpired) {
+                return reply.status(401).send({
+                    status: 'error',
+                    code: 'PASSWORD_EXPIRED',
+                    message: errorMessage,
+                    redirectUrl: 'https://shoonya.finvasia.com/change-password',
+                    detail: err
+                });
+            }
+
+            return reply.status(401).send({
+                status: 'error',
+                code: 'AUTH_FAILED',
+                message: 'Invalid credentials or API error',
+                detail: err
+            });
         }
     });
 
