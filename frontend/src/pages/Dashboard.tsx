@@ -385,10 +385,11 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
     const [settings, setSettings] = useState({
         entryTime: '12:59',
         exitTime: '15:15',
+        reEntryCutoffTime: '13:45',
         targetPnl: 2100,
         stopLossPnl: -1500,
-        telegramToken: '8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc',
-        telegramChatId: '5177480141',
+        telegramToken: '',
+        telegramChatId: '',
         isVirtual: true
     });
     const [status, setStatus] = useState<string>('IDLE');
