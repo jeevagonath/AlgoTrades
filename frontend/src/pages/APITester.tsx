@@ -6,6 +6,7 @@ const APITester = () => {
     const [apiUrl, setApiUrl] = useState('');
     const [requestBody, setRequestBody] = useState('');
     const [response, setResponse] = useState('');
+    const [requestPreview, setRequestPreview] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
@@ -13,6 +14,7 @@ const APITester = () => {
         setLoading(true);
         setError('');
         setResponse('');
+        setRequestPreview('');
 
         try {
             // Parse request body
@@ -42,6 +44,20 @@ const APITester = () => {
             payload.append('jData', JSON.stringify(parsedRequest));
             payload.append('jKey', usertoken);
 
+            // Show request preview
+            const requestPreviewData = {
+                url: apiUrl,
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: {
+                    jData: parsedRequest,
+                    jKey: usertoken.substring(0, 20) + '...' // Show partial token for security
+                }
+            };
+            setRequestPreview(JSON.stringify(requestPreviewData, null, 2));
+
             // Send request
             const result = await axios.post(apiUrl, payload.toString(), {
                 headers: {
@@ -52,10 +68,43 @@ const APITester = () => {
             // Display response
             setResponse(JSON.stringify(result.data, null, 2));
         } catch (err: any) {
-            setError(err.response?.data?.message || err.message || 'Request failed');
-            if (err.response?.data) {
-                setResponse(JSON.stringify(err.response.data, null, 2));
+            // Enhanced error handling
+            let errorMessage = 'Request failed';
+            let errorDetails: any = {};
+
+            if (err.code === 'ERR_NETWORK') {
+                errorMessage = 'Network Error: Unable to reach the API';
+                errorDetails = {
+                    code: err.code,
+                    message: 'Check if the API URL is correct and the server is reachable',
+                    url: apiUrl,
+                    possibleCauses: [
+                        'CORS issue - API may not allow requests from this origin',
+                        'API server is down or unreachable',
+                        'Invalid URL format',
+                        'Network connectivity issue'
+                    ]
+                };
+            } else if (err.response) {
+                errorMessage = `HTTP ${err.response.status}: ${err.response.statusText}`;
+                errorDetails = {
+                    status: err.response.status,
+                    statusText: err.response.statusText,
+                    data: err.response.data
+                };
+            } else if (err.request) {
+                errorMessage = 'No response received from server';
+                errorDetails = {
+                    message: 'Request was sent but no response received',
+                    timeout: err.code === 'ECONNABORTED'
+                };
+            } else {
+                errorMessage = err.message || 'Unknown error';
+                errorDetails = { error: err.toString() };
             }
+
+            setError(errorMessage);
+            setResponse(JSON.stringify(errorDetails, null, 2));
         } finally {
             setLoading(false);
         }
@@ -147,6 +196,29 @@ const APITester = () => {
 
                     {/* Response Section */}
                     <div className="space-y-6">
+                        {/* Request Preview */}
+                        {requestPreview && (
+                            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                                <div className="flex items-center justify-between mb-3">
+                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest">
+                                        📤 Request Sent
+                                    </label>
+                                    <button
+                                        onClick={() => navigator.clipboard.writeText(requestPreview)}
+                                        className="flex items-center gap-1 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition-colors"
+                                    >
+                                        <Copy size={14} />
+                                        Copy
+                                    </button>
+                                </div>
+                                <div className="bg-slate-900 rounded-xl p-4 max-h-[300px] overflow-auto">
+                                    <pre className="text-xs text-cyan-400 font-mono whitespace-pre-wrap">
+                                        {requestPreview}
+                                    </pre>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Error Display */}
                         {error && (
                             <div className="bg-red-50 border border-red-200 rounded-2xl p-4 flex items-start gap-3">
@@ -162,7 +234,7 @@ const APITester = () => {
                         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex-1">
                             <div className="flex items-center justify-between mb-3">
                                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest">
-                                    Response
+                                    📥 Response
                                 </label>
                                 {response && (
                                     <button
