@@ -8,6 +8,7 @@ import { FastifyInstance } from 'fastify';
 import { authRoutes } from './routes/auth.routes';
 import { strategyRoutes } from './routes/strategy.routes';
 import { analyticsRoutes } from './routes/analytics.routes';
+import { proxyRoutes } from './routes/proxy.routes';
 import { strategyEngine } from './services/strategy.engine';
 
 const app: FastifyInstance = fastify({ logger: true });
@@ -37,6 +38,7 @@ app.setErrorHandler((error: any, request, reply) => {
 app.register(authRoutes, { prefix: '/api/auth' });
 app.register(strategyRoutes, { prefix: '/api/strategy' });
 app.register(analyticsRoutes, { prefix: '/api/analytics' });
+app.register(proxyRoutes); // No prefix, already has /api/proxy in route
 
 app.get('/health', async (request, reply) => {
     return { status: 'active', timestamp: new Date(), uptime: process.uptime() };

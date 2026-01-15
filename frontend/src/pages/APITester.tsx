@@ -29,40 +29,19 @@ const APITester = () => {
                 }
             }
 
-            // Get usertoken from backend session
-            const sessionRes = await axios.get('http://localhost:3000/user');
-            const usertoken = sessionRes.data?.data?.susertoken;
-
-            if (!usertoken) {
-                setError('No active session. Please login first.');
-                setLoading(false);
-                return;
-            }
-
-            // Prepare request payload with jKey
-            const payload = new URLSearchParams();
-            payload.append('jData', JSON.stringify(parsedRequest));
-            payload.append('jKey', usertoken);
-
             // Show request preview
             const requestPreviewData = {
-                url: apiUrl,
+                targetUrl: apiUrl,
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: {
-                    jData: parsedRequest,
-                    jKey: usertoken.substring(0, 20) + '...' // Show partial token for security
-                }
+                requestBody: parsedRequest,
+                note: 'Request will be sent via backend proxy with jKey automatically added'
             };
             setRequestPreview(JSON.stringify(requestPreviewData, null, 2));
 
-            // Send request
-            const result = await axios.post(apiUrl, payload.toString(), {
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
+            // Send request through backend proxy to avoid CORS
+            const result = await axios.post('http://localhost:3000/api/proxy', {
+                url: apiUrl,
+                data: parsedRequest
             });
 
             // Display response
@@ -73,15 +52,13 @@ const APITester = () => {
             let errorDetails: any = {};
 
             if (err.code === 'ERR_NETWORK') {
-                errorMessage = 'Network Error: Unable to reach the API';
+                errorMessage = 'Network Error: Unable to reach backend server';
                 errorDetails = {
                     code: err.code,
-                    message: 'Check if the API URL is correct and the server is reachable',
-                    url: apiUrl,
+                    message: 'Make sure your backend server is running on http://localhost:3000',
                     possibleCauses: [
-                        'CORS issue - API may not allow requests from this origin',
-                        'API server is down or unreachable',
-                        'Invalid URL format',
+                        'Backend server is not running',
+                        'Backend server is running on a different port',
                         'Network connectivity issue'
                     ]
                 };
