@@ -29,6 +29,19 @@ const APITester = () => {
                 }
             }
 
+            // Get user session to inject uid if not provided
+            try {
+                const sessionRes = await axios.get('https://algotradesservice.onrender.com/user');
+                const uid = sessionRes.data?.data?.uid;
+
+                // Auto-inject uid if not present in request
+                if (uid && !parsedRequest.uid) {
+                    parsedRequest.uid = uid;
+                }
+            } catch (err) {
+                console.warn('Could not fetch user session for auto-uid injection');
+            }
+
             // Show request preview
             const requestPreviewData = {
                 targetUrl: apiUrl,
@@ -239,32 +252,32 @@ const APITester = () => {
                         <button
                             onClick={() => {
                                 setApiUrl('https://api.shoonya.com/NorenWClientTP/GetQuotes');
-                                setRequestBody(JSON.stringify({ uid: 'YOUR_UID', exch: 'NSE', token: '26000' }, null, 2));
+                                setRequestBody(JSON.stringify({ exch: 'NSE', token: '26000' }, null, 2));
                             }}
                             className="text-left p-4 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-200 transition-colors"
                         >
                             <p className="text-xs font-bold text-blue-600 mb-1">Get Quotes</p>
-                            <p className="text-xs text-slate-500">Fetch live quotes for Nifty 50</p>
+                            <p className="text-xs text-slate-500">Fetch live quotes for Nifty 50 (uid auto-added)</p>
                         </button>
                         <button
                             onClick={() => {
                                 setApiUrl('https://api.shoonya.com/NorenWClientTP/PositionBook');
-                                setRequestBody(JSON.stringify({ uid: 'YOUR_UID', actid: 'YOUR_UID' }, null, 2));
+                                setRequestBody(JSON.stringify({ actid: 'YOUR_ACTID' }, null, 2));
                             }}
                             className="text-left p-4 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-200 transition-colors"
                         >
                             <p className="text-xs font-bold text-blue-600 mb-1">Position Book</p>
-                            <p className="text-xs text-slate-500">Get current positions</p>
+                            <p className="text-xs text-slate-500">Get current positions (uid auto-added)</p>
                         </button>
                         <button
                             onClick={() => {
                                 setApiUrl('https://api.shoonya.com/NorenWClientTP/OrderBook');
-                                setRequestBody(JSON.stringify({ uid: 'YOUR_UID' }, null, 2));
+                                setRequestBody(JSON.stringify({}, null, 2));
                             }}
                             className="text-left p-4 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-200 transition-colors"
                         >
                             <p className="text-xs font-bold text-blue-600 mb-1">Order Book</p>
-                            <p className="text-xs text-slate-500">View all orders</p>
+                            <p className="text-xs text-slate-500">View all orders (uid auto-added)</p>
                         </button>
                     </div>
                 </div>
