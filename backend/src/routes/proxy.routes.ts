@@ -38,16 +38,29 @@ export async function proxyRoutes(app: FastifyInstance) {
             console.error('Proxy error:', err.message);
 
             if (err.response) {
-                return reply.status(err.response.status).send({
+                // Return detailed error from Shoonya API
+                const errorData = {
                     status: 'error',
-                    message: err.response.statusText,
-                    data: err.response.data
-                });
+                    httpStatus: err.response.status,
+                    httpStatusText: err.response.statusText,
+                    shoonyaResponse: err.response.data,
+                    message: err.response.data?.emsg || err.response.data?.message || 'API request failed',
+                    details: {
+                        url: url,
+                        requestData: data
+                    }
+                };
+
+                return reply.status(err.response.status).send(errorData);
             }
 
             return reply.status(500).send({
                 status: 'error',
-                message: err.message || 'Proxy request failed'
+                message: err.message || 'Proxy request failed',
+                details: {
+                    url: url,
+                    requestData: data
+                }
             });
         }
     });
