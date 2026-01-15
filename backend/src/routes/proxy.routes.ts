@@ -9,7 +9,7 @@ export async function proxyRoutes(app: FastifyInstance) {
 
         try {
             // Get user token from session
-            const usertoken = shoonya.getUserToken();
+            const usertoken = await shoonya.getAuthToken();
 
             if (!usertoken) {
                 return reply.status(401).send({
