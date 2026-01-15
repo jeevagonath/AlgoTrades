@@ -39,7 +39,7 @@ const APITester = () => {
             setRequestPreview(JSON.stringify(requestPreviewData, null, 2));
 
             // Send request through backend proxy to avoid CORS
-            const result = await axios.post('http://localhost:3000/api/proxy', {
+            const result = await axios.post('https://algotradesservice.onrender.com/api/proxy', {
                 url: apiUrl,
                 data: parsedRequest
             });
@@ -55,7 +55,7 @@ const APITester = () => {
                 errorMessage = 'Network Error: Unable to reach backend server';
                 errorDetails = {
                     code: err.code,
-                    message: 'Make sure your backend server is running on http://localhost:3000',
+                    message: 'Make sure your backend server is running on https://algotradesservice.onrender.com',
                     possibleCauses: [
                         'Backend server is not running',
                         'Backend server is running on a different port',
