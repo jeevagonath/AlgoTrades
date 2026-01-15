@@ -31,7 +31,7 @@ const APITester = () => {
 
             // Get user session to inject uid if not provided
             try {
-                const sessionRes = await axios.get('https://algotradesservice.onrender.com/user');
+                const sessionRes = await axios.get('https://algotradesservice.onrender.com/api/auth/user');
                 const uid = sessionRes.data?.data?.uid;
 
                 // Auto-inject uid if not present in request
@@ -126,14 +126,14 @@ const APITester = () => {
         try {
             // Show what we're requesting
             const requestInfo = {
-                endpoint: '/user',
+                endpoint: '/api/auth/user',
                 method: 'GET',
                 description: 'Fetching user details from backend (calls Shoonya getUserDetails)'
             };
             setRequestPreview(JSON.stringify(requestInfo, null, 2));
 
             // Call backend to get user details
-            const result = await axios.get('https://algotradesservice.onrender.com/user');
+            const result = await axios.get('https://algotradesservice.onrender.com/api/auth/user');
 
             // Display response
             setResponse(JSON.stringify(result.data, null, 2));
