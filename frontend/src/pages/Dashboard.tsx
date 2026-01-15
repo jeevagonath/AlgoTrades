@@ -429,6 +429,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                     setSettings({
                         entryTime: d.entryTime || '12:59',
                         exitTime: d.exitTime || '15:15',
+                        reEntryCutoffTime: d.reEntryCutoffTime || '13:45',
                         targetPnl: d.targetPnl || 2100,
                         stopLossPnl: d.stopLossPnl || -1500,
                         telegramToken: d.telegramToken || '8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc',
