@@ -1,14 +1,14 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Dashboard from './pages/Dashboard'
 import LoginPage from './pages/LoginPage'
 import APITester from './pages/APITester'
 import { authApi } from './services/api.service'
-import { useEffect } from 'react'
+import { Code } from 'lucide-react'
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState<'dashboard' | 'api'>('dashboard');
+  const [showAPITester, setShowAPITester] = useState(false);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -36,11 +36,10 @@ function App() {
     } catch (err) {
       console.error('Logout API failed:', err);
     } finally {
-      // Clear any local storage or session data regardless of API success
       localStorage.clear();
       sessionStorage.clear();
       setIsAuthenticated(false);
-      setCurrentPage('dashboard');
+      setShowAPITester(false);
     }
   };
 
@@ -59,52 +58,40 @@ function App() {
     return <LoginPage onLogin={handleLogin} />;
   }
 
-  return (
-    <div className="relative">
-      {/* Navigation Tabs */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-slate-200 shadow-sm">
-        <div className="max-w-[1600px] mx-auto px-6 flex items-center gap-4 h-14">
-          <div className="flex items-center gap-2">
-            <div className="p-1 bg-white border border-slate-100 rounded-lg shadow-sm overflow-hidden">
-              <img src="/logo.png" alt="Logo" className="w-6 h-6 object-contain" />
-            </div>
-            <span className="text-base font-bold tracking-tight text-slate-900">AlgoTrades</span>
-          </div>
-          <div className="flex-1 flex items-center gap-2">
-            <button
-              onClick={() => setCurrentPage('dashboard')}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${currentPage === 'dashboard'
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'text-slate-600 hover:bg-slate-100'
-                }`}
-            >
-              Dashboard
-            </button>
-            <button
-              onClick={() => setCurrentPage('api')}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${currentPage === 'api'
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'text-slate-600 hover:bg-slate-100'
-                }`}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-              </svg>
-              API Tester
-            </button>
-          </div>
+  // Show API Tester if requested
+  if (showAPITester) {
+    return (
+      <div className="min-h-screen bg-[#f8f9fc]">
+        {/* Simple back button */}
+        <div className="bg-white border-b border-slate-200 px-6 py-3">
+          <button
+            onClick={() => setShowAPITester(false)}
+            className="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-blue-600 transition-colors"
+          >
+            ← Back to Dashboard
+          </button>
         </div>
+        <APITester />
       </div>
+    );
+  }
 
-      {/* Page Content */}
-      <div className="pt-14">
-        {currentPage === 'dashboard' ? (
-          <Dashboard onLogout={handleLogout} />
-        ) : (
-          <APITester />
-        )}
-      </div>
-    </div>
+  // Show Dashboard with API Tester button
+  return (
+    <>
+      {/* Floating API Tester Button */}
+      <button
+        onClick={() => setShowAPITester(true)}
+        className="fixed bottom-6 right-6 z-50 bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-2xl transition-all active:scale-95 flex items-center gap-2 group"
+        title="Open API Tester"
+      >
+        <Code className="w-5 h-5" />
+        <span className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 whitespace-nowrap font-semibold text-sm">
+          API Tester
+        </span>
+      </button>
+      <Dashboard onLogout={handleLogout} />
+    </>
   );
 }
 
