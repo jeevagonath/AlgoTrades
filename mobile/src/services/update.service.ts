@@ -29,9 +29,21 @@ export const updateService = {
             if (response.data && response.data.tag_name) {
                 // Tag name is usually 'v1.0.1' or '1.0.1'
                 const latestVersion = response.data.tag_name.replace('v', '');
+
+                // Find APK asset in release
+                let apkUrl = response.data.html_url; // Fallback to release page
+                if (response.data.assets && response.data.assets.length > 0) {
+                    const apkAsset = response.data.assets.find((asset: any) =>
+                        asset.name.endsWith('.apk') && asset.browser_download_url
+                    );
+                    if (apkAsset) {
+                        apkUrl = apkAsset.browser_download_url; // Direct APK download URL
+                    }
+                }
+
                 return {
                     version: latestVersion,
-                    url: response.data.html_url,
+                    url: apkUrl, // Now contains direct APK URL if available
                     notes: response.data.body || '',
                 };
             }

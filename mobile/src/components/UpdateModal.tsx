@@ -27,15 +27,16 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
         if (Platform.OS === 'android') {
             try {
                 setDownloading(true);
-                const { updateService } = await import('@/src/services/update.service');
-                const apkUrl = await updateService.getApkDownloadUrl(versionInfo.url);
 
-                if (apkUrl) {
-                    await updateService.downloadAndInstallApk(apkUrl, (progress) => {
+                // Check if URL is a direct APK download link
+                if (versionInfo.url.endsWith('.apk')) {
+                    // Direct APK download
+                    const { updateService } = await import('@/src/services/update.service');
+                    await updateService.downloadAndInstallApk(versionInfo.url, (progress) => {
                         setDownloadProgress(Math.round(progress));
                     });
                 } else {
-                    // Fallback to browser if APK not found
+                    // Fallback to browser if not a direct APK link
                     Linking.openURL(versionInfo.url);
                 }
             } catch (error) {
