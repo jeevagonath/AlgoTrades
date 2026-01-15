@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Send, Copy, Trash2, AlertCircle } from 'lucide-react';
+import { Send, Copy, Trash2, AlertCircle, User } from 'lucide-react';
 import axios from 'axios';
 
 const APITester = () => {
