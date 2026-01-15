@@ -18,6 +18,17 @@ export async function proxyRoutes(app: FastifyInstance) {
                 });
             }
 
+            // Get user details to inject uid if not provided
+            try {
+                const userDetails = await shoonya.getUserDetails();
+                if (userDetails && userDetails.uid && !data.uid) {
+                    data.uid = userDetails.uid;
+                    console.log('[Proxy] Auto-injected uid:', userDetails.uid);
+                }
+            } catch (err) {
+                console.warn('[Proxy] Could not fetch user details for auto-uid injection');
+            }
+
             // Prepare payload with jKey
             const payload = new URLSearchParams();
             payload.append('jData', JSON.stringify(data));
