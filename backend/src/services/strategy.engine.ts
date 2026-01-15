@@ -46,6 +46,17 @@ interface StrategyState {
     nextAction: string; // "Exit at 12:45 PM", "Target Hit", etc.
     engineActivity: string; // "Watching Spikes", "Waiting for Expiry", etc.
     lastHeartbeat: string; // ISO string
+
+    // Re-entry feature fields
+    positionEntryDate: string; // ISO date when position was taken (YYYY-MM-DD)
+    reEntry: {
+        isEligible: boolean;           // Can we re-enter today?
+        hasReEntered: boolean;         // Have we already re-entered today?
+        originalExitTime: string;      // When was the original exit
+        originalExitReason: string;    // Why did we exit (target/sl/manual)
+        positionAge: number;           // Days position was held before exit
+        scheduledReEntryTime: string;  // When re-entry is scheduled (ISO timestamp)
+    };
 }
 
 class StrategyEngine {
@@ -73,7 +84,18 @@ class StrategyEngine {
         },
         nextAction: 'Daily 9 AM Evaluation',
         engineActivity: 'Initializing',
-        lastHeartbeat: new Date().toISOString()
+        lastHeartbeat: new Date().toISOString(),
+
+        // Initialize re-entry state
+        positionEntryDate: '',
+        reEntry: {
+            isEligible: false,
+            hasReEntered: false,
+            originalExitTime: '',
+            originalExitReason: '',
+            positionAge: 0,
+            scheduledReEntryTime: ''
+        }
     };
 
     private lastPnlUpdateTime: number = 0;
@@ -82,6 +104,7 @@ class StrategyEngine {
     private lastPositionSyncTime: number = 0;
     private POSITION_SYNC_INTERVAL = 60 * 60 * 1000; // 1 hour
     private hourlySyncTimer: NodeJS.Timeout | null = null;
+    private reEntryTimer: NodeJS.Timeout | null = null; // Timer for re-entry scheduling
 
     constructor() {
         this.initScheduler();
@@ -299,6 +322,22 @@ class StrategyEngine {
         this.schedulers.push(cron.schedule('0 9 * * *', async () => {
             this.addLog('🌅 [System] Daily 9 AM Reset - evaluating today...');
             const isExpiry = await this.isExpiryDay();
+
+            // Clear re-entry state for new day
+            this.state.reEntry = {
+                isEligible: false,
+                hasReEntered: false,
+                originalExitTime: '',
+                originalExitReason: '',
+                positionAge: 0,
+                scheduledReEntryTime: ''
+            };
+
+            // Clear any pending re-entry timer
+            if (this.reEntryTimer) {
+                clearTimeout(this.reEntryTimer);
+                this.reEntryTimer = null;
+            }
 
             if (isExpiry) {
                 this.state.status = 'WAITING_FOR_EXPIRY';
@@ -727,6 +766,12 @@ class StrategyEngine {
                 this.state.status = 'ENTRY_DONE';    // Transition to ENTRY_DONE
                 this.state.engineActivity = 'Entry Complete';
                 this.state.nextAction = 'Transitioning to Monitoring';
+
+                // Track position entry date for re-entry logic
+                const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+                this.state.positionEntryDate = today;
+                this.addLog(`📅 [Entry] Position entry date recorded: ${today}`);
+
                 this.startMonitoring();
                 await this.syncToDb(true);
 
@@ -1210,6 +1255,10 @@ class StrategyEngine {
         this.state.isActive = false;
         this.state.isTradePlaced = false;
 
+        // ========== RE-ENTRY DETECTION LOGIC ==========
+        await this.detectAndScheduleReEntry(reason);
+        // ==============================================
+
         // Set status based on reason
         if (reason.includes('Profit') || reason.includes('Loss') || reason.includes('MANUAL')) {
             this.state.status = 'FORCE_EXITED';
@@ -1235,11 +1284,144 @@ class StrategyEngine {
         telegramService.sendMessage(`🏁 <b>Strategy Closed</b>\nReason: ${reason}\nFinal PnL: <b>₹${this.state.pnl.toFixed(2)}</b>`);
     }
 
+    // ========== RE-ENTRY FEATURE METHODS ==========
+
+    private async detectAndScheduleReEntry(exitReason: string) {
+        try {
+            const exitTime = new Date();
+            const exitHour = exitTime.getHours();
+            const exitMinute = exitTime.getMinutes();
+            const exitDate = exitTime.toISOString().split('T')[0]; // YYYY-MM-DD
+
+            // Check if exit is before 1:45 PM (13:45)
+            const isEarlyExit = exitHour < 13 || (exitHour === 13 && exitMinute < 45);
+
+            if (!isEarlyExit) {
+                this.addLog(`ℹ️ [Re-Entry] Exit after 1:45 PM, not eligible for re-entry`);
+                return;
+            }
+
+            // Calculate position age in days
+            if (!this.state.positionEntryDate) {
+                this.addLog(`ℹ️ [Re-Entry] No entry date recorded, cannot determine position age`);
+                return;
+            }
+
+            const entryDate = new Date(this.state.positionEntryDate);
+            const exitDateObj = new Date(exitDate);
+            const positionAge = Math.floor((exitDateObj.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24));
+
+            // Check if position was taken EXACTLY yesterday (position age = 1)
+            const isYesterdayPosition = positionAge === 1;
+
+            // Check if this is NOT expiry day exit
+            const isNotExpiryDayExit = !exitReason.includes('Expiry');
+
+            if (isYesterdayPosition && isNotExpiryDayExit) {
+                // Calculate re-entry time (2 minutes from now)
+                const reEntryTime = new Date(exitTime.getTime() + 2 * 60 * 1000);
+
+                this.state.reEntry.isEligible = true;
+                this.state.reEntry.originalExitTime = exitTime.toISOString();
+                this.state.reEntry.originalExitReason = exitReason;
+                this.state.reEntry.positionAge = positionAge;
+                this.state.reEntry.scheduledReEntryTime = reEntryTime.toISOString();
+
+                this.addLog(`✅ [Re-Entry] Eligible for re-entry in 2 minutes`);
+                this.addLog(`   - Position taken on: ${this.state.positionEntryDate}`);
+                this.addLog(`   - Exited on: ${exitDate} at ${exitTime.toLocaleTimeString('en-IN')}`);
+                this.addLog(`   - Position age: ${positionAge} day (yesterday's position)`);
+                this.addLog(`   - Exit reason: ${exitReason}`);
+                this.addLog(`   - Scheduled re-entry: ${reEntryTime.toLocaleTimeString('en-IN')}`);
+
+                this.state.nextAction = `Re-Entry at ${reEntryTime.toLocaleTimeString('en-IN')} (2 min after exit)`;
+
+                // Schedule re-entry after 2 minutes
+                this.scheduleReEntry(2 * 60 * 1000); // 2 minutes in milliseconds
+            } else if (positionAge === 0) {
+                this.addLog(`ℹ️ [Re-Entry] Position taken today (same-day), not eligible for re-entry`);
+            } else if (positionAge > 1) {
+                this.addLog(`ℹ️ [Re-Entry] Position is ${positionAge} days old, not eligible for re-entry (only yesterday's positions qualify)`);
+            }
+        } catch (error: any) {
+            this.addLog(`❌ [Re-Entry] Error in detection: ${error.message}`);
+        }
+    }
+
+    private scheduleReEntry(delayMs: number) {
+        // Clear any existing timer
+        if (this.reEntryTimer) {
+            clearTimeout(this.reEntryTimer);
+            this.reEntryTimer = null;
+        }
+
+        this.addLog(`⏰ [Re-Entry] Scheduling re-entry in ${delayMs / 1000} seconds`);
+
+        // Schedule re-entry
+        this.reEntryTimer = setTimeout(async () => {
+            try {
+                await this.executeReEntry();
+            } catch (error: any) {
+                this.addLog(`❌ [Re-Entry] Error during scheduled re-entry: ${error.message}`);
+            } finally {
+                this.reEntryTimer = null;
+            }
+        }, delayMs);
+    }
+
+    private async executeReEntry() {
+        try {
+            // Safety checks
+            if (!this.state.reEntry.isEligible) {
+                this.addLog('[Re-Entry] Not eligible for re-entry');
+                return;
+            }
+
+            if (this.state.reEntry.hasReEntered) {
+                this.addLog('[Re-Entry] Already re-entered today, skipping');
+                return;
+            }
+
+            if (this.state.isPaused) {
+                this.addLog('[Re-Entry] System is paused, skipping re-entry');
+                return;
+            }
+
+            if (this.state.status !== 'EXIT_DONE' && this.state.status !== 'FORCE_EXITED' && this.state.status !== 'IDLE') {
+                this.addLog(`[Re-Entry] Invalid status: ${this.state.status}, expected EXIT_DONE, FORCE_EXITED, or IDLE`);
+                return;
+            }
+
+            this.addLog('🔄 [Re-Entry] Executing scheduled re-entry');
+
+            // Mark as re-entered to prevent multiple attempts
+            this.state.reEntry.hasReEntered = true;
+            await this.syncToDb(true);
+
+            // Execute entry logic (select strikes and place order)
+            await this.selectStrikes();
+            await this.placeOrder(false);
+
+            // Send notification
+            await telegramService.sendMessage(
+                `🔄 *Re-Entry Trade Executed*\n\n` +
+                `Original Exit: ${this.state.reEntry.originalExitReason}\n` +
+                `Exit Time: ${new Date(this.state.reEntry.originalExitTime).toLocaleTimeString('en-IN')}\n` +
+                `Re-Entry Time: ${new Date().toLocaleTimeString('en-IN')}\n` +
+                `Position Age: ${this.state.reEntry.positionAge} day\n\n` +
+                `New positions taken automatically.`
+            );
+
+        } catch (error: any) {
+            this.addLog(`❌ [Re-Entry] Error: ${error.message}`);
+        }
+    }
+
+    // ========== END RE-ENTRY FEATURE METHODS ==========
+
     // --- Control Methods ---
 
     async pause() {
-        if (this.state.isPaused) return;
-        this.state.isPaused = true;
         this.addLog('⏸️ Strategy PAUSED by User.');
         telegramService.sendMessage('⏸️ <b>Strategy Paused</b>');
         await this.syncToDb();
