@@ -50,11 +50,6 @@ class TelegramService {
     }
 
     async sendMessage(message: string) {
-        if (!this.token || !this.chatId) {
-            console.warn('[Telegram] Credentials not set. Skipping message.');
-            return;
-        }
-
         try {
             // Parse and save alert to database
             const alertMeta = this.parseAlert(message);
@@ -76,14 +71,22 @@ class TelegramService {
                 });
             }).catch(() => { });
 
-            // Send to Telegram
-            const url = `https://api.telegram.org/bot${this.token}/sendMessage`;
-            await axios.post(url, {
-                chat_id: this.chatId,
-                text: message,
-                parse_mode: 'HTML'
-            });
-            //console.log('[Telegram] Message sent successfully');
+            // Send to Telegram (OPTIONAL - only if credentials are set)
+            if (this.token && this.chatId) {
+                try {
+                    const url = `https://api.telegram.org/bot${this.token}/sendMessage`;
+                    await axios.post(url, {
+                        chat_id: this.chatId,
+                        text: message,
+                        parse_mode: 'HTML'
+                    });
+                    //console.log('[Telegram] Message sent successfully');
+                } catch (telegramError: any) {
+                    console.error('[Telegram] Failed to send to Telegram:', telegramError.response?.data || telegramError.message);
+                }
+            } else {
+                console.log('[Telegram] Credentials not set. Alert saved to DB and emitted to app only.');
+            }
         } catch (error: any) {
             console.error('[Telegram] Failed to send message:', error.response?.data || error.message);
         }
