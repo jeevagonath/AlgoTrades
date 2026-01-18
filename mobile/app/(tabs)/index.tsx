@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { StyleSheet, View, Text, ScrollView, RefreshControl, TouchableOpacity, SafeAreaView, Platform, Linking } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, RefreshControl, TouchableOpacity, SafeAreaView, Platform, Linking, Alert } from 'react-native';
 import { Activity, Bell, Play, Pause, Octagon, Settings, LogOut, Info, Clock, TrendingUp, TrendingDown, ChevronRight, Calendar, Zap, CheckCircle, RotateCcw } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -7,6 +7,7 @@ import { MetricCard } from '@/src/components/MetricCard';
 import { NiftyTicker } from '@/src/components/NiftyTicker';
 import { strategyApi, authApi } from '@/src/services/api';
 import { socketService } from '@/src/services/socket';
+import { notificationService, AlertData } from '@/src/services/notification.service';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useAuth } from '@/src/context/AuthContext';
 import { Theme } from '@/src/constants/Theme';
@@ -223,6 +224,11 @@ export default function DashboardScreen() {
     socketService.connect();
     fetchData();
 
+    // Initialize notification service
+    notificationService.initialize().catch(err => {
+      console.warn('Failed to initialize notifications:', err);
+    });
+
     socketService.on('price_update', (data: any) => {
       if (data.token === '26000') {
         setNiftyData(prev => {
@@ -247,6 +253,14 @@ export default function DashboardScreen() {
       if (data.engineActivity) setEngineActivity(data.engineActivity);
       if (data.nextAction) setNextAction(data.nextAction);
       if (data.isPaused !== undefined) setIsPaused(data.isPaused);
+    });
+
+    // Listen for alerts from server
+    socketService.onAlert((alert: AlertData) => {
+      console.log('Alert received:', alert);
+
+      // Show push notification
+      notificationService.showNotification(alert);
     });
 
     return () => {

@@ -1,4 +1,5 @@
 import { io, Socket } from 'socket.io-client';
+import { notificationService } from './notification.service';
 
 class SocketService {
     private socket: Socket | null = null;
@@ -41,6 +42,18 @@ class SocketService {
 
     subscribe(tokens: string[]) {
         this.socket?.emit('subscribe', tokens);
+    }
+
+    onAlert(callback: (data: any) => void) {
+        this.socket?.on('new_alert', (alert) => {
+            // Call the callback for any additional handling
+            callback(alert);
+
+            // Automatically show notification
+            notificationService.showNotification(alert).catch(err => {
+                console.error('Failed to show notification:', err);
+            });
+        });
     }
 }
 

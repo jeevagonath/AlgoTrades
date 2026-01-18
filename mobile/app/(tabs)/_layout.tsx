@@ -42,6 +42,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <ListOrdered size={22} color={color} />,
         }}
       />
+
       <Tabs.Screen
         name="logs"
         options={{

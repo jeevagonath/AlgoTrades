@@ -593,5 +593,61 @@ export const db = {
                 avgLoss: 0
             };
         }
+    },
+
+    async cleanupOldLogs() {
+        try {
+            // Calculate cutoff date (30 days ago)
+            const cutoffDate = new Date();
+            cutoffDate.setDate(cutoffDate.getDate() - 30);
+            const cutoffISO = cutoffDate.toISOString();
+
+            console.log(`[DB Cleanup] Deleting system_logs older than ${cutoffDate.toLocaleDateString()}...`);
+
+            const { data, error, count } = await supabase
+                .from('system_logs')
+                .delete({ count: 'exact' })
+                .lt('created_at', cutoffISO);
+
+            if (error) {
+                console.error('Supabase System Logs Cleanup Error:', error);
+                return { success: false, error, deletedCount: 0 };
+            }
+
+            const deletedCount = count || 0;
+            console.log(`[DB Cleanup] ✅ Deleted ${deletedCount} old system_logs records`);
+            return { success: true, deletedCount };
+        } catch (err) {
+            console.error('Failed to cleanup old system logs:', err);
+            return { success: false, error: err, deletedCount: 0 };
+        }
+    },
+
+    async cleanupOldAlerts() {
+        try {
+            // Calculate cutoff date (30 days ago)
+            const cutoffDate = new Date();
+            cutoffDate.setDate(cutoffDate.getDate() - 30);
+            const cutoffISO = cutoffDate.toISOString();
+
+            console.log(`[DB Cleanup] Deleting alerts older than ${cutoffDate.toLocaleDateString()}...`);
+
+            const { data, error, count } = await supabase
+                .from('alerts')
+                .delete({ count: 'exact' })
+                .lt('created_at', cutoffISO);
+
+            if (error) {
+                console.error('Supabase Alerts Cleanup Error:', error);
+                return { success: false, error, deletedCount: 0 };
+            }
+
+            const deletedCount = count || 0;
+            console.log(`[DB Cleanup] ✅ Deleted ${deletedCount} old alerts records`);
+            return { success: true, deletedCount };
+        } catch (err) {
+            console.error('Failed to cleanup old alerts:', err);
+            return { success: false, error: err, deletedCount: 0 };
+        }
     }
 };

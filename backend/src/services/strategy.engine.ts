@@ -341,6 +341,20 @@ class StrategyEngine {
                 this.reEntryTimer = null;
             }
 
+            // Run database cleanup (delete logs/alerts older than 30 days)
+            try {
+                this.addLog('🧹 [Cleanup] Running daily database cleanup...');
+                const logsResult = await db.cleanupOldLogs();
+                const alertsResult = await db.cleanupOldAlerts();
+
+                if (logsResult.success || alertsResult.success) {
+                    const totalDeleted = (logsResult.deletedCount || 0) + (alertsResult.deletedCount || 0);
+                    this.addLog(`🧹 [Cleanup] Completed: ${totalDeleted} old records deleted`);
+                }
+            } catch (err) {
+                console.error('[Cleanup] Database cleanup failed:', err);
+            }
+
             if (isExpiry) {
                 this.state.status = 'WAITING_FOR_EXPIRY';
                 this.state.engineActivity = 'Waiting for Entry Sequence';

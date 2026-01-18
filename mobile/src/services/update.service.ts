@@ -2,7 +2,7 @@ import axios from 'axios';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import * as FileSystem from 'expo-file-system';
-import * as IntentLauncher from 'expo-intent-launcher';
+import * as Sharing from 'expo-sharing';
 
 const GITHUB_REPO = 'jeevagonath/AlgoTrades';
 const GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`;
@@ -97,8 +97,18 @@ export const updateService = {
         }
 
         try {
-            // Use app's cache directory for temporary APK storage
+            // Use cache directory for temporary APK storage
             const fileUri = `${FileSystem.cacheDirectory}update.apk`;
+
+            // Delete old APK if it exists
+            try {
+                const fileInfo = await FileSystem.getInfoAsync(fileUri);
+                if (fileInfo.exists) {
+                    await FileSystem.deleteAsync(fileUri);
+                }
+            } catch (err) {
+                // File doesn't exist, continue
+            }
 
             const downloadResumable = FileSystem.createDownloadResumable(
                 downloadUrl,
@@ -113,11 +123,18 @@ export const updateService = {
             const result = await downloadResumable.downloadAsync();
 
             if (result && result.uri) {
-                // Trigger Android package installer
-                await IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
-                    data: result.uri,
-                    flags: 1, // FLAG_GRANT_READ_URI_PERMISSION
-                    type: 'application/vnd.android.package-archive',
+                // Check if sharing is available
+                const isAvailable = await Sharing.isAvailableAsync();
+                if (!isAvailable) {
+                    throw new Error('Sharing is not available on this device');
+                }
+
+                // Use Sharing API which handles FileProvider automatically
+                // This opens the system share dialog with install option
+                await Sharing.shareAsync(result.uri, {
+                    mimeType: 'application/vnd.android.package-archive',
+                    dialogTitle: 'Install Update',
+                    UTI: 'public.apk'
                 });
             }
         } catch (error) {
@@ -126,3 +143,4 @@ export const updateService = {
         }
     }
 };
+

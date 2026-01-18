@@ -20,6 +20,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
 }) => {
     const [downloading, setDownloading] = useState(false);
     const [downloadProgress, setDownloadProgress] = useState(0);
+    const [error, setError] = useState<string | null>(null);
 
     if (!versionInfo) return null;
 
@@ -27,6 +28,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
         if (Platform.OS === 'android') {
             try {
                 setDownloading(true);
+                setError(null);
 
                 // Check if URL is a direct APK download link
                 if (versionInfo.url.endsWith('.apk')) {
@@ -39,10 +41,13 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
                     // Fallback to browser if not a direct APK link
                     Linking.openURL(versionInfo.url);
                 }
-            } catch (error) {
+            } catch (error: any) {
                 console.error('Update error:', error);
+                setError(error.message || 'Failed to download update');
                 // Fallback to browser on error
-                Linking.openURL(versionInfo.url);
+                setTimeout(() => {
+                    Linking.openURL(versionInfo.url);
+                }, 1500);
             } finally {
                 setDownloading(false);
                 setDownloadProgress(0);
@@ -84,6 +89,13 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
                             </Text>
                         </View>
                     </View>
+
+                    {error && (
+                        <View style={styles.errorContainer}>
+                            <Text style={styles.errorText}>⚠️ {error}</Text>
+                            <Text style={styles.errorSubtext}>Opening browser...</Text>
+                        </View>
+                    )}
 
                     <View style={styles.footer}>
                         <Button
@@ -209,5 +221,23 @@ const styles = StyleSheet.create({
         height: '100%',
         backgroundColor: Theme.colors.primary,
         borderRadius: 2,
+    },
+    errorContainer: {
+        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+        borderRadius: 12,
+        padding: 12,
+        marginTop: 12,
+        borderWidth: 1,
+        borderColor: 'rgba(239, 68, 68, 0.2)',
+    },
+    errorText: {
+        fontSize: 12,
+        fontWeight: '700',
+        color: '#ef4444',
+        marginBottom: 4,
+    },
+    errorSubtext: {
+        fontSize: 11,
+        color: Theme.colors.textDim,
     },
 });

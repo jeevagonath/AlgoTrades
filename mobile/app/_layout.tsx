@@ -10,6 +10,7 @@ import { Theme } from '@/src/constants/Theme';
 import { AuthProvider, useAuth } from '@/src/context/AuthContext';
 import { updateService, VersionInfo } from '@/src/services/update.service';
 import { UpdateModal } from '@/src/components/UpdateModal';
+import { notificationService } from '@/src/services/notification.service';
 
 function UpdateChecker({ children }: { children: React.ReactNode }) {
   const [modalVisible, setModalVisible] = useState(false);
@@ -78,6 +79,13 @@ function AuthContent() {
 }
 
 export default function RootLayout() {
+  useEffect(() => {
+    // Initialize notification service
+    notificationService.initialize().catch(error => {
+      console.error('Failed to initialize notification service:', error);
+    });
+  }, []);
+
   return (
     <PaperProvider>
       <AuthProvider>
