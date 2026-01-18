@@ -212,6 +212,8 @@ export const db = {
                 pnl: data.pnl,
                 peakProfit: data.peak_profit,
                 peakLoss: data.peak_loss,
+                availableMargin: data.available_margin,
+                requiredMargin: data.required_margin,
                 entryTime: data.entry_time,
                 exitTime: data.exit_time,
                 targetPnl: data.target_pnl,

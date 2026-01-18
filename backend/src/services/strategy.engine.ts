@@ -39,6 +39,8 @@ interface StrategyState {
     stopLossPnl: number;
     telegramToken: string;
     telegramChatId: string;
+    requiredMargin: number;
+    availableMargin: number;
     monitoring: {
         profitTime: number; // Start timestamp
         lossTime: number;   // Start timestamp
@@ -79,6 +81,8 @@ class StrategyEngine {
         stopLossPnl: -1500,
         telegramToken: '',
         telegramChatId: '',
+        requiredMargin: 0,
+        availableMargin: 0,
         monitoring: {
             profitTime: 0,
             lossTime: 0,
@@ -138,6 +142,9 @@ class StrategyEngine {
                     this.state.telegramChatId = savedState.telegramChatId;
                     telegramService.setCredentials(this.state.telegramToken, this.state.telegramChatId);
                 }
+
+                this.state.requiredMargin = savedState.requiredMargin || 0;
+                this.state.availableMargin = savedState.availableMargin || 0;
             }
 
             // 2. Load positions
@@ -727,6 +734,9 @@ class StrategyEngine {
 
             this.addLog(`💰 Margin: Required ₹${requiredMargin.toFixed(0)} | Avail ₹${availableMargin.toFixed(0)}`);
 
+            this.state.requiredMargin = requiredMargin;
+            this.state.availableMargin = availableMargin;
+
             if (availableMargin < requiredMargin) {
                 const shortfall = requiredMargin - availableMargin;
                 const msg = `🚨 <b>Margin Shortfall</b>\nRequired: ₹${requiredMargin.toFixed(2)}\nAvailable: ₹${availableMargin.toFixed(2)}\nShortfall: ₹${shortfall.toFixed(2)}\n⚠️ <b>Trade Aborted!</b>`;
@@ -1209,6 +1219,8 @@ class StrategyEngine {
                 pnl: this.state.pnl,
                 peakProfit: this.state.peakProfit,
                 peakLoss: this.state.peakLoss,
+                requiredMargin: this.state.requiredMargin,
+                availableMargin: this.state.availableMargin,
                 entryTime: this.state.entryTime,
                 exitTime: this.state.exitTime,
                 nextAction: this.state.nextAction,

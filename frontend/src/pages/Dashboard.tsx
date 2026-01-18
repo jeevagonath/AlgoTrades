@@ -344,6 +344,8 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
     const [pnl, setPnl] = useState(0);
     const [peakProfit, setPeakProfit] = useState(0);
     const [peakLoss, setPeakLoss] = useState(0);
+    const [requiredMargin, setRequiredMargin] = useState(0);
+    const [availableMargin, setAvailableMargin] = useState(0);
     const [testStrikes, setTestStrikes] = useState<any[]>([]);
     const [testing, setTesting] = useState(false);
     const [logs, setLogs] = useState<{ time: string, msg: string }[]>([]);
@@ -426,6 +428,8 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                     setPnl(d.pnl || 0);
                     setPeakProfit(d.peakProfit || 0);
                     setPeakLoss(d.peakLoss || 0);
+                    setRequiredMargin(d.requiredMargin || 0);
+                    setAvailableMargin(d.availableMargin || 0);
                     setSettings({
                         entryTime: d.entryTime || '12:59',
                         exitTime: d.exitTime || '15:15',
@@ -608,6 +612,8 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
             if (data.pnl !== undefined) setPnl(data.pnl);
             if (data.peakProfit !== undefined) setPeakProfit(data.peakProfit);
             if (data.peakLoss !== undefined) setPeakLoss(data.peakLoss);
+            if (data.requiredMargin !== undefined) setRequiredMargin(data.requiredMargin);
+            if (data.availableMargin !== undefined) setAvailableMargin(data.availableMargin);
             if (data.isPaused !== undefined) setIsPaused(data.isPaused);
         });
 
@@ -1169,21 +1175,43 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
 
                 {/* Metric Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <AnimatedMetricCard
-                        label="Total PnL"
-                        value={realTimePnL}
-                        icon={realTimePnL >= 0 ? TrendingUp : TrendingDown}
-                        type={realTimePnL >= 0 ? 'positive' : 'negative'}
-                        isSignificant={Math.abs(realTimePnL) > 100}
-                    />
+                    {/* 1. Total PnL - Main Focus */}
+                    <div className="md:col-span-2">
+                        <AnimatedMetricCard
+                            label="Total PnL"
+                            value={realTimePnL}
+                            icon={realTimePnL >= 0 ? TrendingUp : TrendingDown}
+                            type={realTimePnL >= 0 ? 'positive' : 'negative'}
+                            isSignificant={Math.abs(realTimePnL) > 100}
+                        />
+                    </div>
+
+                    {/* 2. Margin Stats */}
+                    <div className="md:col-span-2 grid grid-cols-2 gap-4">
+                        <AnimatedMetricCard
+                            label="Required Margin"
+                            value={requiredMargin}
+                            icon={Shield}
+                            className="bg-white"
+                        />
+                        <AnimatedMetricCard
+                            label="Available Margin"
+                            value={availableMargin}
+                            icon={CheckCircle2}
+                            type={availableMargin < requiredMargin ? 'negative' : 'neutral'}
+                            className="bg-white"
+                        />
+                    </div>
                     <AnimatedMetricCard
                         label="Peak Profit"
                         value={peakProfit}
+                        icon={TrendingUp}
                         type="positive"
                     />
                     <AnimatedMetricCard
                         label="Peak Loss"
                         value={peakLoss}
+                        icon={TrendingDown}
                         type="negative"
                     />
                     <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-2 shadow-sm group">
