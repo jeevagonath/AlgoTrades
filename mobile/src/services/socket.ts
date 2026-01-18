@@ -12,15 +12,15 @@ class SocketService {
         });
 
         this.socket.on('connect', () => {
-            //console.log('Connected to socket server');
+            console.log('[ALGO_NOTIF] Connected to socket server at', url);
         });
 
         this.socket.on('disconnect', () => {
-            //console.log('Disconnected from socket server');
+            console.log('[ALGO_NOTIF] Disconnected from socket server');
         });
 
         this.socket.on('connect_error', (error) => {
-            //console.error('Socket connection error:', error);
+            console.error('[ALGO_NOTIF] Socket connection error:', error);
         });
     }
 
@@ -49,9 +49,11 @@ class SocketService {
             // Call the callback for any additional handling
             callback(alert);
 
+            console.log('[ALGO_NOTIF] Received new_alert event:', alert);
+
             // Automatically show notification
             notificationService.showNotification(alert).catch(err => {
-                console.error('Failed to show notification:', err);
+                console.error('[ALGO_NOTIF] Failed to show notification from socket:', err);
             });
         });
     }

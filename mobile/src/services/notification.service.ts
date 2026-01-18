@@ -29,9 +29,9 @@ class NotificationService {
             this.registerNotificationEvents();
 
             this.isInitialized = true;
-            console.log('Notification service initialized successfully');
+            console.log('[ALGO_NOTIF] Notification service initialized successfully');
         } catch (error) {
-            console.error('Failed to initialize notifications:', error);
+            console.error('[ALGO_NOTIF] Failed to initialize notifications:', error);
         }
     }
 
@@ -77,9 +77,9 @@ class NotificationService {
                 });
             }
 
-            console.log('Notification channels created successfully');
+            console.log('[ALGO_NOTIF] Notification channels created successfully');
         } catch (error) {
-            console.error('Failed to create notification channels:', error);
+            console.error('[ALGO_NOTIF] Failed to create notification channels:', error);
         }
     }
 
@@ -88,7 +88,7 @@ class NotificationService {
             if (Platform.OS === 'ios') {
                 // For iOS, use the platform-specific API
                 await Notifications.ios.registerRemoteNotifications();
-                console.log('iOS notification permissions requested');
+                console.log('[ALGO_NOTIF] iOS notification permissions requested');
                 return true;
             } else if (Platform.OS === 'android') {
                 // For Android 13+, request POST_NOTIFICATIONS permission
@@ -97,21 +97,21 @@ class NotificationService {
                         PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
                     );
                     if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-                        console.log('Android notification permissions granted');
+                        console.log('[ALGO_NOTIF] Android notification permissions granted');
                         return true;
                     } else {
-                        console.warn('Android notification permissions denied');
+                        console.warn('[ALGO_NOTIF] Android notification permissions denied');
                         return false;
                     }
                 } else {
                     // For Android 12 and below, permissions are granted by default
-                    console.log('Android notification permissions granted by default');
+                    console.log('[ALGO_NOTIF] Android notification permissions granted by default');
                     return true;
                 }
             }
             return true;
         } catch (error) {
-            console.warn('Notification permissions request failed:', error);
+            console.warn('[ALGO_NOTIF] Notification permissions request failed:', error);
             return false;
         }
     }
@@ -119,20 +119,20 @@ class NotificationService {
     registerNotificationEvents() {
         // Handle notification when app is in foreground
         Notifications.events().registerNotificationReceivedForeground((notification, completion) => {
-            console.log('Notification received in foreground:', notification);
+            console.log('[ALGO_NOTIF] Notification received in foreground:', notification);
             completion({ alert: true, sound: true, badge: false });
         });
 
         // Handle notification tap
         Notifications.events().registerNotificationOpened((notification, completion) => {
-            console.log('Notification opened:', notification);
+            console.log('[ALGO_NOTIF] Notification opened:', notification);
             completion();
         });
     }
 
     async showNotification(alert: AlertData) {
         if (!this.isInitialized) {
-            console.warn('Notification service not initialized');
+            console.warn('[ALGO_NOTIF] Notification service not initialized');
             return;
         }
 
@@ -159,11 +159,12 @@ class NotificationService {
                 }
             };
 
+            console.log(`[ALGO_NOTIF] Posting notification with payload:`, JSON.stringify(notificationPayload));
             Notifications.postLocalNotification(notificationPayload as any);
 
-            console.log(`Notification shown: ${alert.title}`);
+            console.log(`[ALGO_NOTIF] Notification shown: ${alert.title}`);
         } catch (error) {
-            console.error('Failed to show notification:', error);
+            console.error('[ALGO_NOTIF] Failed to show notification:', error);
         }
     }
 
