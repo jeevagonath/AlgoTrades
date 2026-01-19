@@ -8,6 +8,7 @@ import { NiftyTicker } from '@/src/components/NiftyTicker';
 import { strategyApi, authApi } from '@/src/services/api';
 import { socketService } from '@/src/services/socket';
 import { notificationService, AlertData } from '@/src/services/notification.service';
+import { widgetService } from '@/src/services/widget.service';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useAuth } from '@/src/context/AuthContext';
 import { Theme } from '@/src/constants/Theme';
@@ -188,6 +189,9 @@ export default function DashboardScreen() {
         setNextAction(d.nextAction || 'Pending');
         setIsPaused(d.isPaused || false);
         setIsVirtual(d.isVirtual !== undefined ? d.isVirtual : true);
+
+        // Update widget with initial P&L data
+        widgetService.updateWidgetSync(d.pnl || 0, d.peakProfit || 0, d.peakLoss || 0);
       }
 
       const niftyRes = await strategyApi.getNiftySpot();
@@ -245,6 +249,13 @@ export default function DashboardScreen() {
         setPnl(data.pnl);
         if (data.peakProfit !== undefined) setPeakProfit(data.peakProfit);
         if (data.peakLoss !== undefined) setPeakLoss(data.peakLoss);
+
+        // Update widget with new P&L data
+        widgetService.updateWidgetSync(
+          data.pnl,
+          data.peakProfit !== undefined ? data.peakProfit : peakProfit,
+          data.peakLoss !== undefined ? data.peakLoss : peakLoss
+        );
       }
     });
 
@@ -260,7 +271,7 @@ export default function DashboardScreen() {
       console.log('Alert received:', alert);
 
       // Show push notification
-      notificationService.showNotification(alert);
+      notificationService.displayAlert(alert);
     });
 
     return () => {
