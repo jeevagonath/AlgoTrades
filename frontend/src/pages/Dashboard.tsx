@@ -1122,8 +1122,8 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                         </div>
                     </div>
 
-                    {/* Compact PnL Metrics Cards */}
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                    {/* Compact PnL Metrics Cards + Expiry Badges */}
+                    <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
                         {/* Total PnL - Compact */}
                         <div className={`bg-gradient-to-br ${realTimePnL >= 0 ? 'from-emerald-50 to-emerald-100' : 'from-rose-50 to-rose-100'} border ${realTimePnL >= 0 ? 'border-emerald-200' : 'border-rose-200'} rounded-xl p-3 shadow-sm relative overflow-hidden hover:shadow-md transition-all`}>
                             <div className="flex items-center gap-1.5 mb-1">
@@ -1179,28 +1179,28 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                 ) : 'N/A'}
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                {/* Expiry Display Row */}
-                <div className="flex flex-wrap items-center gap-3">
-                    {currentWeekExpiry && (
-                        <div className={`flex items-center gap-2 px-3 py-1.5 bg-white border rounded-lg shadow-sm ${isExpiryDay ? 'border-rose-300 bg-rose-50/30' : 'border-slate-200'}`}>
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Current Week</span>
-                            <span className={`text-xs font-bold font-mono ${isExpiryDay ? 'text-rose-600' : 'text-slate-700'}`}>
-                                {currentWeekExpiry}
-                                {isExpiryDay && ' 🔔'}
-                            </span>
-                        </div>
-                    )}
-                    {nextWeekExpiry && nextWeekExpiry !== 'N/A' && (
-                        <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg shadow-sm">
-                            <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider">Target Expiry</span>
-                            <span className="text-xs font-bold font-mono text-blue-700">
-                                {nextWeekExpiry}
-                            </span>
-                        </div>
-                    )}
+                        {/* Current Week Expiry Badge */}
+                        {currentWeekExpiry && (
+                            <div className={`flex flex-col justify-center px-3 py-2 bg-white border rounded-xl shadow-sm ${isExpiryDay ? 'border-rose-300 bg-rose-50/30' : 'border-slate-200'}`}>
+                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Current Week</span>
+                                <span className={`text-sm font-bold font-mono ${isExpiryDay ? 'text-rose-600' : 'text-slate-700'}`}>
+                                    {currentWeekExpiry}
+                                    {isExpiryDay && ' 🔔'}
+                                </span>
+                            </div>
+                        )}
+
+                        {/* Target Expiry Badge */}
+                        {nextWeekExpiry && nextWeekExpiry !== 'N/A' && (
+                            <div className="flex flex-col justify-center px-3 py-2 bg-blue-50 border border-blue-200 rounded-xl shadow-sm">
+                                <span className="text-[9px] font-bold text-blue-400 uppercase tracking-wider mb-0.5">Target Expiry</span>
+                                <span className="text-sm font-bold font-mono text-blue-700">
+                                    {nextWeekExpiry}
+                                </span>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Row 1: Engine & Margins & Nifty */}
