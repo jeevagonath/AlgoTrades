@@ -98,6 +98,7 @@ export const updateService = {
 
         try {
             // Use cache directory for temporary APK storage
+            // @ts-ignore
             const fileUri = `${FileSystem.cacheDirectory}update.apk`;
 
             // Delete old APK if it exists
