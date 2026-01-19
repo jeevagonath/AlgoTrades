@@ -36,30 +36,6 @@ class SocketService {
         this.socket.on('connect_error', (error) => {
             console.error('[ALGO_NOTIF] Socket connection error:', error);
         });
-
-        // Listen for strategy state updates to update widget
-        this.socket.on('strategy_state', (data: any) => {
-            if (data.pnl !== undefined || data.peakProfit !== undefined || data.peakLoss !== undefined) {
-                const pnl = data.pnl ?? 0;
-                const peakProfit = data.peakProfit ?? 0;
-                const peakLoss = data.peakLoss ?? 0;
-
-                // Update widget with new P&L data
-                widgetService.updateWidgetSync(pnl, peakProfit, peakLoss);
-            }
-        });
-
-        // Listen for price updates that may affect P&L
-        this.socket.on('price_update', (data: any) => {
-            if (data.pnl !== undefined || data.peakProfit !== undefined || data.peakLoss !== undefined) {
-                const pnl = data.pnl ?? 0;
-                const peakProfit = data.peakProfit ?? 0;
-                const peakLoss = data.peakLoss ?? 0;
-
-                // Update widget with new P&L data
-                widgetService.updateWidgetSync(pnl, peakProfit, peakLoss);
-            }
-        });
     }
 
     on(event: string, callback: (data: any) => void) {

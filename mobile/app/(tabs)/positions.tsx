@@ -15,6 +15,13 @@ export default function PositionsScreen() {
             const state = await strategyApi.getState();
             if (state && state.selectedStrikes) {
                 setPositions(state.selectedStrikes);
+
+                // Subscribe to price updates for all position tokens
+                const tokens = state.selectedStrikes.map((leg: any) => leg.token);
+                if (tokens.length > 0) {
+                    socketService.subscribe(tokens);
+                    console.log('[POSITIONS] Subscribed to tokens:', tokens);
+                }
             }
         } catch (err) {
             console.error('Failed to fetch positions:', err);
@@ -33,6 +40,13 @@ export default function PositionsScreen() {
         socketService.on('positions_updated', (data: any) => {
             if (Array.isArray(data)) {
                 setPositions(data);
+
+                // Subscribe to new position tokens
+                const tokens = data.map((leg: any) => leg.token);
+                if (tokens.length > 0) {
+                    socketService.subscribe(tokens);
+                    console.log('[POSITIONS] Subscribed to updated tokens:', tokens);
+                }
             }
         });
 

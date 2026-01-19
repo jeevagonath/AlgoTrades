@@ -198,6 +198,7 @@ export default function DashboardScreen() {
       if (niftyRes.status === 'success' && niftyRes.data) {
         setNiftyData(niftyRes.data);
         socketService.subscribe(['26000']);
+        console.log('[DASHBOARD] Subscribed to NIFTY token: 26000');
       }
 
       try {
@@ -225,8 +226,16 @@ export default function DashboardScreen() {
   }, []);
 
   useEffect(() => {
-    socketService.connect();
-    fetchData();
+    const initializeApp = async () => {
+      // Connect socket first
+      await socketService.connect();
+      console.log('[DASHBOARD] Socket connected, fetching data...');
+
+      // Then fetch data and subscribe
+      await fetchData();
+    };
+
+    initializeApp();
 
     // Initialize notification service
     notificationService.initialize().catch(err => {
@@ -235,6 +244,7 @@ export default function DashboardScreen() {
 
     socketService.on('price_update', (data: any) => {
       if (data.token === '26000') {
+        console.log('[DASHBOARD] NIFTY price update received:', data.lp);
         setNiftyData(prev => {
           if (!data.lp || !prev) return prev;
           const price = parseFloat(data.lp);

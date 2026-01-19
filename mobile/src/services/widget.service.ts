@@ -10,6 +10,18 @@ class WidgetService {
     private lastPeakProfit: number = 0;
     private lastPeakLoss: number = 0;
 
+    constructor() {
+        // Log widget module availability on initialization
+        if (Platform.OS === 'android') {
+            if (WidgetUpdate) {
+                console.log('[WIDGET] WidgetUpdate module is available');
+                console.log('[WIDGET] Available methods:', Object.keys(WidgetUpdate));
+            } else {
+                console.warn('[WIDGET] WidgetUpdate module is NOT available - widget will not work');
+            }
+        }
+    }
+
     /**
      * Update the widget with new P&L data
      * 
