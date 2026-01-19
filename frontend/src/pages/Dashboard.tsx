@@ -1102,8 +1102,8 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
             )}
 
             <main className="flex-1 max-w-[1600px] mx-auto w-full p-6 space-y-6 relative z-10">
-                {/* Header Info Row */}
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                {/* Header Info Row with Metrics */}
+                <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
                     <div className="flex flex-col">
                         <div className="flex items-center gap-3 mb-1">
                             <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white text-xs font-black shadow-lg shadow-blue-200">
@@ -1122,26 +1122,85 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                         </div>
                     </div>
 
-                    {/* Expiry Display */}
-                    <div className="flex flex-wrap items-center gap-3">
-                        {currentWeekExpiry && (
-                            <div className={`flex items-center gap-2 px-3 py-1.5 bg-white border rounded-lg shadow-sm ${isExpiryDay ? 'border-rose-300 bg-rose-50/30' : 'border-slate-200'}`}>
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Current Week</span>
-                                <span className={`text-xs font-bold font-mono ${isExpiryDay ? 'text-rose-600' : 'text-slate-700'}`}>
-                                    {currentWeekExpiry}
-                                    {isExpiryDay && ' 🔔'}
-                                </span>
+                    {/* Compact PnL Metrics Cards */}
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                        {/* Total PnL - Compact */}
+                        <div className={`bg-gradient-to-br ${realTimePnL >= 0 ? 'from-emerald-50 to-emerald-100' : 'from-rose-50 to-rose-100'} border ${realTimePnL >= 0 ? 'border-emerald-200' : 'border-rose-200'} rounded-xl p-3 shadow-sm relative overflow-hidden hover:shadow-md transition-all`}>
+                            <div className="flex items-center gap-1.5 mb-1">
+                                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-600">Total PnL</span>
+                                {realTimePnL >= 0 ? <TrendingUp className="w-3 h-3 text-emerald-600" /> : <TrendingDown className="w-3 h-3 text-rose-600" />}
                             </div>
-                        )}
-                        {nextWeekExpiry && nextWeekExpiry !== 'N/A' && (
-                            <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg shadow-sm">
-                                <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider">Target Expiry</span>
-                                <span className="text-xs font-bold font-mono text-blue-700">
-                                    {nextWeekExpiry}
-                                </span>
+                            <div className={`text-xl font-black tracking-tighter ${realTimePnL >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                                <AnimatedValueText value={realTimePnL} className="" fractionDigits={2} />
                             </div>
-                        )}
+                        </div>
+
+                        {/* Peak Profit - Compact */}
+                        <div className="bg-gradient-to-br from-green-50 to-emerald-100 border border-green-200 rounded-xl p-3 shadow-sm relative overflow-hidden hover:shadow-md transition-all">
+                            <div className="flex items-center gap-1.5 mb-1">
+                                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-600">Peak Profit</span>
+                                <TrendingUp className="w-3 h-3 text-green-600" />
+                            </div>
+                            <div className="text-xl font-black tracking-tighter text-green-700">
+                                <AnimatedValueText value={peakProfit} className="" fractionDigits={2} />
+                            </div>
+                        </div>
+
+                        {/* Peak Loss - Compact */}
+                        <div className="bg-gradient-to-br from-red-50 to-rose-100 border border-red-200 rounded-xl p-3 shadow-sm relative overflow-hidden hover:shadow-md transition-all">
+                            <div className="flex items-center gap-1.5 mb-1">
+                                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-600">Peak Loss</span>
+                                <TrendingDown className="w-3 h-3 text-red-600" />
+                            </div>
+                            <div className="text-xl font-black tracking-tighter text-red-700">
+                                <AnimatedValueText value={peakLoss} className="" fractionDigits={2} />
+                            </div>
+                        </div>
+
+                        {/* Next Expiry - Compact */}
+                        <div className="bg-gradient-to-br from-blue-50 to-indigo-100 border border-blue-200 rounded-xl p-3 shadow-sm relative overflow-hidden hover:shadow-md transition-all">
+                            <div className="flex items-center gap-1.5 mb-1">
+                                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-600">Next Expiry</span>
+                                <Clock className="w-3 h-3 text-blue-600" />
+                            </div>
+                            <div className="text-base font-black text-blue-700 tracking-tight">
+                                {nextWeekExpiry && nextWeekExpiry !== 'N/A' ? (
+                                    (() => {
+                                        try {
+                                            const date = parseExpiryDate(nextWeekExpiry);
+                                            const day = date.toLocaleDateString('en-US', { weekday: 'short' });
+                                            const dateNum = date.getDate();
+                                            const month = date.toLocaleDateString('en-US', { month: 'short' });
+                                            return `${day}, ${dateNum}-${month}`;
+                                        } catch {
+                                            return nextWeekExpiry;
+                                        }
+                                    })()
+                                ) : 'N/A'}
+                            </div>
+                        </div>
                     </div>
+                </div>
+
+                {/* Expiry Display Row */}
+                <div className="flex flex-wrap items-center gap-3">
+                    {currentWeekExpiry && (
+                        <div className={`flex items-center gap-2 px-3 py-1.5 bg-white border rounded-lg shadow-sm ${isExpiryDay ? 'border-rose-300 bg-rose-50/30' : 'border-slate-200'}`}>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Current Week</span>
+                            <span className={`text-xs font-bold font-mono ${isExpiryDay ? 'text-rose-600' : 'text-slate-700'}`}>
+                                {currentWeekExpiry}
+                                {isExpiryDay && ' 🔔'}
+                            </span>
+                        </div>
+                    )}
+                    {nextWeekExpiry && nextWeekExpiry !== 'N/A' && (
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg shadow-sm">
+                            <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider">Target Expiry</span>
+                            <span className="text-xs font-bold font-mono text-blue-700">
+                                {nextWeekExpiry}
+                            </span>
+                        </div>
+                    )}
                 </div>
 
                 {/* Row 1: Engine & Margins & Nifty */}
@@ -1209,73 +1268,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                     )}
                 </div>
 
-                {/* Row 2: PNL & Peaks & Expiry */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    {/* 1. Total PnL - Enhanced */}
-                    <div className={`bg-gradient-to-br ${realTimePnL >= 0 ? 'from-emerald-50 to-emerald-100' : 'from-rose-50 to-rose-100'} border-2 ${realTimePnL >= 0 ? 'border-emerald-300' : 'border-rose-300'} rounded-2xl p-6 shadow-lg relative overflow-hidden group transition-all duration-200 hover:shadow-xl`}>
-                        <div className="flex items-center justify-between mb-2">
-                            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600">Total PnL</span>
-                            {realTimePnL >= 0 ? <TrendingUp className="w-5 h-5 text-emerald-600" /> : <TrendingDown className="w-5 h-5 text-rose-600" />}
-                        </div>
-                        <div className={`text-4xl font-black tracking-tighter ${realTimePnL >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
-                            <AnimatedValueText value={realTimePnL} className="" fractionDigits={2} />
-                        </div>
-                        <div className="absolute -right-8 -bottom-8 opacity-10">
-                            {realTimePnL >= 0 ? <TrendingUp className="w-32 h-32" /> : <TrendingDown className="w-32 h-32" />}
-                        </div>
-                    </div>
-
-                    {/* 2. Peak Profit - Enhanced */}
-                    <div className="bg-gradient-to-br from-green-50 to-emerald-100 border-2 border-green-300 rounded-2xl p-6 shadow-lg relative overflow-hidden group transition-all duration-200 hover:shadow-xl">
-                        <div className="flex items-center justify-between mb-2">
-                            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600">Peak Profit</span>
-                            <TrendingUp className="w-5 h-5 text-green-600" />
-                        </div>
-                        <div className="text-4xl font-black tracking-tighter text-green-700">
-                            <AnimatedValueText value={peakProfit} className="" fractionDigits={2} />
-                        </div>
-                        <div className="absolute -right-8 -bottom-8 opacity-10">
-                            <TrendingUp className="w-32 h-32" />
-                        </div>
-                    </div>
-
-                    {/* 3. Peak Loss - Enhanced */}
-                    <div className="bg-gradient-to-br from-red-50 to-rose-100 border-2 border-red-300 rounded-2xl p-6 shadow-lg relative overflow-hidden group transition-all duration-200 hover:shadow-xl">
-                        <div className="flex items-center justify-between mb-2">
-                            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600">Peak Loss</span>
-                            <TrendingDown className="w-5 h-5 text-red-600" />
-                        </div>
-                        <div className="text-4xl font-black tracking-tighter text-red-700">
-                            <AnimatedValueText value={peakLoss} className="" fractionDigits={2} />
-                        </div>
-                        <div className="absolute -right-8 -bottom-8 opacity-10">
-                            <TrendingDown className="w-32 h-32" />
-                        </div>
-                    </div>
-
-                    {/* 4. Next Expiry - Enhanced */}
-                    <div className="bg-gradient-to-br from-blue-50 to-indigo-100 border-2 border-blue-300 rounded-2xl p-6 shadow-lg relative overflow-hidden group transition-all duration-200 hover:shadow-xl">
-                        <div className="flex items-center justify-between mb-2">
-                            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600">Next Expiry</span>
-                            <Clock className="w-5 h-5 text-blue-600" />
-                        </div>
-                        <div className="text-2xl font-black text-blue-700 tracking-tight">
-                            {nextWeekExpiry && nextWeekExpiry !== 'N/A' ? (
-                                (() => {
-                                    try {
-                                        return parseExpiryDate(nextWeekExpiry).toLocaleDateString('en-IN', { weekday: 'long' });
-                                    } catch (e) {
-                                        return 'N/A';
-                                    }
-                                })()
-                            ) : 'N/A'}
-                        </div>
-                        <div className="text-[10px] font-mono font-bold text-slate-500 mt-1">
-                            {nextWeekExpiry || '-'}
-                        </div>
-                    </div>
-                </div>
-
+                {/* Main Content Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Main Content Area */}
                     <div className="lg:col-span-2 space-y-6">
