@@ -46,14 +46,16 @@ const AnimatedMetricCard = ({
     icon: Icon,
     isSignificant = false,
     type = 'neutral',
-    className = ''
+    className = '',
+    valueSize = 'text-3xl'
 }: {
     label: string,
     value: number,
     icon?: any,
     isSignificant?: boolean,
     type?: 'positive' | 'negative' | 'neutral',
-    className?: string
+    className?: string,
+    valueSize?: string
 }) => {
     const { displayValue } = useAnimatedValue(value, 500);
     const isFlashing = useFlashOnChange(value);
@@ -68,12 +70,12 @@ const AnimatedMetricCard = ({
     const valueColor = type === 'positive' ? 'text-emerald-600' : type === 'negative' ? 'text-rose-600' : 'text-slate-900';
 
     return (
-        <div className={`bg-white border border-slate-200 rounded-xl p-6 space-y-2 shadow-sm relative overflow-hidden group transition-all duration-200 ${flashClass} ${isSignificant && isFlashing ? 'pulse-update' : ''} ${className}`}>
+        <div className={`bg-white border border-slate-200 rounded-xl p-4 space-y-1 shadow-sm relative overflow-hidden group transition-all duration-200 ${flashClass} ${isSignificant && isFlashing ? 'pulse-update' : ''} ${className}`}>
             <div className="flex items-center justify-between text-slate-400">
                 <span className="text-[10px] font-bold uppercase tracking-wider">{label}</span>
-                {Icon && <Icon className={`w-4 h-4 transition-colors duration-300 ${type === 'positive' ? 'text-emerald-500' : type === 'negative' ? 'text-rose-500' : 'text-blue-500'}`} />}
+                {Icon && <Icon className={`w-3.5 h-3.5 transition-colors duration-300 ${type === 'positive' ? 'text-emerald-500' : type === 'negative' ? 'text-rose-500' : 'text-blue-500'}`} />}
             </div>
-            <div className={`text-3xl font-black tracking-tighter transition-colors duration-300 ${valueColor}`}>
+            <div className={`${valueSize} font-black tracking-tighter transition-colors duration-300 ${valueColor}`}>
                 ₹{displayValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
         </div>
@@ -1142,84 +1144,108 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                     </div>
                 </div>
 
-                {/* Strategy Monitoring Bar (NEW) */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="md:col-span-2 bg-white border border-slate-200 rounded-xl p-4 flex flex-col md:flex-row items-center gap-8 shadow-sm">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 bg-blue-50 rounded-lg">
-                                <Activity className="w-4 h-4 text-blue-600" />
-                            </div>
-                            <div>
-                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Engine Activity</div>
-                                <div className="text-sm font-bold text-slate-700">{engineActivity || 'Ready'}</div>
-                            </div>
+                {/* Row 1: Engine & Margins & Nifty */}
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                    {/* 1. Engine Activity */}
+                    <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-col justify-center">
+                        <div className="flex items-center gap-2 mb-1">
+                            <Activity className="w-3.5 h-3.5 text-blue-500" />
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Engine Activity</span>
                         </div>
-                        <div className="hidden md:block w-px h-8 bg-slate-100" />
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 bg-slate-50 rounded-lg">
-                                <Clock className="w-4 h-4 text-slate-500" />
-                            </div>
-                            <div>
-                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Next Task</div>
-                                <div className="text-sm font-bold text-slate-700">
-                                    {nextAction || 'Pending'}
-                                    <TaskTimer taskText={nextAction} />
-                                </div>
-                            </div>
+                        <div className="text-sm font-bold text-slate-700 truncate" title={engineActivity}>{engineActivity || 'Ready'}</div>
+                    </div>
+
+                    {/* 2. Next Task */}
+                    <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-col justify-center">
+                        <div className="flex items-center gap-2 mb-1">
+                            <Clock className="w-3.5 h-3.5 text-slate-400" />
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Next Task</span>
+                        </div>
+                        <div className="text-sm font-bold text-slate-700 flex items-center gap-2 truncate">
+                            <span className="truncate" title={nextAction}>{nextAction || 'Pending'}</span>
+                            <TaskTimer taskText={nextAction} />
                         </div>
                     </div>
 
-                    {/* NIFTY Ticker Card */}
-                    {niftyData && <NiftyTicker data={niftyData} />}
+                    {/* 3. Required Margin */}
+                    <AnimatedMetricCard
+                        label="Required Margin"
+                        value={requiredMargin}
+                        icon={Shield}
+                        className="bg-white"
+                        valueSize="text-xl"
+                    />
+
+                    {/* 4. Available Margin */}
+                    <AnimatedMetricCard
+                        label="Available Margin"
+                        value={availableMargin}
+                        icon={CheckCircle2}
+                        type={availableMargin < requiredMargin ? 'negative' : 'neutral'}
+                        className="bg-white"
+                        valueSize="text-xl"
+                    />
+
+                    {/* 5. Nifty Ticker */}
+                    {niftyData ? (
+                        <div className={`bg-white border border-slate-200 rounded-xl p-4 flex flex-col justify-center shadow-sm overflow-hidden group transition-all duration-200`}>
+                            <div className="flex items-center justify-between mb-1">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">NIFTY 50</span>
+                                <button onClick={() => openTradingViewChart('NSE:NIFTY')} className="text-slate-400 hover:text-blue-600"><BarChart3 className="w-3 h-3" /></button>
+                            </div>
+                            <div className="flex items-baseline justify-between">
+                                <span className="text-xl font-black text-slate-900 font-mono tracking-tighter">
+                                    {niftyData.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                                </span>
+                                <span className={`text-xs font-bold font-mono ${niftyData.change >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                    {niftyData.change > 0 ? '+' : ''}{niftyData.change.toFixed(2)} ({Math.abs(niftyData.changePercent).toFixed(2)}%)
+                                </span>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex items-center justify-center">
+                            <span className="text-xs text-slate-400 animate-pulse">Loading NIFTY...</span>
+                        </div>
+                    )}
                 </div>
 
-                {/* Metric Cards */}
+                {/* Row 2: PNL & Peaks & Expiry */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    {/* 1. Total PnL - Main Focus */}
-                    <div className="md:col-span-2">
-                        <AnimatedMetricCard
-                            label="Total PnL"
-                            value={realTimePnL}
-                            icon={realTimePnL >= 0 ? TrendingUp : TrendingDown}
-                            type={realTimePnL >= 0 ? 'positive' : 'negative'}
-                            isSignificant={Math.abs(realTimePnL) > 100}
-                        />
-                    </div>
+                    {/* 1. Total PnL */}
+                    <AnimatedMetricCard
+                        label="Total PnL"
+                        value={realTimePnL}
+                        icon={realTimePnL >= 0 ? TrendingUp : TrendingDown}
+                        type={realTimePnL >= 0 ? 'positive' : 'negative'}
+                        isSignificant={Math.abs(realTimePnL) > 100}
+                        valueSize="text-2xl"
+                    />
 
-                    {/* 2. Margin Stats */}
-                    <div className="md:col-span-2 grid grid-cols-2 gap-4">
-                        <AnimatedMetricCard
-                            label="Required Margin"
-                            value={requiredMargin}
-                            icon={Shield}
-                            className="bg-white"
-                        />
-                        <AnimatedMetricCard
-                            label="Available Margin"
-                            value={availableMargin}
-                            icon={CheckCircle2}
-                            type={availableMargin < requiredMargin ? 'negative' : 'neutral'}
-                            className="bg-white"
-                        />
-                    </div>
+                    {/* 2. Peak Profit */}
                     <AnimatedMetricCard
                         label="Peak Profit"
                         value={peakProfit}
                         icon={TrendingUp}
                         type="positive"
+                        valueSize="text-2xl"
                     />
+
+                    {/* 3. Peak Loss */}
                     <AnimatedMetricCard
                         label="Peak Loss"
                         value={peakLoss}
                         icon={TrendingDown}
                         type="negative"
+                        valueSize="text-2xl"
                     />
-                    <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-2 shadow-sm group">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
-                            <Clock className="w-3 h-3 text-blue-500" />
-                            Next Expiry
+
+                    {/* 4. Next Expiry */}
+                    <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-col justify-center group">
+                        <div className="flex items-center gap-2 mb-1">
+                            <Clock className="w-3.5 h-3.5 text-blue-500" />
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Next Expiry</span>
                         </div>
-                        <div className="text-3xl font-black text-slate-900 tracking-tighter">
+                        <div className="text-xl font-black text-slate-900 tracking-tighter">
                             {nextWeekExpiry && nextWeekExpiry !== 'N/A' ? (
                                 (() => {
                                     try {
@@ -1229,6 +1255,9 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                     }
                                 })()
                             ) : 'N/A'}
+                        </div>
+                        <div className="text-[10px] font-mono font-bold text-slate-500 mt-1">
+                            {nextWeekExpiry || '-'}
                         </div>
                     </div>
                 </div>
