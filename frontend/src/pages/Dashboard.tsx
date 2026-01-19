@@ -1211,41 +1211,55 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
 
                 {/* Row 2: PNL & Peaks & Expiry */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    {/* 1. Total PnL */}
-                    <AnimatedMetricCard
-                        label="Total PnL"
-                        value={realTimePnL}
-                        icon={realTimePnL >= 0 ? TrendingUp : TrendingDown}
-                        type={realTimePnL >= 0 ? 'positive' : 'negative'}
-                        isSignificant={Math.abs(realTimePnL) > 100}
-                        valueSize="text-2xl"
-                    />
-
-                    {/* 2. Peak Profit */}
-                    <AnimatedMetricCard
-                        label="Peak Profit"
-                        value={peakProfit}
-                        icon={TrendingUp}
-                        type="positive"
-                        valueSize="text-2xl"
-                    />
-
-                    {/* 3. Peak Loss */}
-                    <AnimatedMetricCard
-                        label="Peak Loss"
-                        value={peakLoss}
-                        icon={TrendingDown}
-                        type="negative"
-                        valueSize="text-2xl"
-                    />
-
-                    {/* 4. Next Expiry */}
-                    <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-col justify-center group">
-                        <div className="flex items-center gap-2 mb-1">
-                            <Clock className="w-3.5 h-3.5 text-blue-500" />
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Next Expiry</span>
+                    {/* 1. Total PnL - Enhanced */}
+                    <div className={`bg-gradient-to-br ${realTimePnL >= 0 ? 'from-emerald-50 to-emerald-100' : 'from-rose-50 to-rose-100'} border-2 ${realTimePnL >= 0 ? 'border-emerald-300' : 'border-rose-300'} rounded-2xl p-6 shadow-lg relative overflow-hidden group transition-all duration-200 hover:shadow-xl`}>
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600">Total PnL</span>
+                            {realTimePnL >= 0 ? <TrendingUp className="w-5 h-5 text-emerald-600" /> : <TrendingDown className="w-5 h-5 text-rose-600" />}
                         </div>
-                        <div className="text-xl font-black text-slate-900 tracking-tighter">
+                        <div className={`text-4xl font-black tracking-tighter ${realTimePnL >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                            <AnimatedValueText value={realTimePnL} className="" fractionDigits={2} />
+                        </div>
+                        <div className="absolute -right-8 -bottom-8 opacity-10">
+                            {realTimePnL >= 0 ? <TrendingUp className="w-32 h-32" /> : <TrendingDown className="w-32 h-32" />}
+                        </div>
+                    </div>
+
+                    {/* 2. Peak Profit - Enhanced */}
+                    <div className="bg-gradient-to-br from-green-50 to-emerald-100 border-2 border-green-300 rounded-2xl p-6 shadow-lg relative overflow-hidden group transition-all duration-200 hover:shadow-xl">
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600">Peak Profit</span>
+                            <TrendingUp className="w-5 h-5 text-green-600" />
+                        </div>
+                        <div className="text-4xl font-black tracking-tighter text-green-700">
+                            <AnimatedValueText value={peakProfit} className="" fractionDigits={2} />
+                        </div>
+                        <div className="absolute -right-8 -bottom-8 opacity-10">
+                            <TrendingUp className="w-32 h-32" />
+                        </div>
+                    </div>
+
+                    {/* 3. Peak Loss - Enhanced */}
+                    <div className="bg-gradient-to-br from-red-50 to-rose-100 border-2 border-red-300 rounded-2xl p-6 shadow-lg relative overflow-hidden group transition-all duration-200 hover:shadow-xl">
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600">Peak Loss</span>
+                            <TrendingDown className="w-5 h-5 text-red-600" />
+                        </div>
+                        <div className="text-4xl font-black tracking-tighter text-red-700">
+                            <AnimatedValueText value={peakLoss} className="" fractionDigits={2} />
+                        </div>
+                        <div className="absolute -right-8 -bottom-8 opacity-10">
+                            <TrendingDown className="w-32 h-32" />
+                        </div>
+                    </div>
+
+                    {/* 4. Next Expiry - Enhanced */}
+                    <div className="bg-gradient-to-br from-blue-50 to-indigo-100 border-2 border-blue-300 rounded-2xl p-6 shadow-lg relative overflow-hidden group transition-all duration-200 hover:shadow-xl">
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600">Next Expiry</span>
+                            <Clock className="w-5 h-5 text-blue-600" />
+                        </div>
+                        <div className="text-2xl font-black text-blue-700 tracking-tight">
                             {nextWeekExpiry && nextWeekExpiry !== 'N/A' ? (
                                 (() => {
                                     try {
