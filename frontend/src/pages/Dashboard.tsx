@@ -1342,7 +1342,10 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                                 {orders.map((order, i) => (
                                                     <tr key={i} className="hover:bg-slate-50/50 transition-colors">
                                                         <td className="px-6 py-4 font-mono text-xs text-slate-600">
-                                                            {new Date(order.created_at).toLocaleTimeString('en-IN', { hour12: false })}
+                                                            <div className="flex flex-col">
+                                                                <span className="font-bold">{new Date(order.created_at).toLocaleTimeString('en-IN', { hour12: false })}</span>
+                                                                <span className="text-[10px] opacity-60">{new Date(order.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</span>
+                                                            </div>
                                                         </td>
                                                         <td className="px-6 py-4 font-bold text-sm text-slate-900">{formatOptionSymbol(order.symbol)}</td>
                                                         <td className="px-6 py-4 text-center">

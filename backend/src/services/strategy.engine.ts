@@ -17,6 +17,7 @@ interface LegState {
     ltp: number;
     quantity: number;
     tier?: number; // 1 or 2
+    isAdjusted?: boolean; // Track if adjustment has been executed for this leg
 }
 
 export type StrategyStatus = 'IDLE' | 'WAITING_FOR_EXPIRY' | 'EXIT_DONE' | 'ENTRY_DONE' | 'ACTIVE' | 'FORCE_EXITED';
@@ -1098,6 +1099,9 @@ class StrategyEngine {
         // Only monitor Tier 2 Sells (₹75 legs)
         if (leg.tier !== 2 || leg.side !== 'SELL') return;
 
+        // Prevent duplicate adjustments if already handled
+        if (leg.isAdjusted) return;
+
         const now = Date.now();
         if (leg.ltp > 100) {
             if (!this.state.monitoring.adjustments[leg.token]) {
@@ -1118,6 +1122,9 @@ class StrategyEngine {
 
     private async executeAdjustment(triggeredLeg: LegState) {
         //console.log(`[Adjustment] Triggered for ${triggeredLeg.symbol} (Stayed > 100 for 10s)`);
+
+        // Mark as adjusted immediately to prevent race conditions/double firing
+        triggeredLeg.isAdjusted = true;
 
         // Find the next OTM hedge (50 points further)
         try {
@@ -1178,7 +1185,15 @@ class StrategyEngine {
         const now = Date.now();
         // Profit Exit: > target for 10s
         if (this.state.pnl > this.state.targetPnl) {
-            if (!this.state.monitoring.profitTime) this.state.monitoring.profitTime = now;
+            if (!this.state.monitoring.profitTime) {
+                this.state.monitoring.profitTime = now;
+                // Log PnL breakdown when timer starts
+                this.addLog(`⚠️ Profit Target Timer Started: Current PnL ₹${this.state.pnl.toFixed(2)} > Target ₹${this.state.targetPnl}`);
+                this.state.selectedStrikes.forEach(l => {
+                    const legPnl = (l.ltp - (l.entryPrice || 0)) * l.quantity * (l.side === 'BUY' ? 1 : -1);
+                    console.log(`[PnL Debug] ${l.symbol}: LTP=${l.ltp}, Entry=${l.entryPrice}, PnL=${legPnl.toFixed(2)}`);
+                });
+            }
             else if (now - this.state.monitoring.profitTime >= 10000) {
                 this.exitAllPositions(`Profit Target ₹${this.state.targetPnl} (10s confirmation)`);
             }
@@ -1200,6 +1215,10 @@ class StrategyEngine {
     private calculatePnL() {
         let totalPnL = 0;
         for (const leg of this.state.selectedStrikes) {
+            // Skip PnL calculation for legs with invalid/zero entry price (pending orders)
+            // This prevents false profit spikes when a market order is placed but not yet filled/updated
+            if (!leg.entryPrice || leg.entryPrice <= 0) continue;
+
             const multiplier = leg.side === 'BUY' ? 1 : -1;
             totalPnL += (leg.ltp - leg.entryPrice) * leg.quantity * multiplier;
         }

@@ -84,6 +84,7 @@ export const db = {
                         ltp: l.ltp,
                         quantity: l.quantity,
                         tier: l.tier,
+                        is_adjusted: l.isAdjusted || false,
                         // Preserve original created_at if position existed before
                         ...(existingCreatedAt && { created_at: existingCreatedAt })
                     };
@@ -242,7 +243,8 @@ export const db = {
             entryPrice: p.entry_price,
             ltp: p.ltp,
             quantity: p.quantity,
-            tier: p.tier
+            tier: p.tier,
+            isAdjusted: p.is_adjusted
         }));
     },
 
