@@ -3,6 +3,7 @@ import { Activity, ListOrdered, History, Bell, LogOut, TrendingUp, TrendingDown,
 import { socketService } from '@/services/socket.service';
 import { strategyApi, authApi } from '@/services/api.service';
 import { formatTradingViewSymbol, getNiftySpotChartUrl, openTradingViewChart } from '@/utils/tradingview';
+import { formatOptionSymbol } from '@/utils/formatters';
 import { useAnimatedValue, useFlashOnChange } from '@/hooks/useAnimations';
 import { CalendarHeatmap } from '@/components/CalendarHeatmap';
 import { PositionDetailsModal } from '@/components/PositionDetailsModal';
@@ -123,7 +124,7 @@ const PositionRow = ({ leg }: { leg: LegState }) => {
     return (
         <tr className={`hover:bg-slate-50/50 transition-all duration-200 ${isFlashing ? 'flash-neutral' : ''}`}>
             <td className="px-6 py-4">
-                <div className="font-bold text-sm text-slate-900">{leg.symbol}</div>
+                <div className="font-bold text-sm text-slate-900">{formatOptionSymbol(leg.symbol)}</div>
                 <div className="text-[10px] text-slate-400 font-medium">{leg.token}</div>
             </td>
             <td className="px-6 py-4 text-center">
