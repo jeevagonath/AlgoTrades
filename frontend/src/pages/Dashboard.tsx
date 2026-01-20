@@ -1344,7 +1344,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                                         <td className="px-6 py-4 font-mono text-xs text-slate-600">
                                                             {new Date(order.created_at).toLocaleTimeString('en-IN', { hour12: false })}
                                                         </td>
-                                                        <td className="px-6 py-4 font-bold text-sm text-slate-900">{order.symbol}</td>
+                                                        <td className="px-6 py-4 font-bold text-sm text-slate-900">{formatOptionSymbol(order.symbol)}</td>
                                                         <td className="px-6 py-4 text-center">
                                                             <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${order.side === 'BUY' ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'bg-amber-50 text-amber-700 border border-amber-100'}`}>
                                                                 {order.side}
