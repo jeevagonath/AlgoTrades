@@ -2,13 +2,22 @@ import { FastifyInstance } from 'fastify';
 import { strategyEngine } from '../services/strategy.engine';
 import { db } from '../services/supabase.service';
 import { shoonya } from '../services/shoonya.service';
-
-
+import { nseService } from '../services/nse.service';
 export async function strategyRoutes(app: FastifyInstance) {
     app.get('/expiries', async (request, reply) => {
         try {
             const expiries = await strategyEngine.getAvailableExpiries();
             return { status: 'success', data: expiries };
+        } catch (err: any) {
+            return reply.status(500).send({ status: 'error', message: err.message });
+        }
+    });
+
+    app.get('/nse/chain', async (request: any, reply) => {
+        try {
+            const { symbol } = request.query as { symbol: string };
+            const data = await nseService.getOptionChainData(symbol || 'NIFTY');
+            return { status: 'success', data };
         } catch (err: any) {
             return reply.status(500).send({ status: 'error', message: err.message });
         }
@@ -96,9 +105,9 @@ export async function strategyRoutes(app: FastifyInstance) {
                 return reply.status(400).send({ status: 'error', message: 'Invalid expiries format' });
             }
 
-            const result = await db.saveManualExpiries(expiries);
+            const success = await db.setManualExpiries(expiries);
 
-            if (result.success) {
+            if (success) {
                 return { status: 'success', message: `Saved ${expiries.length} expiry dates` };
             } else {
                 return reply.status(500).send({ status: 'error', message: 'Failed to save expiries' });

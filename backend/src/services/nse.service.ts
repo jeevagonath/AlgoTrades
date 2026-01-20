@@ -102,6 +102,32 @@ class NseService {
         }
     }
 
+    async getOptionChainData(symbol: string = 'NIFTY'): Promise<any> {
+        try {
+            // Ensure session is fresh-ish by checking cookies or cache age (simple refresh for now)
+            const today = new Date();
+            if (!this.expiryCache || !this.isSameDay(new Date(this.expiryCache.fetchedDate), today)) {
+                await this.getExpiries(symbol); // This refreshes cookies/session
+            }
+
+            const response = await this.axiosInstance.get(
+                `/api/option-chain-contract-info?symbol=${symbol}`,
+                {
+                    headers: {
+                        'Referer': `${this.baseUrl}/option-chain`,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                }
+            );
+
+            return response.data;
+        } catch (error: any) {
+            console.error('[NSE] Failed to fetch option chain data:', error.message);
+            // Retry logic could go here
+            throw error;
+        }
+    }
+
 
     async getSpotPrice(symbol: string = 'NIFTY'): Promise<number | null> {
         try {

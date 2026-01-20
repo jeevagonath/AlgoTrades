@@ -108,6 +108,10 @@ class ShoonyaService {
 
     async getQuotes(exchange: string, token: string) {
         //console.log(`[GetQuotes] REQUEST: exchange=${exchange}, token=${token}`);
+        if (!this.session || !this.session.uid) {
+            console.warn('[Shoonya] getQuotes skipped: session or uid missing');
+            return Promise.resolve({ stat: 'Not_Ok', emsg: 'Session Missing' });
+        }
         return new Promise((resolve, reject) => {
             this.api.get_quotes(exchange, token)
                 .then((res: any) => {

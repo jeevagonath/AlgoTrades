@@ -1,3 +1,4 @@
+
 import { shoonya } from './shoonya.service';
 import { db } from './supabase.service';
 import { socketService } from './socket.service';
@@ -132,7 +133,7 @@ class StrategyEngine {
                 this.state.entryTime = savedState.entryTime || '12:59';
                 this.state.exitTime = savedState.exitTime || '15:15';
                 this.state.reEntryCutoffTime = savedState.reEntryCutoffTime || '13:45';
-                this.addLog(`📥 [System] Loaded Settings: Entry=${this.state.entryTime}, Exit=${this.state.exitTime}, ReEntryVal=${this.state.reEntryCutoffTime}`);
+                this.addLog(`📥[System] Loaded Settings: Entry = ${this.state.entryTime}, Exit = ${this.state.exitTime}, ReEntryVal = ${this.state.reEntryCutoffTime} `);
 
                 this.state.pnl = savedState.pnl || 0;
                 this.state.peakProfit = savedState.peakProfit || 0;
@@ -151,22 +152,26 @@ class StrategyEngine {
             // 2. Load positions
             const positions = await db.getPositions();
             this.state.selectedStrikes = positions;
-            this.addLog(`🔍 [Debug] DB returned ${positions.length} positions: ${positions.map((p: any) => p.token).join(', ')}`);
+            this.addLog(`🔍[Debug] DB returned ${positions.length} positions: ${positions.map((p: any) => p.token).join(', ')} `);
 
             // 2.5. Fetch fresh LTP for existing positions via GetQuotes API
             if (positions.length > 0) {
                 try {
-                    this.addLog(`📊 [System] Fetching live prices for ${positions.length} existing positions...`);
+                    this.addLog(`📊[System] Fetching live prices for ${positions.length} existing positions...`);
                     for (const leg of positions) {
                         try {
+                            if (!leg.token || leg.token === 'null' || leg.token === 'undefined') {
+                                this.addLog(`⚠️[Price] Skipping live price for ${leg.symbol} (Missing Token)`);
+                                continue;
+                            }
                             const quote: any = await shoonya.getQuotes('NFO', String(leg.token));
                             if (quote && quote.lp) {
                                 leg.ltp = parseFloat(quote.lp);
-                                this.addLog(`✅ [Price] ${leg.symbol}: LTP=₹${quote.lp}, Entry=₹${leg.entryPrice}`);
+                                this.addLog(`✅[Price] ${leg.symbol}: LTP =₹${quote.lp}, Entry =₹${leg.entryPrice} `);
                             }
                         } catch (quoteErr) {
-                            console.error(`[Strategy] GetQuote Error for ${leg.symbol}:`, quoteErr);
-                            this.addLog(`⚠️ [Price] Could not fetch LTP for ${leg.symbol}, using last known price`);
+                            console.error(`[Strategy] GetQuote Error for ${leg.symbol}: `, quoteErr);
+                            this.addLog(`⚠️[Price] Could not fetch LTP for ${leg.symbol}, using last known price`);
                         }
                     }
                     this.calculatePnL(); // Recalculate PnL with fresh LTPs
@@ -206,7 +211,7 @@ class StrategyEngine {
                             } else {
                                 this.state.status = 'ACTIVE';
                                 this.state.engineActivity = 'Monitoring Iron Condor';
-                                this.state.nextAction = `Daily Exit at ${this.state.exitTime}`;
+                                this.state.nextAction = `Daily Exit at ${this.state.exitTime} `;
                             }
                         }
                     } else if (currentMinutes >= exitMinutes) {
@@ -216,18 +221,18 @@ class StrategyEngine {
                         // After exit, we should be waiting for entry
                         this.state.status = 'WAITING_FOR_EXPIRY';
                         this.state.engineActivity = 'Waiting for Entry Time';
-                        this.state.nextAction = `Entry at ${this.state.entryTime}`;
+                        this.state.nextAction = `Entry at ${this.state.entryTime} `;
                     } else {
                         // Before both. Monitor old positions.
                         this.state.status = 'ACTIVE';
                         this.state.engineActivity = 'Monitoring Old Positions';
-                        this.state.nextAction = `Daily Exit at ${this.state.exitTime}`;
+                        this.state.nextAction = `Daily Exit at ${this.state.exitTime} `;
                     }
                 } else {
                     // Normal day. Just monitor.
                     this.state.status = 'ACTIVE';
                     this.state.engineActivity = 'Monitoring iron Condor';
-                    this.state.nextAction = `Watching Target/SL`;
+                    this.state.nextAction = `Watching Target / SL`;
                 }
 
                 if (this.state.status === 'ACTIVE') {
@@ -244,8 +249,8 @@ class StrategyEngine {
                     } else {
                         this.state.status = 'WAITING_FOR_EXPIRY';
                         this.state.engineActivity = 'Waiting for Entry Time';
-                        this.state.nextAction = `Entry at ${this.state.entryTime}`;
-                        this.addLog(`🔔 [Strategy] Resumed: Waiting for ${this.state.entryTime}.`);
+                        this.state.nextAction = `Entry at ${this.state.entryTime} `;
+                        this.addLog(`🔔[Strategy] Resumed: Waiting for ${this.state.entryTime}.`);
                     }
                 } else {
                     this.state.status = 'IDLE';
@@ -258,7 +263,7 @@ class StrategyEngine {
             }
 
             // Send startup notification
-            const startupMsg = `🚀 <b>Strategy Engine Resumed</b>\n` +
+            const startupMsg = `🚀 <b>Strategy Engine Resumed </b>\n` +
                 `Status: ${this.state.status}\n` +
                 `Activity: ${this.state.engineActivity}\n` +
                 `Mode: ${this.state.isVirtual ? 'VIRTUAL' : 'LIVE'}`;
@@ -379,6 +384,28 @@ class StrategyEngine {
 
             await this.syncToDb(true);
             await this.initScheduler();
+        }, tzOption));
+
+        // 1.5. Automated Expiry Sync from NSE at 9:05 AM
+        this.schedulers.push(cron.schedule('5 9 * * *', async () => {
+            this.addLog('🔄 [Auto-Sync] Fetching latest expiry dates from NSE...');
+            try {
+                const data = await nseService.getOptionChainData('NIFTY');
+                if (data && data.records && data.records.expiryDates) {
+                    const expiries: string[] = data.records.expiryDates;
+                    const formatted = expiries.map((d: string) => d.toUpperCase());
+
+                    const success = await db.setManualExpiries(formatted);
+                    if (success) {
+                        this.addLog(`✅ [Auto-Sync] Updated DB with ${formatted.length} expiries from NSE.`);
+                    } else {
+                        this.addLog('❌ [Auto-Sync] Failed to update DB.');
+                    }
+                }
+            } catch (err: any) {
+                console.error('[Auto-Sync] Failed:', err);
+                this.addLog(`❌ [Auto-Sync] Error: ${err.message}`);
+            }
         }, tzOption));
 
         const isExpiry = await this.isExpiryDay();

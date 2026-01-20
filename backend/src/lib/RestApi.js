@@ -91,14 +91,14 @@ var NorenRestApi = function (params) {
     if (self.__susertoken)
       payload = payload + `&jKey=${self.__susertoken}`;
 
-    //console.log(`[Shoonya] POST ${url} payload: ${payload}`);
+    console.log(`[Shoonya] POST ${url} payload: ${payload}`);
     return axios.post(url, payload);
   }
 
   self.setSessionDetails = function (response) {
     self.__susertoken = response.susertoken;
-    self.__username = response.actid
-    self.__accountid = response.actid
+    self.__username = response.uid || response.actid;
+    self.__accountid = response.actid || response.uid;
 
   };
 
@@ -202,6 +202,12 @@ var NorenRestApi = function (params) {
     values["uid"] = self.__username
     values["exch"] = exchange
     values["token"] = token
+    console.log(`[RestApi] get_quotes internal: uid=${self.__username}, exch=${exchange}, token=${token}`);
+
+    if (!self.__username) {
+      console.error('[RestApi] get_quotes aborted: uid (username) is missing');
+      return Promise.reject({ stat: 'Not_Ok', emsg: 'Invalid Input : uid is Missing internally' });
+    }
 
     let reply = post_request("getquotes", values, self.__susertoken);
     return reply;

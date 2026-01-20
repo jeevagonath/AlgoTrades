@@ -300,55 +300,7 @@ export const db = {
         }
     },
 
-    async saveManualExpiries(expiries: string[]) {
-        try {
-            // Save to manual_expiry_settings table
-            const { error } = await supabase
-                .from('manual_expiry_settings')
-                .upsert({
-                    id: 1,
-                    expiry_json: JSON.stringify(expiries),
-                    updated_at: new Date().toISOString()
-                });
 
-            if (error) {
-                console.error('Supabase Manual Expiry Save Error:', error);
-                return { success: false, error };
-            }
-
-            //console.log(`[DB] Saved ${expiries.length} manual expiry dates`);
-            return { success: true };
-        } catch (err) {
-            console.error('Failed to save manual expiries:', err);
-            return { success: false, error: err };
-        }
-    },
-
-    async getManualExpiries(): Promise<string[]> {
-        try {
-            const { data, error } = await supabase
-                .from('manual_expiry_settings')
-                .select('expiry_json')
-                .eq('id', 1)
-                .single();
-
-            if (error && error.code !== 'PGRST116') {
-                console.error('Supabase Manual Expiry Load Error:', error);
-                return [];
-            }
-
-            if (data && data.expiry_json) {
-                const expiries = JSON.parse(data.expiry_json);
-                //console.log(`[DB] Loaded ${expiries.length} manual expiry dates`);
-                return expiries;
-            }
-
-            return [];
-        } catch (err) {
-            console.error('Failed to load manual expiries:', err);
-            return [];
-        }
-    },
 
     async saveAlert(alert: {
         type: string,
@@ -397,6 +349,66 @@ export const db = {
         } catch (err) {
             console.error('Failed to load alerts:', err);
             return [];
+        }
+    },
+
+    async getManualExpiries() {
+        try {
+            const { data, error } = await supabase
+                .from('manual_expiry_settings')
+                .select('expiry_date')
+                .eq('is_active', true)
+                .order('expiry_date', { ascending: true });
+
+            if (error) {
+                console.error('Supabase Manual Expiry Load Error:', error);
+                return [];
+            }
+            return data.map(d => d.expiry_date);
+        } catch (err) {
+            console.error('Failed to load manual expiries:', err);
+            return [];
+        }
+    },
+
+    async setManualExpiries(dates: string[]) {
+        try {
+            // First, deactivate all existing
+            await supabase
+                .from('manual_expiry_settings')
+                .update({ is_active: false })
+                .neq('id', 0); // Update all
+
+            // Then insert new ones (or update if existing)
+            // We'll just insert new active rows for simplicity since it's a small table
+            // Or ideally use upsert. Let's try upserting logic or simple insert.
+            // Simplified: Delete all active entries? No, keep history.
+            // Just insert the new batch as active.
+
+            // Cleanest approach for this specific requirement:
+            // 1. Mark all as inactive
+            // 2. Insert new dates as active
+
+            const payload = dates.map(date => ({
+                expiry_date: date,
+                is_active: true,
+                created_at: new Date().toISOString()
+            }));
+
+            const { error } = await supabase
+                .from('manual_expiry_settings')
+                .insert(payload);
+
+            if (error) {
+                console.error('Supabase Manual Expiry Update Error:', error);
+                return false;
+            }
+
+            // Emit update?
+            return true;
+        } catch (err) {
+            console.error('Failed to set manual expiries:', err);
+            return false;
         }
     },
 
