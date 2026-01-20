@@ -1412,3 +1412,577 @@ Payload: [object Object]
 Status: 200
 Data: {"ok":true,"result":{"message_id":190,"from":{"id":8494833053,"is_bot":true,"first_name":"OptionSellingVercel","username":"Option_Selling_Vercel_Bot"},"chat":{"id":5177480141,"first_name":"Gonath","username":"itsmegonath","type":"private"},"date":1768229924,"text":"🚀 Strategy Engine Resumed\nStatus: IDLE\nActivity: Idle\nMode: VIRTUAL","entities":[{"offset":3,"length":23,"type":"bold"}]}}
 ---
+[2026-01-20T13:34:37.514Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58707"}
+---
+[2026-01-20T13:34:37.803Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:34:37.805Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58711"}
+---
+[2026-01-20T13:34:37.872Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:34:37.873Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58710"}
+---
+[2026-01-20T13:34:37.961Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:34:37.963Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58729"}
+---
+[2026-01-20T13:34:38.029Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:34:38.031Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58815"}
+---
+[2026-01-20T13:34:38.089Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:34:38.090Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58598"}
+---
+[2026-01-20T13:34:38.155Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:34:38.157Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58690"}
+---
+[2026-01-20T13:34:38.225Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:34:38.227Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58706"}
+---
+[2026-01-20T13:34:38.289Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:34:38.291Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58694"}
+---
+[2026-01-20T13:34:38.366Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:34:39.134Z] REQUEST: post https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Payload: [object Object]
+---
+[2026-01-20T13:34:39.815Z] ERROR: https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Message: Request failed with status code 401
+Detail: {"ok":false,"error_code":401,"description":"Unauthorized"}
+---
+[2026-01-20T13:53:51.231Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58707"}
+---
+[2026-01-20T13:53:51.497Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:53:51.499Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58711"}
+---
+[2026-01-20T13:53:51.572Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:53:51.573Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58710"}
+---
+[2026-01-20T13:53:51.671Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:53:51.672Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58729"}
+---
+[2026-01-20T13:53:51.732Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:53:51.733Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58815"}
+---
+[2026-01-20T13:53:51.795Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:53:51.797Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58598"}
+---
+[2026-01-20T13:53:51.861Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:53:51.863Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58690"}
+---
+[2026-01-20T13:53:51.936Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:53:51.938Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58706"}
+---
+[2026-01-20T13:53:52.005Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:53:52.007Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58694"}
+---
+[2026-01-20T13:53:52.127Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:53:52.827Z] REQUEST: post https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Payload: [object Object]
+---
+[2026-01-20T13:53:53.646Z] ERROR: https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Message: Request failed with status code 401
+Detail: {"ok":false,"error_code":401,"description":"Unauthorized"}
+---
+[2026-01-20T13:55:40.354Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58707"}
+---
+[2026-01-20T13:55:40.857Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:55:40.859Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58711"}
+---
+[2026-01-20T13:55:40.922Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:55:40.923Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58710"}
+---
+[2026-01-20T13:55:40.995Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:55:40.997Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58729"}
+---
+[2026-01-20T13:55:41.062Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:55:41.064Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58815"}
+---
+[2026-01-20T13:55:41.132Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:55:41.133Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58598"}
+---
+[2026-01-20T13:55:41.212Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:55:41.214Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58690"}
+---
+[2026-01-20T13:55:41.296Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:55:41.298Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58706"}
+---
+[2026-01-20T13:55:41.372Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:55:41.373Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58694"}
+---
+[2026-01-20T13:55:41.441Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:55:42.087Z] REQUEST: post https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Payload: [object Object]
+---
+[2026-01-20T13:55:42.745Z] ERROR: https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Message: Request failed with status code 401
+Detail: {"ok":false,"error_code":401,"description":"Unauthorized"}
+---
+[2026-01-20T13:56:01.100Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58707"}
+---
+[2026-01-20T13:56:01.363Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:56:01.365Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58711"}
+---
+[2026-01-20T13:56:01.441Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:56:01.443Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58710"}
+---
+[2026-01-20T13:56:01.539Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:56:01.541Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58729"}
+---
+[2026-01-20T13:56:01.610Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:56:01.612Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58815"}
+---
+[2026-01-20T13:56:01.689Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:56:01.691Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58598"}
+---
+[2026-01-20T13:56:01.781Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:56:01.783Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58690"}
+---
+[2026-01-20T13:56:01.859Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:56:01.861Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58706"}
+---
+[2026-01-20T13:56:01.944Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:56:01.946Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58694"}
+---
+[2026-01-20T13:56:02.133Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:56:02.795Z] REQUEST: post https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Payload: [object Object]
+---
+[2026-01-20T13:56:03.488Z] ERROR: https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Message: Request failed with status code 401
+Detail: {"ok":false,"error_code":401,"description":"Unauthorized"}
+---
+[2026-01-20T13:56:22.223Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58707"}
+---
+[2026-01-20T13:56:22.417Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:56:22.419Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58711"}
+---
+[2026-01-20T13:56:22.485Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:56:22.487Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58710"}
+---
+[2026-01-20T13:56:22.555Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:56:22.556Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58729"}
+---
+[2026-01-20T13:56:22.619Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:56:22.621Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58815"}
+---
+[2026-01-20T13:56:22.684Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:56:22.686Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58598"}
+---
+[2026-01-20T13:56:22.758Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:56:22.760Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58690"}
+---
+[2026-01-20T13:56:22.829Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:56:22.830Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58706"}
+---
+[2026-01-20T13:56:22.894Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:56:22.896Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58694"}
+---
+[2026-01-20T13:56:22.958Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:56:23.593Z] REQUEST: post https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Payload: [object Object]
+---
+[2026-01-20T13:56:24.250Z] ERROR: https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Message: Request failed with status code 401
+Detail: {"ok":false,"error_code":401,"description":"Unauthorized"}
+---
+[2026-01-20T13:59:19.369Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58707"}
+---
+[2026-01-20T13:59:20.200Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:59:20.202Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58711"}
+---
+[2026-01-20T13:59:20.266Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:59:20.268Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58710"}
+---
+[2026-01-20T13:59:20.341Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:59:20.342Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58729"}
+---
+[2026-01-20T13:59:20.440Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:59:20.442Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58815"}
+---
+[2026-01-20T13:59:20.506Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:59:20.508Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58598"}
+---
+[2026-01-20T13:59:20.575Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:59:20.577Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58690"}
+---
+[2026-01-20T13:59:20.669Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:59:20.670Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58706"}
+---
+[2026-01-20T13:59:20.737Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:59:20.738Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58694"}
+---
+[2026-01-20T13:59:20.818Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T13:59:21.527Z] REQUEST: post https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Payload: [object Object]
+---
+[2026-01-20T13:59:23.946Z] ERROR: https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Message: Request failed with status code 401
+Detail: {"ok":false,"error_code":401,"description":"Unauthorized"}
+---
+[2026-01-20T14:01:48.333Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58707"}
+---
+[2026-01-20T14:01:48.654Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T14:01:48.656Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58711"}
+---
+[2026-01-20T14:01:48.720Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T14:01:48.722Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58710"}
+---
+[2026-01-20T14:01:48.810Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T14:01:48.811Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58729"}
+---
+[2026-01-20T14:01:48.881Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T14:01:48.883Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58815"}
+---
+[2026-01-20T14:01:48.962Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T14:01:48.963Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58598"}
+---
+[2026-01-20T14:01:49.035Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T14:01:49.037Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58690"}
+---
+[2026-01-20T14:01:49.102Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T14:01:49.104Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58706"}
+---
+[2026-01-20T14:01:49.250Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T14:01:49.252Z] REQUEST: post https://api.shoonya.com/NorenWClientTP/GetQuotes
+Payload: jData={"exch":"NFO","token":"58694"}
+---
+[2026-01-20T14:01:49.322Z] ERROR: https://api.shoonya.com/NorenWClientTP/GetQuotes
+Message: Request failed with status code 400
+Detail: {"stat":"Not_Ok","emsg":"Invalid Input :  uid or exch or token is Missing."}
+---
+[2026-01-20T14:01:49.930Z] REQUEST: post https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Payload: [object Object]
+---
+[2026-01-20T14:01:50.514Z] ERROR: https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Message: Request failed with status code 401
+Detail: {"ok":false,"error_code":401,"description":"Unauthorized"}
+---
+[2026-01-20T14:02:54.462Z] REQUEST: post https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Payload: [object Object]
+---
+[2026-01-20T14:02:55.071Z] ERROR: https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Message: Request failed with status code 401
+Detail: {"ok":false,"error_code":401,"description":"Unauthorized"}
+---
+[2026-01-20T14:03:31.532Z] REQUEST: post https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Payload: [object Object]
+---
+[2026-01-20T14:03:32.403Z] ERROR: https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Message: Request failed with status code 401
+Detail: {"ok":false,"error_code":401,"description":"Unauthorized"}
+---
+[2026-01-20T14:08:01.218Z] REQUEST: post https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Payload: [object Object]
+---
+[2026-01-20T14:08:02.243Z] ERROR: https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Message: Request failed with status code 401
+Detail: {"ok":false,"error_code":401,"description":"Unauthorized"}
+---
+[2026-01-20T14:11:26.433Z] REQUEST: post https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Payload: [object Object]
+---
+[2026-01-20T14:11:27.165Z] ERROR: https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Message: Request failed with status code 401
+Detail: {"ok":false,"error_code":401,"description":"Unauthorized"}
+---
+[2026-01-20T14:24:37.440Z] REQUEST: post https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Payload: [object Object]
+---
+[2026-01-20T14:24:38.080Z] ERROR: https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Message: Request failed with status code 401
+Detail: {"ok":false,"error_code":401,"description":"Unauthorized"}
+---
+[2026-01-20T14:25:58.955Z] REQUEST: post https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Payload: [object Object]
+---
+[2026-01-20T14:25:59.906Z] ERROR: https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Message: Request failed with status code 401
+Detail: {"ok":false,"error_code":401,"description":"Unauthorized"}
+---
+[2026-01-20T14:27:37.859Z] REQUEST: post https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Payload: [object Object]
+---
+[2026-01-20T14:27:38.486Z] ERROR: https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Message: Request failed with status code 401
+Detail: {"ok":false,"error_code":401,"description":"Unauthorized"}
+---
+[2026-01-20T14:27:55.843Z] REQUEST: post https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Payload: [object Object]
+---
+[2026-01-20T14:27:56.592Z] ERROR: https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Message: Request failed with status code 401
+Detail: {"ok":false,"error_code":401,"description":"Unauthorized"}
+---
+[2026-01-20T14:28:36.347Z] REQUEST: post https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Payload: [object Object]
+---
+[2026-01-20T14:28:37.277Z] ERROR: https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Message: Request failed with status code 401
+Detail: {"ok":false,"error_code":401,"description":"Unauthorized"}
+---
+[2026-01-20T14:29:13.703Z] REQUEST: post https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Payload: [object Object]
+---
+[2026-01-20T14:29:14.631Z] ERROR: https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Message: Request failed with status code 401
+Detail: {"ok":false,"error_code":401,"description":"Unauthorized"}
+---
+[2026-01-20T14:30:20.515Z] REQUEST: post https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Payload: [object Object]
+---
+[2026-01-20T14:30:22.597Z] ERROR: https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Message: Request failed with status code 401
+Detail: {"ok":false,"error_code":401,"description":"Unauthorized"}
+---
+[2026-01-20T14:30:38.739Z] REQUEST: post https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Payload: [object Object]
+---
+[2026-01-20T14:30:39.418Z] ERROR: https://api.telegram.org/bot8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc/sendMessage
+Message: Request failed with status code 401
+Detail: {"ok":false,"error_code":401,"description":"Unauthorized"}
+---

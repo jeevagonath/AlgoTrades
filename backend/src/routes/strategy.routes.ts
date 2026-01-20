@@ -117,6 +117,19 @@ export async function strategyRoutes(app: FastifyInstance) {
         }
     });
 
+    app.post('/sync-expiries', async (request, reply) => {
+        try {
+            const success = await strategyEngine.triggerExpirySync();
+            if (success) {
+                return { status: 'success', message: 'Expiries synced from NSE' };
+            } else {
+                return reply.status(500).send({ status: 'error', message: 'Failed to sync expiries' });
+            }
+        } catch (err: any) {
+            return reply.status(500).send({ status: 'error', message: err.message });
+        }
+    });
+
     app.get('/manual-expiries', async (request, reply) => {
         try {
             const expiries = await db.getManualExpiries();

@@ -120,6 +120,14 @@ class NseService {
                 }
             );
 
+            // console.log('[NSE] Response Status:', response.status);
+            // console.log('[NSE] Response Data Keys:', Object.keys(response.data || {}));
+            if (response.data && response.data.records) {
+                // console.log('[NSE] Records Keys:', Object.keys(response.data.records));
+            } else {
+                console.warn('[NSE] Response missing "records" field:', JSON.stringify(response.data).substring(0, 200));
+            }
+
             return response.data;
         } catch (error: any) {
             console.error('[NSE] Failed to fetch option chain data:', error.message);
