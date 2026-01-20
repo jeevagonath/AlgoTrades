@@ -357,14 +357,27 @@ export const db = {
             const { data, error } = await supabase
                 .from('manual_expiry_settings')
                 .select('expiry_date')
-                .eq('is_active', true)
-                .order('expiry_date', { ascending: true });
+                .eq('is_active', true);
 
             if (error) {
                 console.error('Supabase Manual Expiry Load Error:', error);
                 return [];
             }
-            return data.map(d => d.expiry_date);
+
+            const months: { [key: string]: number } = {
+                'JAN': 0, 'FEB': 1, 'MAR': 2, 'APR': 3, 'MAY': 4, 'JUN': 5,
+                'JUL': 6, 'AUG': 7, 'SEP': 8, 'OCT': 9, 'NOV': 10, 'DEC': 11
+            };
+
+            const parseDate = (d: string) => {
+                const p = d.split('-');
+                if (p.length < 3) return new Date(d).getTime(); // Fallback
+                return new Date(parseInt(p[2]), months[p[1].toUpperCase()], parseInt(p[0])).getTime();
+            };
+
+            return data
+                .map(d => d.expiry_date)
+                .sort((a, b) => parseDate(a) - parseDate(b));
         } catch (err) {
             console.error('Failed to load manual expiries:', err);
             return [];
