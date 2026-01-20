@@ -151,6 +151,7 @@ class StrategyEngine {
             // 2. Load positions
             const positions = await db.getPositions();
             this.state.selectedStrikes = positions;
+            this.addLog(`🔍 [Debug] DB returned ${positions.length} positions: ${positions.map((p: any) => p.token).join(', ')}`);
 
             // 2.5. Fetch fresh LTP for existing positions via GetQuotes API
             if (positions.length > 0) {

@@ -240,9 +240,9 @@ export const db = {
             type: p.type,
             side: p.side,
             strike: p.strike,
-            entryPrice: p.entry_price,
-            ltp: p.ltp,
-            quantity: p.quantity,
+            entryPrice: p.entry_price || 0,
+            ltp: p.ltp || 0,
+            quantity: p.quantity || 0,
             tier: p.tier,
             isAdjusted: p.is_adjusted
         }));

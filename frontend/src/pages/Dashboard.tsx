@@ -427,7 +427,10 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                 // 1. Fetch Initial State
                 const d = await strategyApi.getState();
                 if (d) {
-                    if (d.selectedStrikes) setTestStrikes(d.selectedStrikes);
+                    if (d.selectedStrikes) {
+                        console.log('[Dashboard] Received positions:', d.selectedStrikes.length, d.selectedStrikes.map((s: any) => s.token));
+                        setTestStrikes(d.selectedStrikes);
+                    }
                     setPnl(d.pnl || 0);
                     setPeakProfit(d.peakProfit || 0);
                     setPeakLoss(d.peakLoss || 0);
