@@ -398,6 +398,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
         isVirtual: true
     });
     const [status, setStatus] = useState<string>('IDLE');
+    const [reEntryState, setReEntryState] = useState<any>(null);
     const [engineActivity, setEngineActivity] = useState<string>('Initializing...');
     const [nextAction, setNextAction] = useState<string>('Waiting for data...');
     const [isPaused, setIsPaused] = useState(false);
@@ -621,6 +622,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
             if (data.requiredMargin !== undefined) setRequiredMargin(data.requiredMargin);
             if (data.availableMargin !== undefined) setAvailableMargin(data.availableMargin);
             if (data.isPaused !== undefined) setIsPaused(data.isPaused);
+            if (data.reEntry) setReEntryState(data.reEntry);
         });
 
         return () => {
@@ -1195,14 +1197,42 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                             </div>
                         </div>
 
-                        {/* Current Week */}
+                        {/* Current Week / Re-entry Info */}
                         <div className={`bg-white shadow-sm rounded-xl p-3 border w-48 ${isExpiryDay ? 'border-rose-300 bg-rose-50/30' : 'border-slate-100'}`}>
-                            <div className="flex flex-col items-start">
-                                <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase mb-1">Current Week</span>
-                                <div className={`text-sm font-bold font-mono ${isExpiryDay ? 'text-rose-600' : 'text-slate-700'}`}>
-                                    {currentWeekExpiry || 'N/A'}
-                                    {isExpiryDay && ' 🔔'}
-                                </div>
+                            <div className="flex flex-col items-start w-full">
+                                {reEntryState && reEntryState.isEligible && reEntryState.scheduledReEntryTime && new Date(reEntryState.scheduledReEntryTime) > new Date() ? (
+                                    <>
+                                        <span className="text-[10px] font-bold tracking-wider text-amber-500 uppercase mb-1 animate-pulse flex items-center gap-1">
+                                            <RotateCcw className="w-3 h-3" /> Re-Entry Pending
+                                        </span>
+                                        <div className="text-xs font-bold font-mono text-slate-700 flex flex-col leading-tight whitespace-nowrap w-full">
+                                            {reEntryState.originalStrikes?.length > 0 ? (
+                                                <div className="flex justify-between w-full pr-2">
+                                                    {(() => {
+                                                        const ce = reEntryState.originalStrikes.find((l: any) => l.type === 'CE' && l.side === 'SELL');
+                                                        const pe = reEntryState.originalStrikes.find((l: any) => l.type === 'PE' && l.side === 'SELL');
+                                                        return (
+                                                            <>
+                                                                <span className="text-rose-600">CE: {ce ? ce.strike : '...'}</span>
+                                                                <span className="text-emerald-600">PE: {pe ? pe.strike : '...'}</span>
+                                                            </>
+                                                        );
+                                                    })()}
+                                                </div>
+                                            ) : (
+                                                <span>Calculating...</span>
+                                            )}
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase mb-1">Current Week</span>
+                                        <div className={`text-sm font-bold font-mono ${isExpiryDay ? 'text-rose-600' : 'text-slate-700'}`}>
+                                            {currentWeekExpiry || 'N/A'}
+                                            {isExpiryDay && ' 🔔'}
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         </div>
 

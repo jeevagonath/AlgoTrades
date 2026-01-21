@@ -1266,7 +1266,8 @@ class StrategyEngine {
                 nextAction: this.state.nextAction,
                 engineActivity: this.state.engineActivity,
                 isPaused: this.state.isPaused,
-                lastHeartbeat: new Date().toISOString()
+                lastHeartbeat: new Date().toISOString(),
+                reEntry: this.state.reEntry // [NEW] Send re-entry state to frontend
             };
 
             await db.updateState(statePayload);
