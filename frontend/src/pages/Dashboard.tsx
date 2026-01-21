@@ -1126,84 +1126,95 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                         </div>
                     </div>
 
-                    {/* Compact PnL Metrics Cards + Expiry Badges */}
-                    <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
-                        {/* Total PnL - Compact */}
-                        <div className={`bg-gradient-to-br ${realTimePnL >= 0 ? 'from-emerald-50 to-emerald-100' : 'from-rose-50 to-rose-100'} border ${realTimePnL >= 0 ? 'border-emerald-200' : 'border-rose-200'} rounded-xl p-3 shadow-sm relative overflow-hidden hover:shadow-md transition-all`}>
-                            <div className="flex items-center gap-1.5 mb-1">
-                                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-600">Total PnL</span>
-                                {realTimePnL >= 0 ? <TrendingUp className="w-3 h-3 text-emerald-600" /> : <TrendingDown className="w-3 h-3 text-rose-600" />}
-                            </div>
-                            <div className={`text-xl font-black tracking-tighter ${realTimePnL >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
-                                <AnimatedValueText value={realTimePnL} className="" fractionDigits={2} />
-                            </div>
-                        </div>
-
-                        {/* Peak Profit - Compact */}
-                        <div className="bg-gradient-to-br from-green-50 to-emerald-100 border border-green-200 rounded-xl p-3 shadow-sm relative overflow-hidden hover:shadow-md transition-all">
-                            <div className="flex items-center gap-1.5 mb-1">
-                                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-600">Peak Profit</span>
-                                <TrendingUp className="w-3 h-3 text-green-600" />
-                            </div>
-                            <div className="text-xl font-black tracking-tighter text-green-700">
-                                <AnimatedValueText value={peakProfit} className="" fractionDigits={2} />
+                    {/* Header Metrics Row */}
+                    <div className="flex flex-row items-center gap-4">
+                        {/* Total PnL */}
+                        <div className={`shadow-sm rounded-xl p-3 border w-48 transition-all duration-300 ${realTimePnL >= 0 ? 'bg-emerald-50 border-emerald-100' : 'bg-rose-50 border-rose-100'}`}>
+                            <div className="flex flex-col items-start">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-[10px] font-bold tracking-wider text-slate-500 uppercase">Total PnL</span>
+                                    {realTimePnL >= 0 ?
+                                        <TrendingUp className="w-3 h-3 text-emerald-600" /> :
+                                        <TrendingDown className="w-3 h-3 text-rose-600" />
+                                    }
+                                </div>
+                                <div className={`text-2xl font-black tracking-tight ${realTimePnL >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                                    <AnimatedValueText value={realTimePnL} className="" fractionDigits={2} />
+                                </div>
                             </div>
                         </div>
 
-                        {/* Peak Loss - Compact */}
-                        <div className="bg-gradient-to-br from-red-50 to-rose-100 border border-red-200 rounded-xl p-3 shadow-sm relative overflow-hidden hover:shadow-md transition-all">
-                            <div className="flex items-center gap-1.5 mb-1">
-                                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-600">Peak Loss</span>
-                                <TrendingDown className="w-3 h-3 text-red-600" />
-                            </div>
-                            <div className="text-xl font-black tracking-tighter text-red-700">
-                                <AnimatedValueText value={peakLoss} className="" fractionDigits={2} />
-                            </div>
-                        </div>
-
-                        {/* Next Expiry - Compact */}
-                        <div className="bg-gradient-to-br from-blue-50 to-indigo-100 border border-blue-200 rounded-xl p-3 shadow-sm relative overflow-hidden hover:shadow-md transition-all">
-                            <div className="flex items-center gap-1.5 mb-1">
-                                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-600">Next Expiry</span>
-                                <Clock className="w-3 h-3 text-blue-600" />
-                            </div>
-                            <div className="text-base font-black text-blue-700 tracking-tight">
-                                {nextWeekExpiry && nextWeekExpiry !== 'N/A' ? (
-                                    (() => {
-                                        try {
-                                            const date = parseExpiryDate(nextWeekExpiry);
-                                            const day = date.toLocaleDateString('en-US', { weekday: 'short' });
-                                            const dateNum = date.getDate();
-                                            const month = date.toLocaleDateString('en-US', { month: 'short' });
-                                            return `${day}, ${dateNum}-${month}`;
-                                        } catch {
-                                            return nextWeekExpiry;
-                                        }
-                                    })()
-                                ) : 'N/A'}
+                        {/* Peak Profit */}
+                        <div className="bg-emerald-50/50 shadow-sm rounded-xl p-3 border border-emerald-100 w-48">
+                            <div className="flex flex-col items-start">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-[10px] font-bold tracking-wider text-slate-500 uppercase">Peak Profit</span>
+                                    <TrendingUp className="w-3 h-3 text-emerald-500" />
+                                </div>
+                                <div className="text-2xl font-black tracking-tight text-emerald-700">
+                                    <AnimatedValueText value={peakProfit} className="" fractionDigits={2} />
+                                </div>
                             </div>
                         </div>
 
-                        {/* Current Week Expiry Badge */}
-                        {currentWeekExpiry && (
-                            <div className={`flex flex-col justify-center px-3 py-2 bg-white border rounded-xl shadow-sm ${isExpiryDay ? 'border-rose-300 bg-rose-50/30' : 'border-slate-200'}`}>
-                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Current Week</span>
-                                <span className={`text-sm font-bold font-mono ${isExpiryDay ? 'text-rose-600' : 'text-slate-700'}`}>
-                                    {currentWeekExpiry}
+                        {/* Peak Loss */}
+                        <div className="bg-rose-50/50 shadow-sm rounded-xl p-3 border border-rose-100 w-48">
+                            <div className="flex flex-col items-start">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-[10px] font-bold tracking-wider text-slate-500 uppercase">Peak Loss</span>
+                                    <TrendingDown className="w-3 h-3 text-rose-500" />
+                                </div>
+                                <div className="text-2xl font-black tracking-tight text-rose-700">
+                                    <AnimatedValueText value={peakLoss} className="" fractionDigits={2} />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Next Expiry */}
+                        <div className="bg-blue-50/50 shadow-sm rounded-xl p-3 border border-blue-100 w-48">
+                            <div className="flex flex-col items-start">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-[10px] font-bold tracking-wider text-slate-500 uppercase">Next Expiry</span>
+                                    <Clock className="w-3 h-3 text-blue-500" />
+                                </div>
+                                <div className="text-lg font-black tracking-tight text-blue-700 whitespace-nowrap">
+                                    {nextWeekExpiry && nextWeekExpiry !== 'N/A' ? (
+                                        (() => {
+                                            try {
+                                                const date = parseExpiryDate(nextWeekExpiry);
+                                                const day = date.toLocaleDateString('en-US', { weekday: 'short' });
+                                                const dateNum = date.getDate();
+                                                const month = date.toLocaleDateString('en-US', { month: 'short' });
+                                                return `${day}, ${dateNum}-${month}`;
+                                            } catch {
+                                                return nextWeekExpiry;
+                                            }
+                                        })()
+                                    ) : 'N/A'}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Current Week */}
+                        <div className={`bg-white shadow-sm rounded-xl p-3 border w-48 ${isExpiryDay ? 'border-rose-300 bg-rose-50/30' : 'border-slate-100'}`}>
+                            <div className="flex flex-col items-start">
+                                <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase mb-1">Current Week</span>
+                                <div className={`text-sm font-bold font-mono ${isExpiryDay ? 'text-rose-600' : 'text-slate-700'}`}>
+                                    {currentWeekExpiry || 'N/A'}
                                     {isExpiryDay && ' 🔔'}
-                                </span>
+                                </div>
                             </div>
-                        )}
+                        </div>
 
-                        {/* Target Expiry Badge */}
-                        {nextWeekExpiry && nextWeekExpiry !== 'N/A' && (
-                            <div className="flex flex-col justify-center px-3 py-2 bg-blue-50 border border-blue-200 rounded-xl shadow-sm">
-                                <span className="text-[9px] font-bold text-blue-400 uppercase tracking-wider mb-0.5">Target Expiry</span>
-                                <span className="text-sm font-bold font-mono text-blue-700">
-                                    {nextWeekExpiry}
-                                </span>
+                        {/* Target Expiry */}
+                        <div className="bg-blue-50/30 shadow-sm rounded-xl p-3 border border-blue-100 w-48">
+                            <div className="flex flex-col items-start">
+                                <span className="text-[10px] font-bold tracking-wider text-blue-400 uppercase mb-1">Target Expiry</span>
+                                <div className="text-sm font-bold font-mono text-blue-700">
+                                    {nextWeekExpiry || 'N/A'}
+                                </div>
                             </div>
-                        )}
+                        </div>
                     </div>
                 </div>
 
@@ -1501,123 +1512,125 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                         <EngineWorkflow status={status} activity={engineActivity} />
                     </div>
                 </div>
-            </main>
+            </main >
 
             {/* Client Details Modal */}
-            {showClientModal && (
-                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-                    <div className="bg-white rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl border border-slate-200 animate-in fade-in zoom-in duration-300">
-                        {/* Modal Header */}
-                        <div className="bg-slate-900 p-8 flex justify-between items-center text-white relative">
-                            <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
-                                <Shield size={120} />
-                            </div>
-                            <div className="relative z-10">
-                                <h2 className="text-2xl font-black tracking-tighter italic uppercase leading-tight">Account Intelligence</h2>
-                                <p className="text-[10px] text-blue-400 font-black uppercase tracking-[0.2em] mt-1">Institutional Grade Trading Console</p>
-                            </div>
-                            <button onClick={() => setShowClientModal(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all relative z-10 active:scale-95">
-                                <X size={24} />
-                            </button>
-                        </div>
-
-                        <div className="p-10 space-y-10 max-h-[70vh] overflow-y-auto custom-scrollbar">
-                            {/* Personal & Broker Info */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                                <div className="space-y-6">
-                                    <div className="flex items-center gap-3 border-b border-slate-100 pb-2">
-                                        <div className="w-2 h-4 bg-blue-600 rounded-full" />
-                                        <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Identity & Broker</h3>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-6">
-                                        <div>
-                                            <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Client ID</label>
-                                            <p className="font-black text-slate-900 text-lg tabular-nums">{(clientDetails || userDetails)?.actid || 'N/A'}</p>
-                                        </div>
-                                        <div>
-                                            <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1">User Name</label>
-                                            <p className="font-black text-slate-900 text-lg uppercase">{(userDetails || clientDetails)?.uname || 'CLIENT'}</p>
-                                        </div>
-                                        <div>
-                                            <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Brokerage</label>
-                                            <p className="font-black text-blue-600 text-lg italic">FINVASIA</p>
-                                        </div>
-                                        <div>
-                                            <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1">PAN Card</label>
-                                            <p className="font-black text-slate-900 text-lg uppercase">{userDetails?.pan || 'VERIFIED'}</p>
-                                        </div>
-                                    </div>
+            {
+                showClientModal && (
+                    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+                        <div className="bg-white rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl border border-slate-200 animate-in fade-in zoom-in duration-300">
+                            {/* Modal Header */}
+                            <div className="bg-slate-900 p-8 flex justify-between items-center text-white relative">
+                                <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
+                                    <Shield size={120} />
                                 </div>
+                                <div className="relative z-10">
+                                    <h2 className="text-2xl font-black tracking-tighter italic uppercase leading-tight">Account Intelligence</h2>
+                                    <p className="text-[10px] text-blue-400 font-black uppercase tracking-[0.2em] mt-1">Institutional Grade Trading Console</p>
+                                </div>
+                                <button onClick={() => setShowClientModal(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all relative z-10 active:scale-95">
+                                    <X size={24} />
+                                </button>
+                            </div>
 
-                                <div className="space-y-6">
-                                    <div className="flex items-center gap-3 border-b border-slate-100 pb-2">
-                                        <div className="w-2 h-4 bg-emerald-500 rounded-full" />
-                                        <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Banking Interface</h3>
+                            <div className="p-10 space-y-10 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                                {/* Personal & Broker Info */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                    <div className="space-y-6">
+                                        <div className="flex items-center gap-3 border-b border-slate-100 pb-2">
+                                            <div className="w-2 h-4 bg-blue-600 rounded-full" />
+                                            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Identity & Broker</h3>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-6">
+                                            <div>
+                                                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Client ID</label>
+                                                <p className="font-black text-slate-900 text-lg tabular-nums">{(clientDetails || userDetails)?.actid || 'N/A'}</p>
+                                            </div>
+                                            <div>
+                                                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1">User Name</label>
+                                                <p className="font-black text-slate-900 text-lg uppercase">{(userDetails || clientDetails)?.uname || 'CLIENT'}</p>
+                                            </div>
+                                            <div>
+                                                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Brokerage</label>
+                                                <p className="font-black text-blue-600 text-lg italic">FINVASIA</p>
+                                            </div>
+                                            <div>
+                                                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1">PAN Card</label>
+                                                <p className="font-black text-slate-900 text-lg uppercase">{userDetails?.pan || 'VERIFIED'}</p>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="space-y-4">
-                                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                                            <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Bank Name</label>
-                                            <p className="font-black text-slate-900 text-sm italic">{clientDetails?.bnk || 'HDFC BANK'}</p>
-                                            <div className="mt-2 flex justify-between items-center">
-                                                <div className="space-y-0.5">
-                                                    <label className="text-[8px] font-bold text-slate-300 uppercase tracking-tighter">Account</label>
-                                                    <p className="font-mono text-xs text-slate-600">****{clientDetails?.accno?.slice(-4) || '8842'}</p>
-                                                </div>
-                                                <div className="space-y-0.5 text-right">
-                                                    <label className="text-[8px] font-bold text-slate-300 uppercase tracking-tighter">IFSC</label>
-                                                    <p className="font-mono text-xs text-slate-600">{clientDetails?.ifsc || 'HDFC0000001'}</p>
+
+                                    <div className="space-y-6">
+                                        <div className="flex items-center gap-3 border-b border-slate-100 pb-2">
+                                            <div className="w-2 h-4 bg-emerald-500 rounded-full" />
+                                            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Banking Interface</h3>
+                                        </div>
+                                        <div className="space-y-4">
+                                            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Bank Name</label>
+                                                <p className="font-black text-slate-900 text-sm italic">{clientDetails?.bnk || 'HDFC BANK'}</p>
+                                                <div className="mt-2 flex justify-between items-center">
+                                                    <div className="space-y-0.5">
+                                                        <label className="text-[8px] font-bold text-slate-300 uppercase tracking-tighter">Account</label>
+                                                        <p className="font-mono text-xs text-slate-600">****{clientDetails?.accno?.slice(-4) || '8842'}</p>
+                                                    </div>
+                                                    <div className="space-y-0.5 text-right">
+                                                        <label className="text-[8px] font-bold text-slate-300 uppercase tracking-tighter">IFSC</label>
+                                                        <p className="font-mono text-xs text-slate-600">{clientDetails?.ifsc || 'HDFC0000001'}</p>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            {/* Margins & Balances */}
-                            <div className="space-y-6">
-                                <div className="flex items-center gap-3 border-b border-slate-100 pb-2">
-                                    <div className="w-2 h-4 bg-amber-500 rounded-full" />
-                                    <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Financial Liquidity</h3>
+                                {/* Margins & Balances */}
+                                <div className="space-y-6">
+                                    <div className="flex items-center gap-3 border-b border-slate-100 pb-2">
+                                        <div className="w-2 h-4 bg-amber-500 rounded-full" />
+                                        <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Financial Liquidity</h3>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        <div className="bg-gradient-to-br from-blue-50 to-white p-5 rounded-2xl border border-blue-100/50 shadow-sm">
+                                            <label className="text-[9px] font-bold text-blue-400 uppercase tracking-widest block mb-2">Cash Available</label>
+                                            <p className="text-2xl font-black text-blue-700 tabular-nums">
+                                                ₹{parseFloat(margins?.cash || '0').toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                                            </p>
+                                        </div>
+                                        <div className="bg-gradient-to-br from-emerald-50 to-white p-5 rounded-2xl border border-emerald-100/50 shadow-sm">
+                                            <label className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest block mb-2">Total Margin</label>
+                                            <p className="text-2xl font-black text-emerald-700 tabular-nums">
+                                                ₹{parseFloat(margins?.marginused || '0').toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                                            </p>
+                                        </div>
+                                        <div className="bg-gradient-to-br from-amber-50 to-white p-5 rounded-2xl border border-amber-100/50 shadow-sm">
+                                            <label className="text-[9px] font-bold text-amber-500 uppercase tracking-widest block mb-2">Pay-in Today</label>
+                                            <p className="text-2xl font-black text-amber-700 tabular-nums">
+                                                ₹{parseFloat(margins?.payin || '0').toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    <div className="bg-gradient-to-br from-blue-50 to-white p-5 rounded-2xl border border-blue-100/50 shadow-sm">
-                                        <label className="text-[9px] font-bold text-blue-400 uppercase tracking-widest block mb-2">Cash Available</label>
-                                        <p className="text-2xl font-black text-blue-700 tabular-nums">
-                                            ₹{parseFloat(margins?.cash || '0').toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                                        </p>
-                                    </div>
-                                    <div className="bg-gradient-to-br from-emerald-50 to-white p-5 rounded-2xl border border-emerald-100/50 shadow-sm">
-                                        <label className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest block mb-2">Total Margin</label>
-                                        <p className="text-2xl font-black text-emerald-700 tabular-nums">
-                                            ₹{parseFloat(margins?.marginused || '0').toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                                        </p>
-                                    </div>
-                                    <div className="bg-gradient-to-br from-amber-50 to-white p-5 rounded-2xl border border-amber-100/50 shadow-sm">
-                                        <label className="text-[9px] font-bold text-amber-500 uppercase tracking-widest block mb-2">Pay-in Today</label>
-                                        <p className="text-2xl font-black text-amber-700 tabular-nums">
-                                            ₹{parseFloat(margins?.payin || '0').toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
 
-                            {/* Footer / Dismiss */}
-                            <div className="pt-8 border-t border-slate-100 flex justify-between items-center">
-                                <div className="flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-tight">
-                                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                                    Account Status: Secure & Synchronized
+                                {/* Footer / Dismiss */}
+                                <div className="pt-8 border-t border-slate-100 flex justify-between items-center">
+                                    <div className="flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-tight">
+                                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                                        Account Status: Secure & Synchronized
+                                    </div>
+                                    <button
+                                        onClick={() => setShowClientModal(false)}
+                                        className="px-10 py-4 bg-slate-900 text-white text-xs font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 active:scale-95 flex items-center gap-2"
+                                    >
+                                        Dismiss Module
+                                    </button>
                                 </div>
-                                <button
-                                    onClick={() => setShowClientModal(false)}
-                                    className="px-10 py-4 bg-slate-900 text-white text-xs font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 active:scale-95 flex items-center gap-2"
-                                >
-                                    Dismiss Module
-                                </button>
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Position Details Modal */}
             <PositionDetailsModal
@@ -1627,7 +1640,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                 positions={selectedPositions}
                 totalPnl={selectedPnL}
             />
-        </div>
+        </div >
     );
 };
 
