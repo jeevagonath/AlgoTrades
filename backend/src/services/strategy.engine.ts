@@ -1337,9 +1337,16 @@ class StrategyEngine {
             this.state.engineActivity = 'Strategy Terminated';
             this.state.nextAction = 'Manual Reset Required';
         } else {
-            this.state.status = 'IDLE';
-            this.state.engineActivity = 'Waiting for Next Cycle';
-            this.state.nextAction = 'Daily 9 AM Evaluation';
+            // Check if re-entry is scheduled before resetting to idle defaults
+            if (this.state.reEntry.isEligible && !this.state.reEntry.hasReEntered) {
+                this.state.status = 'IDLE'; // Keep as IDLE or introduce WAITING state if needed
+                this.state.engineActivity = 'Waiting for Re-Entry';
+                // Note: nextAction is already set by detectAndScheduleReEntry
+            } else {
+                this.state.status = 'IDLE';
+                this.state.engineActivity = 'Waiting for Next Cycle';
+                this.state.nextAction = 'Daily 9 AM Evaluation';
+            }
         }
 
         // Save to history before clearing
