@@ -61,6 +61,7 @@ interface StrategyState {
         originalExitReason: string;    // Why did we exit (target/sl/manual)
         positionAge: number;           // Days position was held before exit
         scheduledReEntryTime: string;  // When re-entry is scheduled (ISO timestamp)
+        originalStrikes?: LegState[];  // [NEW] Stores the configuration of legs at exit for precise restoration
     };
 }
 
@@ -1415,6 +1416,16 @@ class StrategyEngine {
                 this.addLog(`ℹ️ [Re-Entry] Position taken today (same-day), not eligible for re-entry`);
             } else if (positionAge > 1) {
                 this.addLog(`ℹ️ [Re-Entry] Position is ${positionAge} days old, not eligible for re-entry (only yesterday's positions qualify)`);
+            } else {
+                // If we are here, we might have accidentally fallen through or logic mismatch.
+                // But specifically for the "Take trade on positions entry" requirement:
+                // We need to capture the CURRENT strikes before they are cleared.
+                // NOTE: selectedStrikes are cleared in exitAllPositions AFTER this method is awaited.
+                // So we can still access them here.
+                if (this.state.reEntry.isEligible) {
+                    this.state.reEntry.originalStrikes = JSON.parse(JSON.stringify(this.state.selectedStrikes));
+                    this.addLog(`💾 [Re-Entry] Saved ${this.state.reEntry.originalStrikes?.length} original legs for restoration.`);
+                }
             }
         } catch (error: any) {
             this.addLog(`❌ [Re-Entry] Error in detection: ${error.message}`);
@@ -1471,8 +1482,23 @@ class StrategyEngine {
             this.state.reEntry.hasReEntered = true;
             await this.syncToDb(true);
 
-            // Execute entry logic (select strikes and place order)
-            await this.selectStrikes();
+
+            // Execute entry logic
+            if (this.state.reEntry.originalStrikes && this.state.reEntry.originalStrikes.length > 0) {
+                this.addLog(`♻️ [Re-Entry] Restoring ${this.state.reEntry.originalStrikes.length} original positions...`);
+                // Restore strikes but reset execution details
+                this.state.selectedStrikes = this.state.reEntry.originalStrikes.map(leg => ({
+                    ...leg,
+                    entryPrice: 0, // Reset to allow new market entry
+                    ltp: 0,
+                    orderId: undefined,
+                    isAdjusted: false // Reset adjustment status for new cycle
+                }));
+            } else {
+                this.addLog(`⚠️ [Re-Entry] No original strikes found. Falling back to dynamic selection (Target Entry).`);
+                await this.selectStrikes();
+            }
+
             await this.placeOrder(false);
 
             // Send notification
