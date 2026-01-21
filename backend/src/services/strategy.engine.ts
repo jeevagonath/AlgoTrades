@@ -370,7 +370,15 @@ class StrategyEngine {
                 console.error('[Cleanup] Database cleanup failed:', err);
             }
 
-            if (isExpiry) {
+            if (this.state.selectedStrikes.length > 0) {
+                this.addLog(`⚠️ [System] Active positions found during 9 AM reset. Skipping status reset.`);
+                // Maintain ACTIVE status if it was active, or force it if we have positions
+                if (this.state.status !== 'ACTIVE') {
+                    this.state.status = 'ACTIVE';
+                }
+                this.state.engineActivity = 'Monitoring Overnight/Existing Positions';
+                this.state.nextAction = 'Continuing Strategy Leg Monitoring';
+            } else if (isExpiry) {
                 this.state.status = 'WAITING_FOR_EXPIRY';
                 this.state.engineActivity = 'Waiting for Entry Sequence';
                 this.state.nextAction = `Entry at ${this.state.entryTime}`;
@@ -379,7 +387,7 @@ class StrategyEngine {
                 this.state.status = 'IDLE';
                 this.state.engineActivity = 'Watching for Expiry Day';
                 this.state.nextAction = 'Next 9 AM Check';
-                telegramService.sendMessage('🌅 <b>Daily Strategy Reset</b>\nEngine is idle and watching for expiry day.');
+                telegramService.sendMessage('🌅 <b>Daily Strategy Reset</b>\nEngine is idle and waiting for expiry day.');
             }
 
             await this.syncToDb(true);
