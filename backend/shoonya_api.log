@@ -1986,3 +1986,24 @@ Payload: [object Object]
 Message: Request failed with status code 401
 Detail: {"ok":false,"error_code":401,"description":"Unauthorized"}
 ---
+[2026-01-21T06:40:48.360Z] REQUEST: post https://api.telegram.org/bot8377716331:AAH-9nvlaWFifdf6NT1UZKEzCjc0gZBR57w/sendMessage
+Payload: [object Object]
+---
+[2026-01-21T06:40:49.442Z] RESPONSE: https://api.telegram.org/bot8377716331:AAH-9nvlaWFifdf6NT1UZKEzCjc0gZBR57w/sendMessage
+Status: 200
+Data: {"ok":true,"result":{"message_id":31,"from":{"id":8377716331,"is_bot":true,"first_name":"AlgoTradesBot","username":"Algo_option_trades_bot"},"chat":{"id":5177480141,"first_name":"Gonath","username":"itsmegonath","type":"private"},"date":1768977649,"text":"🚀 Strategy Engine Resumed \nStatus: IDLE\nActivity: Idle\nMode: VIRTUAL","entities":[{"offset":3,"length":24,"type":"bold"}]}}
+---
+[2026-01-21T06:46:34.702Z] REQUEST: post https://api.telegram.org/bot8377716331:AAH-9nvlaWFifdf6NT1UZKEzCjc0gZBR57w/sendMessage
+Payload: [object Object]
+---
+[2026-01-21T06:46:35.724Z] RESPONSE: https://api.telegram.org/bot8377716331:AAH-9nvlaWFifdf6NT1UZKEzCjc0gZBR57w/sendMessage
+Status: 200
+Data: {"ok":true,"result":{"message_id":33,"from":{"id":8377716331,"is_bot":true,"first_name":"AlgoTradesBot","username":"Algo_option_trades_bot"},"chat":{"id":5177480141,"first_name":"Gonath","username":"itsmegonath","type":"private"},"date":1768977995,"text":"🚀 Strategy Engine Resumed \nStatus: IDLE\nActivity: Idle\nMode: VIRTUAL","entities":[{"offset":3,"length":24,"type":"bold"}]}}
+---
+[2026-01-21T06:47:42.017Z] REQUEST: post https://api.telegram.org/bot8377716331:AAH-9nvlaWFifdf6NT1UZKEzCjc0gZBR57w/sendMessage
+Payload: [object Object]
+---
+[2026-01-21T06:47:43.273Z] RESPONSE: https://api.telegram.org/bot8377716331:AAH-9nvlaWFifdf6NT1UZKEzCjc0gZBR57w/sendMessage
+Status: 200
+Data: {"ok":true,"result":{"message_id":34,"from":{"id":8377716331,"is_bot":true,"first_name":"AlgoTradesBot","username":"Algo_option_trades_bot"},"chat":{"id":5177480141,"first_name":"Gonath","username":"itsmegonath","type":"private"},"date":1768978063,"text":"🚀 Strategy Engine Resumed \nStatus: IDLE\nActivity: Idle\nMode: VIRTUAL","entities":[{"offset":3,"length":24,"type":"bold"}]}}
+---
