@@ -1206,22 +1206,8 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                             <RotateCcw className="w-3 h-3" /> Re-Entry Pending
                                         </span>
                                         <div className="text-xs font-bold font-mono text-slate-700 flex flex-col leading-tight whitespace-nowrap w-full">
-                                            {reEntryState.originalStrikes?.length > 0 ? (
-                                                <div className="flex justify-between w-full pr-2">
-                                                    {(() => {
-                                                        const ce = reEntryState.originalStrikes.find((l: any) => l.type === 'CE' && l.side === 'SELL');
-                                                        const pe = reEntryState.originalStrikes.find((l: any) => l.type === 'PE' && l.side === 'SELL');
-                                                        return (
-                                                            <>
-                                                                <span className="text-rose-600">CE: {ce ? ce.strike : '...'}</span>
-                                                                <span className="text-emerald-600">PE: {pe ? pe.strike : '...'}</span>
-                                                            </>
-                                                        );
-                                                    })()}
-                                                </div>
-                                            ) : (
-                                                <span>Calculating...</span>
-                                            )}
+                                            <span className="text-blue-600">Dynamic (Spot-Based)</span>
+                                            <span className="text-[9px] text-slate-400 font-medium">Strikes selected at entry</span>
                                         </div>
                                     </>
                                 ) : (

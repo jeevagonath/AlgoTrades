@@ -1520,20 +1520,10 @@ class StrategyEngine {
 
 
             // Execute entry logic
-            if (this.state.reEntry.originalStrikes && this.state.reEntry.originalStrikes.length > 0) {
-                this.addLog(`♻️ [Re-Entry] Restoring ${this.state.reEntry.originalStrikes.length} original positions...`);
-                // Restore strikes but reset execution details
-                this.state.selectedStrikes = this.state.reEntry.originalStrikes.map(leg => ({
-                    ...leg,
-                    entryPrice: 0, // Reset to allow new market entry
-                    ltp: 0,
-                    orderId: undefined,
-                    isAdjusted: false // Reset adjustment status for new cycle
-                }));
-            } else {
-                this.addLog(`⚠️ [Re-Entry] No original strikes found. Falling back to dynamic selection (Target Entry).`);
-                await this.selectStrikes();
-            }
+            // Execute entry logic
+            this.addLog(`🔄 [Re-Entry] executing dynamic strike selection (Spot-based)...`);
+            // We use standard strategy selection logic because spot price might have changed
+            await this.selectStrikes();
 
             await this.placeOrder(false);
 
