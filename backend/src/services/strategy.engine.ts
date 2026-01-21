@@ -126,6 +126,7 @@ class StrategyEngine {
 
             // 1. Load basic state from DB
             const savedState: any = await db.getState();
+            console.log('[DEBUG] Resume Loaded State:', JSON.stringify(savedState, null, 2));
             if (savedState) {
                 this.state.isVirtual = savedState.isVirtual !== undefined ? savedState.isVirtual : true;
                 this.state.isPaused = savedState.isPaused !== undefined ? savedState.isPaused : false;
@@ -586,18 +587,23 @@ class StrategyEngine {
                 throw new Error('No expiries available');
             }
 
-            // 2. Always use NEXT WEEK's expiry (2nd in list)
-            const targetExpiry = this.getTradingExpiry(expiries);
+            // 2. Determine Target Expiry
+            // If explicit expiry provided (e.g. during re-entry), use it.
+            // Otherwise, default to NEXT WEEK's expiry.
+            let targetExpiry = expiryDate;
 
-            this.addLog(`🎯 Auto-selecting NEXT WEEK expiry: ${targetExpiry}`);
-            //console.log(`[Strategy] Trading Expiry: ${targetExpiry} (Current: ${expiries[0]})`);
+            if (!targetExpiry) {
+                targetExpiry = this.getTradingExpiry(expiries);
+                this.addLog(`🎯 Auto-selecting NEXT WEEK expiry: ${targetExpiry}`);
+            } else {
+                this.addLog(`♻️ [Re-Entry] Using PREVIOUS expiry: ${targetExpiry}`);
+            }
 
             // Send Telegram notification
             telegramService.sendMessage(
                 `🎯 <b>Strike Selection Started</b>\n` +
-                `Current Week: ${expiries[0]}\n` +
-                `Trading Week: ${targetExpiry}\n` +
-                `Selecting 8-leg Iron Condor...`
+                `Expiry: ${targetExpiry}\n` +
+                `selecting 8-leg Iron Condor...`
             );
 
             // 3. Get NIFTY Spot to find candidates
@@ -1520,10 +1526,34 @@ class StrategyEngine {
 
 
             // Execute entry logic
-            // Execute entry logic
             this.addLog(`🔄 [Re-Entry] executing dynamic strike selection (Spot-based)...`);
+
+            // Extract expiry from original strikes if available to ensure we stick to the same week
+            let reEntryExpiry: string | undefined = undefined;
+            if (this.state.reEntry.originalStrikes && this.state.reEntry.originalStrikes.length > 0) {
+                // Parse expiry from symbol e.g., NIFTY23JAN26C24000
+                const firstLeg = this.state.reEntry.originalStrikes[0];
+                const match = firstLeg.symbol.match(/NIFTY(\d{2}[A-Z]{3}\d{2})/);
+                if (match && match[1]) {
+                    // Convert 23JAN26 -> 23-JAN-2026 format expected by selectStrikes (or whatever format it uses?)
+                    // Wait, selectStrikes expects normalized format if possible, or matches against getAvailableExpiries.
+                    // The standard option chain format has 23JAN26. 
+                    // Let's pass it as is, but we might need to verify format match.
+                    // getAvailableExpiries returns "13-JAN-2026".
+                    // We need to convert "27JAN26" -> "27-JAN-2026".
+
+                    const rawDate = match[1]; // 23JAN26
+                    const day = rawDate.substring(0, 2);
+                    const month = rawDate.substring(2, 5);
+                    const yearShort = rawDate.substring(5, 7);
+                    reEntryExpiry = `${day}-${month}-20${yearShort}`;
+                    this.addLog(`🔄 [Re-Entry] Detected Original Expiry: ${reEntryExpiry}`);
+                }
+            }
+
             // We use standard strategy selection logic because spot price might have changed
-            await this.selectStrikes();
+            // BUT we enforce the extracted expiry date
+            await this.selectStrikes(reEntryExpiry);
 
             await this.placeOrder(false);
 
