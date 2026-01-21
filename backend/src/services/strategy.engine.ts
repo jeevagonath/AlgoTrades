@@ -1207,7 +1207,7 @@ class StrategyEngine {
                     type: targetScrip.optt as 'CE' | 'PE',
                     side: 'BUY',
                     strike: targetScrip.strprc,
-                    entryPrice: 0, // Market order
+                    entryPrice: quote.lp, // Market order
                     ltp: 0,
                     quantity: lotSize,
                     tier: 2 // Adjustments for Tier 2 Sell should maintain Tier 2 monitoring
