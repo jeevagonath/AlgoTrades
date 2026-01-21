@@ -31,6 +31,8 @@ export const db = {
         if (state.nextAction !== undefined) payload.next_action = state.nextAction;
         if (state.engineActivity !== undefined) payload.engine_activity = state.engineActivity;
         if (state.reEntryCutoffTime !== undefined) payload.re_entry_cutoff_time = state.reEntryCutoffTime;
+        // Fix: Persist re_entry state object
+        if (state.reEntry !== undefined) payload.re_entry = state.reEntry;
 
         //console.log('[DB] Updating state with payload:', JSON.stringify(payload, null, 2));
 
@@ -223,7 +225,8 @@ export const db = {
                 telegramChatId: data.telegram_chat_id,
                 nextAction: data.next_action || '',
                 engineActivity: data.engine_activity || '',
-                reEntryCutoffTime: data.re_entry_cutoff_time || '13:45'
+                reEntryCutoffTime: data.re_entry_cutoff_time || '13:45',
+                reEntry: data.re_entry // Restore reEntry state
             };
         }
         return null;
