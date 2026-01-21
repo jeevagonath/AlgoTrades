@@ -1551,9 +1551,14 @@ class StrategyEngine {
                 }
             }
 
+
+            const expiries = await this.getAvailableExpiries();
+            if (expiries.length === 0) return false;
+            const currentExpiry = expiries[0]; // First expiry = current week
+
             // We use standard strategy selection logic because spot price might have changed
             // BUT we enforce the extracted expiry date
-            await this.selectStrikes(reEntryExpiry);
+            await this.selectStrikes(currentExpiry);
 
             await this.placeOrder(false);
 
