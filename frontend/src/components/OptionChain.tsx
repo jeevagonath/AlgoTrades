@@ -50,7 +50,8 @@ export const OptionChain: React.FC<OptionChainProps> = () => {
             if (res.status === 'success') {
                 setExpiries(res.data);
                 if (res.data.length > 0 && !selectedExpiry) {
-                    setSelectedExpiry(res.data[0]);
+                    // Default to second expiry if available, otherwise first
+                    setSelectedExpiry(res.data[1] || res.data[0]);
                 }
             }
         } catch (err) {
