@@ -192,21 +192,15 @@ export const OptionChain: React.FC<OptionChainProps> = () => {
         <div className="flex flex-col h-full bg-[#f8f9fc] animate-in fade-in duration-500">
             {/* Header Control Panel */}
             <div className="bg-white border-b border-slate-200 px-8 py-5 flex items-center justify-between shadow-sm sticky top-0 z-30">
-                <div className="flex items-center gap-8">
-                    <div>
-                        <div className="flex items-center gap-2">
-                            <h2 className="text-2xl font-black text-slate-900 tracking-tighter">Option Chain</h2>
-                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse mt-1"></div>
+                <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-100 border border-slate-200 shadow-sm">
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Spot</span>
+                            <span className="text-xs font-bold text-slate-900 font-mono">{spotPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                         </div>
-                        <div className="flex items-center gap-4 mt-1">
-                            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Spot</span>
-                                <span className="text-xs font-bold text-slate-900 font-mono tracking-tight">{spotPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                            </div>
-                            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-blue-50 border border-blue-100">
-                                <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Lot Size</span>
-                                <span className="text-xs font-bold text-blue-700 font-mono tracking-tight">{lotSize}</span>
-                            </div>
+                        <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-blue-50 border border-blue-100 shadow-sm">
+                            <span className="text-[9px] font-black text-blue-400 uppercase tracking-widest">Lot</span>
+                            <span className="text-xs font-bold text-blue-700 font-mono">{lotSize}</span>
                         </div>
                     </div>
                 </div>
@@ -256,16 +250,10 @@ export const OptionChain: React.FC<OptionChainProps> = () => {
                 <div className="bg-white border border-slate-200 rounded-2xl shadow-xl shadow-slate-200/50 flex flex-col flex-1 overflow-hidden">
 
                     {/* Table Header Grid */}
-                    <div className="bg-slate-50/80 border-b border-slate-200 grid grid-cols-[1fr_0.8fr_1fr_1.2fr_1.2fr_1.2fr_1fr_0.8fr_1fr] sticky top-0 z-20 backdrop-blur-md">
-                        <div className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Bid</div>
-                        <div className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Qty</div>
-                        <div className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Ask</div>
-                        <div className="px-4 py-4 text-[11px] font-black text-slate-600 uppercase tracking-widest text-center border-l border-slate-200/50">LTP (CALLS)</div>
-                        <div className="px-4 py-4 text-[11px] font-black text-slate-900 uppercase tracking-[0.2em] text-center bg-slate-900 text-white border-x border-slate-900 shadow-lg relative z-10">Strike</div>
-                        <div className="px-4 py-4 text-[11px] font-black text-slate-600 uppercase tracking-widest text-center border-r border-slate-200/50">LTP (PUTS)</div>
-                        <div className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Bid</div>
-                        <div className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Qty</div>
-                        <div className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Ask</div>
+                    <div className="bg-slate-50/80 border-b border-slate-200 grid grid-cols-[1fr_1.2fr_1.2fr] sticky top-0 z-20 backdrop-blur-md">
+                        <div className="px-4 py-3 text-[10px] font-black text-slate-600 uppercase tracking-widest text-center">LTP (CALLS)</div>
+                        <div className="px-4 py-3 text-[10px] font-black text-white uppercase tracking-[0.2em] text-center bg-slate-900 border-x border-slate-900 shadow-lg relative z-10">Strike</div>
+                        <div className="px-4 py-3 text-[10px] font-black text-slate-600 uppercase tracking-widest text-center">LTP (PUTS)</div>
                     </div>
 
                     {/* Table Dynamic Scrollable Body */}
@@ -296,53 +284,34 @@ export const OptionChain: React.FC<OptionChainProps> = () => {
                                 : 'hover:bg-slate-50/80 transition-colors';
 
                             return (
-                                <div key={row.strike} className={`grid grid-cols-[1fr_0.8fr_1fr_1.2fr_1.2fr_1.2fr_1fr_0.8fr_1fr] border-b border-slate-100 transition-all duration-300 ${rowThemeClass}`}>
-                                    {/* Calls Side */}
-                                    <div className="px-4 py-3.5 text-xs text-slate-400 text-center font-mono opacity-60">
-                                        {row.call?.bid.toFixed(2) || '-'}
-                                    </div>
-                                    <div className="px-4 py-3.5 text-xs text-slate-400 text-center font-mono opacity-40">
-                                        {row.call?.qty || '-'}
-                                    </div>
-                                    <div className="px-4 py-3.5 text-xs text-slate-400 text-center font-mono opacity-60">
-                                        {row.call?.ask.toFixed(2) || '-'}
-                                    </div>
-                                    <div className={`px-4 py-3.5 text-sm font-black text-center font-mono border-l border-slate-50 ${row.call && row.call.ltp > row.call.bid ? 'text-emerald-600' : 'text-slate-900'}`}>
+                                <div key={row.strike} className={`grid grid-cols-[1fr_1.2fr_1.2fr] border-b border-slate-100 transition-all duration-300 ${rowThemeClass}`}>
+                                    {/* Calls LTP */}
+                                    <div className={`px-4 py-2.5 text-xs font-bold text-center font-mono border-r border-slate-50 ${row.call && row.call.ltp > row.call.bid ? 'text-emerald-600' : 'text-slate-900'}`}>
                                         {row.call?.ltp.toFixed(2) || '-'}
                                     </div>
 
                                     {/* Center Strike */}
-                                    <div className={`px-4 py-3.5 text-sm font-black text-center font-mono shadow-sm relative z-10 transition-all duration-300 ${isAtmRow ? 'bg-slate-900 text-white scale-[1.05] rounded-sm ring-4 ring-blue-500/10' : 'bg-slate-100/50 text-slate-900 border-x border-slate-200/50'}`}>
+                                    <div className={`px-4 py-2.5 text-xs font-black text-center font-mono shadow-sm relative z-10 transition-all duration-300 ${isAtmRow ? 'bg-slate-900 text-white scale-[1.05] rounded-sm ring-4 ring-blue-500/10' : 'bg-slate-100/50 text-slate-900 border-x border-slate-200/50'}`}>
                                         {row.strike}
-                                        {isAtmRow && <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-blue-500 rounded-full blur-sm animate-pulse"></div>}
                                     </div>
 
-                                    {/* Puts Side */}
-                                    <div className={`px-4 py-3.5 text-sm font-black text-center font-mono border-r border-slate-50 ${row.put && row.put.ltp > row.put.bid ? 'text-emerald-600' : 'text-slate-900'}`}>
+                                    {/* Puts LTP */}
+                                    <div className={`px-4 py-2.5 text-xs font-bold text-center font-mono border-l border-slate-50 ${row.put && row.put.ltp > row.put.bid ? 'text-emerald-600' : 'text-slate-900'}`}>
                                         {row.put?.ltp.toFixed(2) || '-'}
-                                    </div>
-                                    <div className="px-4 py-3.5 text-xs text-slate-400 text-center font-mono opacity-60">
-                                        {row.put?.bid.toFixed(2) || '-'}
-                                    </div>
-                                    <div className="px-4 py-3.5 text-xs text-slate-400 text-center font-mono opacity-40">
-                                        {row.put?.qty || '-'}
-                                    </div>
-                                    <div className="px-4 py-3.5 text-xs text-slate-400 text-center font-mono opacity-60">
-                                        {row.put?.ask.toFixed(2) || '-'}
                                     </div>
                                 </div>
                             );
                         })}
                     </div>
-                </div>
 
-                {/* Footer Info */}
-                <div className="mt-4 flex items-center justify-between opacity-50">
-                    <div className="flex items-center gap-2">
-                        <Clock className="w-3 h-3" />
-                        <span className="text-[10px] font-bold uppercase tracking-widest">Live Updates Connected</span>
+                    {/* Footer Info */}
+                    <div className="mt-4 flex items-center justify-between opacity-50 px-4 pb-4">
+                        <div className="flex items-center gap-2">
+                            <Clock className="w-3 h-3" />
+                            <span className="text-[10px] font-bold uppercase tracking-widest">Live Updates Connected</span>
+                        </div>
+                        <span className="text-[10px] font-bold uppercase tracking-widest">AlgoTrades Pro v2.0</span>
                     </div>
-                    <span className="text-[10px] font-bold uppercase tracking-widest">AlgoTrades Pro v2.0</span>
                 </div>
             </div>
 
