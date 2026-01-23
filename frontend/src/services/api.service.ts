@@ -105,9 +105,9 @@ export const strategyApi = {
         const response = await apiClient.post('/strategy/reset');
         return response.data;
     },
-    getOptionChain: async (symbol: string, strikeprice: number, count: number = 20) => {
+    getOptionChain: async (symbol: string, expiry: string, strikeprice: number, count: number = 20) => {
         const response = await apiClient.get('/strategy/option-chain', {
-            params: { symbol, strikeprice, count }
+            params: { symbol, expiry, strikeprice, count }
         });
         return response.data;
     },

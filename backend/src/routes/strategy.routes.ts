@@ -184,10 +184,10 @@ export async function strategyRoutes(app: FastifyInstance) {
 
     app.get('/option-chain', async (request, reply) => {
         try {
-            const { symbol, strikeprice, count } = request.query as { symbol: string; strikeprice: string; count?: string };
+            const { symbol, expiry, strikeprice, count } = request.query as { symbol: string; expiry: string; strikeprice: string; count?: string };
 
-            if (!symbol || !strikeprice) {
-                return reply.status(400).send({ status: 'error', message: 'Symbol and strikeprice are required' });
+            if (!symbol || !strikeprice || !expiry) {
+                return reply.status(400).send({ status: 'error', message: 'Symbol, expiry and strikeprice are required' });
             }
 
             const { shoonya } = await import('../services/shoonya.service');
@@ -195,9 +195,37 @@ export async function strategyRoutes(app: FastifyInstance) {
                 return reply.status(401).send({ status: 'error', message: 'Not logged in' });
             }
 
-            const data = await shoonya.getOptionChain('NFO', symbol, parseFloat(strikeprice), parseInt(count || '20'));
+            // 1. Helper for Expiry Formatting (copied from engine for route isolation)
+            const formatExpiry = (dateStr: string) => {
+                const parts = dateStr.split('-');
+                if (parts.length < 3) return dateStr;
+                const day = parts[0];
+                const month = parts[1].toUpperCase();
+                const year = parts[2].substring(parts[2].length - 2);
+                return `${day}${month}${year}`;
+            };
+
+            // 2. Determine Rounding Interval
+            const intervalMap: Record<string, number> = {
+                'NIFTY': 50,
+                'BANKNIFTY': 100,
+                'FINNIFTY': 50,
+                'MIDCPNIFTY': 25
+            };
+            const interval = intervalMap[symbol] || 50;
+            const spot = parseFloat(strikeprice);
+            const roundedStrike = Math.round(spot / interval) * interval;
+
+            // 3. Construct Anchor Symbol
+            const formattedDate = formatExpiry(expiry);
+            const anchorTsym = `${symbol}${formattedDate}C${roundedStrike}`;
+
+            //console.log(`[OptionChain] Fetching chain for ${anchorTsym} at ${roundedStrike}...`);
+
+            const data = await shoonya.getOptionChain('NFO', anchorTsym, roundedStrike, parseInt(count || '20'));
             return { status: 'success', data };
         } catch (err: any) {
+            console.error('[OptionChain] Error:', err.message);
             return reply.status(500).send({ status: 'error', message: err.message });
         }
     });

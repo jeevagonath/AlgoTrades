@@ -80,7 +80,7 @@ export const OptionChain: React.FC<OptionChainProps> = () => {
             };
             setLotSize(index === 'NIFTY' ? 65 : lotMap[index] || 1); // Using 65 for Nifty as per user screenshot
 
-            const res = await strategyApi.getOptionChain(index, spotPrice, 30);
+            const res = await strategyApi.getOptionChain(index, selectedExpiry, spotPrice, 30);
             if (res.status === 'success' && res.data) {
                 processChainData(res.data);
             }
