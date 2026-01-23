@@ -2007,3 +2007,10 @@ Payload: [object Object]
 Status: 200
 Data: {"ok":true,"result":{"message_id":34,"from":{"id":8377716331,"is_bot":true,"first_name":"AlgoTradesBot","username":"Algo_option_trades_bot"},"chat":{"id":5177480141,"first_name":"Gonath","username":"itsmegonath","type":"private"},"date":1768978063,"text":"🚀 Strategy Engine Resumed \nStatus: IDLE\nActivity: Idle\nMode: VIRTUAL","entities":[{"offset":3,"length":24,"type":"bold"}]}}
 ---
+[2026-01-22T04:08:48.690Z] REQUEST: post https://api.telegram.org/bot8377716331:AAH-9nvlaWFifdf6NT1UZKEzCjc0gZBR57w/sendMessage
+Payload: [object Object]
+---
+[2026-01-22T04:08:49.508Z] RESPONSE: https://api.telegram.org/bot8377716331:AAH-9nvlaWFifdf6NT1UZKEzCjc0gZBR57w/sendMessage
+Status: 200
+Data: {"ok":true,"result":{"message_id":99,"from":{"id":8377716331,"is_bot":true,"first_name":"AlgoTradesBot","username":"Algo_option_trades_bot"},"chat":{"id":5177480141,"first_name":"Gonath","username":"itsmegonath","type":"private"},"date":1769054928,"text":"🚀 Strategy Engine Resumed \nStatus: IDLE\nActivity: Idle\nMode: VIRTUAL","entities":[{"offset":3,"length":24,"type":"bold"}]}}
+---

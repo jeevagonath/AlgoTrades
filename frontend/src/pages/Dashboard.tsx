@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Activity, ListOrdered, History, Bell, LogOut, TrendingUp, TrendingDown, Clock, Play, Pause, Octagon, Power, Search, Shield, Settings, Save, X, BarChart3, CheckCircle2, Circle, RotateCcw, Code } from 'lucide-react';
-import { socketService } from '@/services/socket.service';
+import { socketService, type SocketStatus } from '@/services/socket.service';
 import { strategyApi, authApi } from '@/services/api.service';
 import { formatTradingViewSymbol, getNiftySpotChartUrl, openTradingViewChart } from '@/utils/tradingview';
 import { formatOptionSymbol } from '@/utils/formatters';
@@ -160,7 +160,7 @@ const PositionRow = ({ leg }: { leg: LegState }) => {
     );
 };
 
-const EngineWorkflow = ({ status, activity }: { status: string, activity: string }) => {
+const EngineWorkflow = ({ status, activity, socketStatus }: { status: string, activity: string, socketStatus: SocketStatus }) => {
     const steps = [
         { id: 'EVAL', label: 'Daily Evaluation', desc: '9:00 AM Check', icon: '🔍', color: 'blue' },
         { id: 'WAIT', label: 'Waiting for Expiry', desc: 'Non-expiry Day', icon: '⏳', color: 'amber' },
@@ -203,8 +203,24 @@ const EngineWorkflow = ({ status, activity }: { status: string, activity: string
                     <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
                     Engine Workflow
                 </h3>
-                <div className="text-[9px] font-bold px-2 py-1 rounded-full bg-blue-100 text-blue-700 uppercase tracking-wide">
-                    {status}
+                <div className="flex flex-col items-end gap-1.5">
+                    <div className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-blue-50 text-blue-600 border border-blue-100 uppercase tracking-wide">
+                        {status}
+                    </div>
+                    <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md border ${socketStatus.connected ? 'bg-emerald-50/50 border-emerald-100' : 'bg-rose-50/50 border-rose-100'}`}>
+                        <div className={`w-1.5 h-1.5 rounded-full ${socketStatus.connected ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`}></div>
+                        <span className={`text-[9px] font-black uppercase tracking-widest ${socketStatus.connected ? 'text-emerald-700' : 'text-rose-700'}`}>
+                            {socketStatus.connected ? 'Live' : 'Offline'}
+                        </span>
+                        {socketStatus.connected && (
+                            <>
+                                <div className="w-[1px] h-2 bg-emerald-200 mx-0.5"></div>
+                                <span className="text-[9px] font-black text-emerald-700 uppercase tracking-widest">
+                                    {socketStatus.subscribedCount} Tokens
+                                </span>
+                            </>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -410,6 +426,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
     const [userDetails, setUserDetails] = useState<any>(null);
     const [margins, setMargins] = useState<any>(null);
     const [showClientModal, setShowClientModal] = useState(false);
+    const [socketStatus, setSocketStatus] = useState<SocketStatus>({ connected: false, subscribedCount: 0 });
 
     // Dynamic PnL calculation from individual legs
     const realTimePnL = useMemo(() => {
@@ -423,6 +440,9 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
 
     useEffect(() => {
         socketService.connect();
+        const unmountStatus = socketService.onStatusUpdate((status) => {
+            setSocketStatus(status);
+        });
 
         const fetchData = async () => {
             try {
@@ -627,6 +647,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
         });
 
         return () => {
+            unmountStatus();
             // Cleanup socket listeners if needed
             socketService.off('system_log');
             socketService.off('strategy_state');
@@ -1527,7 +1548,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
 
                     {/* Sidebar: Workflow & Logs */}
                     <div className="lg:col-span-1 space-y-4">
-                        <EngineWorkflow status={status} activity={engineActivity} />
+                        <EngineWorkflow status={status} activity={engineActivity} socketStatus={socketStatus} />
                     </div>
                 </div>
             </main >
