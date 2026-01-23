@@ -34,12 +34,13 @@ export const OptionChain: React.FC<OptionChainProps> = () => {
     const [rows, setRows] = useState<OptionRow[]>([]);
     const [tokens, setTokens] = useState<string[]>([]);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
-    const atmRowRef = useRef<HTMLDivElement>(null);
+    const scrolledRef = useRef(false);
 
     const indices = ['NIFTY', 'BANKNIFTY', 'FINNIFTY', 'MIDCPNIFTY'];
 
     // Initial Fetch
     useEffect(() => {
+        scrolledRef.current = false;
         fetchExpiries();
         fetchSpot();
     }, [index]);
@@ -134,21 +135,21 @@ export const OptionChain: React.FC<OptionChainProps> = () => {
 
     useEffect(() => {
         if (selectedExpiry && spotPrice) {
+            scrolledRef.current = false;
             fetchChain();
         }
     }, [selectedExpiry, spotPrice, index]);
 
     // Auto-scroll to ATM
     useEffect(() => {
-        if (rows.length > 0 && !loading) {
+        if (rows.length > 0 && !loading && !scrolledRef.current) {
             setTimeout(() => {
                 const atmElement = document.getElementById('atm-row');
                 if (atmElement && scrollContainerRef.current) {
                     const container = scrollContainerRef.current;
-                    const elementRect = atmElement.getBoundingClientRect();
-                    const containerRect = container.getBoundingClientRect();
                     const scrollPos = (atmElement.offsetTop - container.offsetTop) - (container.clientHeight / 2) + (atmElement.clientHeight / 2);
                     container.scrollTo({ top: scrollPos, behavior: 'smooth' });
+                    scrolledRef.current = true;
                 }
             }, 100);
         }
