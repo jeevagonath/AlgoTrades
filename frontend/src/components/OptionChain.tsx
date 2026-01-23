@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { RefreshCcw, TrendingUp, TrendingDown, Clock, Search, ChevronDown, Activity } from 'lucide-react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
+import { RefreshCcw, TrendingUp, TrendingDown, Clock, Search, ChevronDown, Activity, Info } from 'lucide-react';
 import { strategyApi } from '@/services/api.service';
 import { socketService } from '@/services/socket.service';
 
@@ -33,6 +33,8 @@ export const OptionChain: React.FC<OptionChainProps> = () => {
     const [loading, setLoading] = useState(false);
     const [rows, setRows] = useState<OptionRow[]>([]);
     const [tokens, setTokens] = useState<string[]>([]);
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const atmRowRef = useRef<HTMLDivElement>(null);
 
     const indices = ['NIFTY', 'BANKNIFTY', 'FINNIFTY', 'MIDCPNIFTY'];
 
@@ -135,6 +137,22 @@ export const OptionChain: React.FC<OptionChainProps> = () => {
         }
     }, [selectedExpiry, spotPrice, index]);
 
+    // Auto-scroll to ATM
+    useEffect(() => {
+        if (rows.length > 0 && !loading) {
+            setTimeout(() => {
+                const atmElement = document.getElementById('atm-row');
+                if (atmElement && scrollContainerRef.current) {
+                    const container = scrollContainerRef.current;
+                    const elementRect = atmElement.getBoundingClientRect();
+                    const containerRect = container.getBoundingClientRect();
+                    const scrollPos = (atmElement.offsetTop - container.offsetTop) - (container.clientHeight / 2) + (atmElement.clientHeight / 2);
+                    container.scrollTo({ top: scrollPos, behavior: 'smooth' });
+                }
+            }, 100);
+        }
+    }, [rows, loading]);
+
     // WebSocket Price Updates
     useEffect(() => {
         const handlePriceUpdate = (data: any) => {
@@ -193,14 +211,20 @@ export const OptionChain: React.FC<OptionChainProps> = () => {
             {/* Header Control Panel */}
             <div className="bg-white border-b border-slate-200 px-8 py-5 flex items-center justify-between shadow-sm sticky top-0 z-30">
                 <div className="flex items-center gap-6">
-                    <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-100 border border-slate-200 shadow-sm">
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Spot</span>
-                            <span className="text-xs font-bold text-slate-900 font-mono">{spotPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                    <div className="flex flex-col">
+                        <div className="flex items-center gap-2 mb-1">
+                            <h2 className="text-xl font-black text-slate-900 tracking-tight">Option Chain</h2>
+                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
                         </div>
-                        <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-blue-50 border border-blue-100 shadow-sm">
-                            <span className="text-[9px] font-black text-blue-400 uppercase tracking-widest">Lot</span>
-                            <span className="text-xs font-bold text-blue-700 font-mono">{lotSize}</span>
+                        <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 shadow-sm">
+                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Spot</span>
+                                <span className="text-xs font-bold text-slate-900 font-mono tracking-tight">{spotPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-blue-50 border border-blue-100 shadow-sm">
+                                <span className="text-[9px] font-black text-blue-400 uppercase tracking-widest">Lot</span>
+                                <span className="text-xs font-bold text-blue-700 font-mono tracking-tight">{lotSize}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -257,7 +281,7 @@ export const OptionChain: React.FC<OptionChainProps> = () => {
                     </div>
 
                     {/* Table Dynamic Scrollable Body */}
-                    <div className="flex-1 overflow-y-auto option-chain-body custom-scrollbar relative">
+                    <div ref={scrollContainerRef} className="flex-1 overflow-y-auto option-chain-body custom-scrollbar relative">
                         {loading && (
                             <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] z-50 flex items-center justify-center">
                                 <div className="flex flex-col items-center gap-3">
@@ -279,14 +303,22 @@ export const OptionChain: React.FC<OptionChainProps> = () => {
 
                         {rows.map((row) => {
                             const isAtmRow = isATM(row.strike);
-                            const rowThemeClass = isAtmRow
-                                ? 'bg-blue-50/50 hover:bg-blue-100/50'
-                                : 'hover:bg-slate-50/80 transition-colors';
+                            const strikeVal = parseFloat(row.strike);
+
+                            // Highlighting Logic: OTM is shaded/colored, ITM is white
+                            // Calls OTM: Strike > Spot
+                            // Puts OTM: Strike < Spot
+                            const isCallOTM = strikeVal > spotPrice;
+                            const isPutOTM = strikeVal < spotPrice;
 
                             return (
-                                <div key={row.strike} className={`grid grid-cols-[1fr_1.2fr_1.2fr] border-b border-slate-100 transition-all duration-300 ${rowThemeClass}`}>
+                                <div
+                                    key={row.strike}
+                                    id={isAtmRow ? 'atm-row' : undefined}
+                                    className={`grid grid-cols-[1fr_1.2fr_1.2fr] border-b border-slate-100 transition-all duration-300 ${isAtmRow ? 'bg-blue-50/30' : 'hover:bg-slate-50/80'}`}
+                                >
                                     {/* Calls LTP */}
-                                    <div className={`px-4 py-2.5 text-xs font-bold text-center font-mono border-r border-slate-50 ${row.call && row.call.ltp > row.call.bid ? 'text-emerald-600' : 'text-slate-900'}`}>
+                                    <div className={`px-4 py-2.5 text-xs font-bold text-center font-mono border-r border-slate-50 ${isCallOTM ? 'bg-amber-50/30 text-slate-500' : 'bg-white text-slate-900'}`}>
                                         {row.call?.ltp.toFixed(2) || '-'}
                                     </div>
 
@@ -296,7 +328,7 @@ export const OptionChain: React.FC<OptionChainProps> = () => {
                                     </div>
 
                                     {/* Puts LTP */}
-                                    <div className={`px-4 py-2.5 text-xs font-bold text-center font-mono border-l border-slate-50 ${row.put && row.put.ltp > row.put.bid ? 'text-emerald-600' : 'text-slate-900'}`}>
+                                    <div className={`px-4 py-2.5 text-xs font-bold text-center font-mono border-l border-slate-50 ${isPutOTM ? 'bg-amber-50/30 text-slate-500' : 'bg-white text-slate-900'}`}>
                                         {row.put?.ltp.toFixed(2) || '-'}
                                     </div>
                                 </div>
