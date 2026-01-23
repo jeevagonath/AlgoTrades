@@ -160,7 +160,7 @@ const PositionRow = ({ leg }: { leg: LegState }) => {
     );
 };
 
-const EngineWorkflow = ({ status, activity, socketStatus }: { status: string, activity: string, socketStatus: SocketStatus }) => {
+const EngineWorkflow = ({ status, activity }: { status: string, activity: string }) => {
     const steps = [
         { id: 'EVAL', label: 'Daily Evaluation', desc: '9:00 AM Check', icon: '🔍', color: 'blue' },
         { id: 'WAIT', label: 'Waiting for Expiry', desc: 'Non-expiry Day', icon: '⏳', color: 'amber' },
@@ -203,24 +203,8 @@ const EngineWorkflow = ({ status, activity, socketStatus }: { status: string, ac
                     <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
                     Engine Workflow
                 </h3>
-                <div className="flex flex-col items-end gap-1.5">
-                    <div className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-blue-50 text-blue-600 border border-blue-100 uppercase tracking-wide">
-                        {status}
-                    </div>
-                    <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md border ${socketStatus.connected ? 'bg-emerald-50/50 border-emerald-100' : 'bg-rose-50/50 border-rose-100'}`}>
-                        <div className={`w-1.5 h-1.5 rounded-full ${socketStatus.connected ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`}></div>
-                        <span className={`text-[9px] font-black uppercase tracking-widest ${socketStatus.connected ? 'text-emerald-700' : 'text-rose-700'}`}>
-                            {socketStatus.connected ? 'Live' : 'Offline'}
-                        </span>
-                        {socketStatus.connected && (
-                            <>
-                                <div className="w-[1px] h-2 bg-emerald-200 mx-0.5"></div>
-                                <span className="text-[9px] font-black text-emerald-700 uppercase tracking-widest">
-                                    {socketStatus.subscribedCount} Tokens
-                                </span>
-                            </>
-                        )}
-                    </div>
+                <div className="text-[9px] font-bold px-2 py-1 rounded-full bg-blue-100 text-blue-700 uppercase tracking-wide">
+                    {status}
                 </div>
             </div>
 
@@ -1259,11 +1243,20 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
 
                 {/* Row 1: Engine & Margins & Nifty */}
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                    {/* 1. Engine Activity */}
-                    <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-col justify-center">
-                        <div className="flex items-center gap-2 mb-1">
-                            <Activity className="w-3.5 h-3.5 text-blue-500" />
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Engine Activity</span>
+                    <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-col justify-center relative overflow-hidden">
+                        <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center gap-2">
+                                <Activity className="w-3.5 h-3.5 text-blue-500" />
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Engine Activity</span>
+                            </div>
+
+                            {/* WebSocket Status Indicator */}
+                            <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md border border-slate-100 ${socketStatus.connected ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                                <div className={`w-1 h-1 rounded-full ${socketStatus.connected ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`}></div>
+                                <span className="text-[8px] font-black uppercase tracking-tighter">
+                                    {socketStatus.connected ? `${socketStatus.subscribedCount} Live` : 'Offline'}
+                                </span>
+                            </div>
                         </div>
                         <div className="text-sm font-bold text-slate-700 truncate" title={engineActivity}>{engineActivity || 'Ready'}</div>
                     </div>
@@ -1548,7 +1541,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
 
                     {/* Sidebar: Workflow & Logs */}
                     <div className="lg:col-span-1 space-y-4">
-                        <EngineWorkflow status={status} activity={engineActivity} socketStatus={socketStatus} />
+                        <EngineWorkflow status={status} activity={engineActivity} />
                     </div>
                 </div>
             </main >
