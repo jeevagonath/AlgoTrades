@@ -1588,6 +1588,7 @@ class StrategyEngine {
     }
 
     async resumeMonitoring() {
+        this.addLog('▶️ Strategy RESUMED by User.' + this.state.isPaused);
         if (!this.state.isPaused) return;
         this.state.isPaused = false;
         this.addLog('▶️ Strategy RESUMED by User.');
