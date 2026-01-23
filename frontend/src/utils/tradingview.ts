@@ -8,30 +8,31 @@ const MONTH_MAP: { [key: string]: string } = {
 
 /**
  * Converts option symbol to TradingView format
- * Input: "NIFTY24JAN26C23000"
- * Output: "NSE:NIFTY260113C23000"
+ * Input: "NIFTY24JAN26C23000", "BANKNIFTY24JAN26C48000"
+ * Output: "NSE:NIFTY260124C23000", "NSE:BANKNIFTY260124C48000"
  */
 export const formatTradingViewSymbol = (symbol: string): string => {
     try {
         // Extract components from symbol
-        // Format: NIFTY{DD}{MMM}{YY}{C/P}{STRIKE}
-        const match = symbol.match(/NIFTY(\d{2})([A-Z]{3})(\d{2})([CP])(\d+)/);
+        // Format: {INDEX}{DD}{MMM}{YY}{C/P}{STRIKE}
+        // Example match for NIFTY: NIFTY24JAN26C23000
+        const match = symbol.match(/^([A-Z]+)(\d{2})([A-Z]{3})(\d{2})([CP])(\d+)/);
 
         if (!match) {
             console.warn('Invalid symbol format:', symbol);
             return '';
         }
 
-        const [, day, monthName, year, optionType, strike] = match;
-        const month = MONTH_MAP[monthName];
+        const [, index, day, monthName, year, optionType, strike] = match;
+        const month = MONTH_MAP[monthName.toUpperCase()];
 
         if (!month) {
             console.warn('Invalid month in symbol:', monthName);
             return '';
         }
 
-        // Format: NSE:NIFTY{YY}{MM}{DD}{C/P}{STRIKE}
-        return `NSE:NIFTY${year}${month}${day}${optionType}${strike}`;
+        // Format for TradingView: NSE:{INDEX}{YY}{MM}{DD}{C/P}{STRIKE}
+        return `NSE:${index}${year}${month}${day}${optionType}${strike}`;
     } catch (error) {
         console.error('Error formatting TradingView symbol:', error);
         return '';
