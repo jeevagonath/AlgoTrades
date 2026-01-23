@@ -8,6 +8,8 @@ import { useAnimatedValue, useFlashOnChange } from '@/hooks/useAnimations';
 import { CalendarHeatmap } from '@/components/CalendarHeatmap';
 import { PositionDetailsModal } from '@/components/PositionDetailsModal';
 import { OptionChain } from '@/components/OptionChain';
+import { useTheme } from '@/hooks/useTheme';
+import { Sun, Moon } from 'lucide-react';
 import APITester from './APITester';
 
 // --- Types ---
@@ -69,11 +71,11 @@ const AnimatedMetricCard = ({
         else flashClass = 'flash-neutral';
     }
 
-    const valueColor = type === 'positive' ? 'text-emerald-600' : type === 'negative' ? 'text-rose-600' : 'text-slate-900';
+    const valueColor = type === 'positive' ? 'text-emerald-600 dark:text-emerald-400' : type === 'negative' ? 'text-rose-600 dark:text-rose-400' : 'text-foreground';
 
     return (
-        <div className={`bg-white border border-slate-200 rounded-xl p-4 space-y-1 shadow-sm relative overflow-hidden group transition-all duration-200 ${flashClass} ${isSignificant && isFlashing ? 'pulse-update' : ''} ${className}`}>
-            <div className="flex items-center justify-between text-slate-400">
+        <div className={`bg-card border border-border rounded-xl p-4 space-y-1 shadow-sm relative overflow-hidden group transition-all duration-300 ${flashClass} ${isSignificant && isFlashing ? 'pulse-update' : ''} ${className}`}>
+            <div className="flex items-center justify-between text-slate-400 dark:text-slate-500">
                 <span className="text-[10px] font-bold uppercase tracking-wider">{label}</span>
                 {Icon && <Icon className={`w-3.5 h-3.5 transition-colors duration-300 ${type === 'positive' ? 'text-emerald-500' : type === 'negative' ? 'text-rose-500' : 'text-blue-500'}`} />}
             </div>
@@ -89,26 +91,26 @@ const NiftyTicker = ({ data }: { data: any }) => {
     const isFlashing = useFlashOnChange(data.price);
 
     return (
-        <div className={`bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between shadow-sm overflow-hidden group transition-all duration-200 ${isFlashing ? 'flash-neutral' : ''}`}>
+        <div className={`bg-card border border-border rounded-xl p-4 flex items-center justify-between shadow-sm overflow-hidden group transition-all duration-300 ${isFlashing ? 'flash-neutral' : ''}`}>
             <div className="flex flex-col">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">NIFTY 50</span>
-                <span className="text-lg font-black text-slate-900 font-mono tracking-tighter transition-all duration-300">
+                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">NIFTY 50</span>
+                <span className="text-lg font-black text-foreground font-mono tracking-tighter transition-all duration-300">
                     {animatedPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                 </span>
             </div>
             <div className="flex items-center gap-3">
                 <div className="flex flex-col items-end">
-                    <span className={`text-xs font-bold font-mono transition-colors duration-300 ${data.change >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                    <span className={`text-xs font-bold font-mono transition-colors duration-300 ${data.change >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
                         {data.change > 0 ? '+' : ''}{data.change.toFixed(2)}
                     </span>
-                    <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold mt-1 transition-colors duration-300 ${data.change >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
+                    <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold mt-1 transition-colors duration-300 ${data.change >= 0 ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300' : 'bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-300'}`}>
                         {data.change >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
                         {Math.abs(data.changePercent).toFixed(2)}%
                     </div>
                 </div>
                 <button
                     onClick={() => openTradingViewChart('NSE:NIFTY')}
-                    className="p-2 rounded-lg hover:bg-blue-50 text-slate-400 hover:text-blue-600 transition-colors"
+                    className="p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 text-slate-400 hover:text-blue-600 transition-colors"
                     title="View NIFTY Chart"
                 >
                     <BarChart3 className="w-5 h-5" />
@@ -123,23 +125,23 @@ const PositionRow = ({ leg }: { leg: LegState }) => {
     const isFlashing = useFlashOnChange(leg.ltp);
 
     return (
-        <tr className={`hover:bg-slate-50/50 transition-all duration-200 ${isFlashing ? 'flash-neutral' : ''}`}>
+        <tr className={`hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-all duration-200 ${isFlashing ? 'flash-neutral' : ''}`}>
             <td className="px-6 py-4">
-                <div className="font-bold text-sm text-slate-900">{formatOptionSymbol(leg.symbol)}</div>
-                <div className="text-[10px] text-slate-400 font-medium">{leg.token}</div>
+                <div className="font-bold text-sm text-foreground">{formatOptionSymbol(leg.symbol)}</div>
+                <div className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">{leg.token}</div>
             </td>
             <td className="px-6 py-4 text-center">
-                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${leg.side === 'BUY' ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'bg-amber-50 text-amber-700 border border-amber-100'}`}>
+                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${leg.side === 'BUY' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border border-blue-100 dark:border-blue-800' : 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-100 dark:border-amber-800'}`}>
                     {leg.side}
                 </span>
             </td>
-            <td className="px-6 py-4 text-center font-mono text-sm text-slate-600">{leg.strike}</td>
-            <td className="px-6 py-4 text-center font-mono text-sm font-bold text-slate-700">{leg.quantity}</td>
-            <td className="px-6 py-4 text-center font-mono text-sm text-slate-800">₹{leg.entryPrice || '0.00'}</td>
-            <td className={`px-6 py-4 text-right font-mono text-sm font-bold tracking-tight transition-colors duration-300 ${leg.ltp > leg.entryPrice ? (leg.side === 'BUY' ? 'text-emerald-600' : 'text-rose-600') : (leg.side === 'BUY' ? 'text-rose-600' : 'text-emerald-600')}`}>
+            <td className="px-6 py-4 text-center font-mono text-sm text-slate-600 dark:text-slate-400">{leg.strike}</td>
+            <td className="px-6 py-4 text-center font-mono text-sm font-bold text-slate-700 dark:text-slate-300">{leg.quantity}</td>
+            <td className="px-6 py-4 text-center font-mono text-sm text-slate-800 dark:text-slate-300">₹{leg.entryPrice || '0.00'}</td>
+            <td className={`px-6 py-4 text-right font-mono text-sm font-bold tracking-tight transition-colors duration-300 ${leg.ltp > leg.entryPrice ? (leg.side === 'BUY' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400') : (leg.side === 'BUY' ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400')}`}>
                 ₹{animatedLtp.toFixed(2)}
             </td>
-            <td className={`px-6 py-4 text-right font-mono text-sm font-bold ${((leg.ltp - leg.entryPrice) * (leg.side === 'BUY' ? 1 : -1)) >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+            <td className={`px-6 py-4 text-right font-mono text-sm font-bold ${((leg.ltp - leg.entryPrice) * (leg.side === 'BUY' ? 1 : -1)) >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
                 ₹{((leg.ltp - leg.entryPrice) * leg.quantity * (leg.side === 'BUY' ? 1 : -1)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </td>
             <td className="px-6 py-4 text-center">
@@ -150,7 +152,7 @@ const PositionRow = ({ leg }: { leg: LegState }) => {
                             openTradingViewChart(tvSymbol);
                         }
                     }}
-                    className="p-1.5 rounded-lg hover:bg-blue-50 text-slate-400 hover:text-blue-600 transition-colors"
+                    className="p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 text-slate-400 hover:text-blue-600 transition-colors"
                     title="View Chart"
                 >
                     <BarChart3 className="w-4 h-4" />
@@ -197,13 +199,13 @@ const EngineWorkflow = ({ status, activity }: { status: string, activity: string
     };
 
     return (
-        <div className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-xl p-6 shadow-sm flex flex-col h-full">
-            <div className="flex items-center justify-between mb-6 border-b border-slate-100 pb-3">
-                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+        <div className="bg-gradient-to-br from-card to-background border border-border rounded-xl p-6 shadow-sm flex flex-col h-full transition-colors duration-300">
+            <div className="flex items-center justify-between mb-6 border-b border-border pb-3">
+                <h3 className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
                     Engine Workflow
                 </h3>
-                <div className="text-[9px] font-bold px-2 py-1 rounded-full bg-blue-100 text-blue-700 uppercase tracking-wide">
+                <div className="text-[9px] font-bold px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 uppercase tracking-wide">
                     {status}
                 </div>
             </div>
@@ -219,13 +221,13 @@ const EngineWorkflow = ({ status, activity }: { status: string, activity: string
                             {idx !== steps.length - 1 && (
                                 <div className={`absolute left-[13px] top-7 w-[2px] h-5 transition-all duration-500 ${isDone ? 'bg-gradient-to-b from-emerald-500 to-emerald-400' :
                                     isCurrent ? 'bg-gradient-to-b from-blue-500 to-blue-300' :
-                                        'bg-slate-200'
+                                        'bg-slate-200 dark:bg-slate-800'
                                     }`} />
                             )}
 
-                            <div className={`mt-0.5 w-7 h-7 rounded-full border-2 flex items-center justify-center z-10 transition-all duration-500 text-sm ${isDone ? 'bg-emerald-500 border-emerald-500 shadow-md shadow-emerald-200' :
-                                isCurrent ? `bg-white ${getStepColor(step.color, 'border')} ring-4 ${getStepColor(step.color, 'ring')} shadow-md` :
-                                    'bg-white border-slate-200'
+                            <div className={`mt-0.5 w-7 h-7 rounded-full border-2 flex items-center justify-center z-10 transition-all duration-500 text-sm ${isDone ? 'bg-emerald-500 border-emerald-500 shadow-md shadow-emerald-200 dark:shadow-none' :
+                                isCurrent ? `bg-background dark:bg-card ${getStepColor(step.color, 'border')} ring-4 ${getStepColor(step.color, 'ring')} shadow-md` :
+                                    'bg-background dark:bg-card border-slate-200 dark:border-slate-800'
                                 }`}>
                                 {isDone ? (
                                     <CheckCircle2 className="w-4 h-4 text-white" />
@@ -238,13 +240,13 @@ const EngineWorkflow = ({ status, activity }: { status: string, activity: string
 
                             <div className="flex-1 pt-0.5">
                                 <div className={`text-xs font-bold leading-tight transition-colors duration-300 ${isCurrent ? getStepColor(step.color, 'text') :
-                                    isDone ? 'text-slate-700' :
-                                        'text-slate-400'
+                                    isDone ? 'text-foreground' :
+                                        'text-slate-400 dark:text-slate-500'
                                     }`}>
                                     {step.label}
                                 </div>
 
-                                <div className={`text-[10px] font-medium mt-1 leading-tight ${isCurrent ? 'text-slate-600' : 'text-slate-400'
+                                <div className={`text-[10px] font-medium mt-1 leading-tight ${isCurrent ? 'text-slate-600 dark:text-slate-400' : 'text-slate-400 dark:text-slate-500'
                                     }`}>
                                     {isCurrent ? (
                                         <div className="flex items-center gap-1">
@@ -345,6 +347,7 @@ const TaskTimer = ({ taskText }: { taskText: string }) => {
 };
 
 const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
+    const { theme, toggleTheme } = useTheme();
     const [pnl, setPnl] = useState(0);
     const [peakProfit, setPeakProfit] = useState(0);
     const [peakLoss, setPeakLoss] = useState(0);
@@ -816,26 +819,26 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
     };
 
     return (
-        <div className="min-h-screen bg-[#f8f9fc] text-slate-900 flex flex-col font-sans">
+        <div className="min-h-screen bg-background text-foreground flex flex-col font-sans transition-colors duration-300">
             {/* Minimalist Top Navigation */}
-            <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200">
+            <nav className="sticky top-0 z-50 bg-card/80 backdrop-blur-md border-b border-border transition-colors duration-300">
                 <div className="max-w-[1600px] mx-auto px-6 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-8">
                         <div className="flex items-center gap-2.5">
-                            <div className="p-1 bg-white border border-slate-100 rounded-lg shadow-sm overflow-hidden">
+                            <div className="p-1 bg-card border border-border rounded-lg shadow-sm overflow-hidden transition-colors">
                                 <img src="/logo.png" alt="Logo" className="w-7 h-7 object-contain" />
                             </div>
-                            <span className="text-lg font-bold tracking-tight text-slate-900">
+                            <span className="text-lg font-bold tracking-tight text-foreground">
                                 AlgoTrades
                             </span>
                         </div>
 
                         {/* Global Status Badge */}
-                        <div className={`flex items-center gap-2 px-2.5 py-1 rounded-md text-[10px] font-bold border transition-colors ${status === 'ACTIVE' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' :
-                            status === 'ENTRY_DONE' ? 'bg-blue-50 border-blue-200 text-blue-700' :
-                                status === 'EXIT_DONE' ? 'bg-amber-50 border-amber-200 text-amber-700' :
-                                    status === 'FORCE_EXITED' ? 'bg-rose-50 border-rose-200 text-rose-700' :
-                                        'bg-slate-50 border-slate-200 text-slate-600'
+                        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-[10px] font-black tracking-widest transition-all duration-300 ${status === 'ACTIVE' ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 shadow-sm' :
+                            status === 'ENTRY_DONE' ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400' :
+                                status === 'EXIT_DONE' ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400' :
+                                    status === 'FORCE_EXITED' ? 'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-400' :
+                                        'bg-slate-50 dark:bg-slate-800/50 border-border text-slate-600 dark:text-slate-400'
                             }`}>
                             <span className={`w-1.5 h-1.5 rounded-full ${status === 'ACTIVE' ? 'bg-emerald-500' : 'bg-slate-400'}`} />
                             {status.replace(/_/g, ' ')}
@@ -845,7 +848,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                         {/* Control Center */}
                         <div className="flex items-center gap-4">
                             {/* Control Center */}
-                            <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-lg border border-slate-200">
+                            <div className="flex items-center gap-2 bg-background/50 p-1 rounded-lg border border-border transition-colors">
                                 {/* Pause/Resume */}
                                 <button
                                     onClick={async () => {
@@ -862,8 +865,8 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                         } catch (e: any) { addLog(`Error: ${e.message}`); }
                                     }}
                                     className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-[10px] font-bold transition-all ${isPaused
-                                        ? 'bg-amber-100 text-amber-700 border border-amber-200 shadow-sm'
-                                        : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                                        ? 'bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800 shadow-sm'
+                                        : 'bg-card text-slate-600 dark:text-slate-400 border border-border hover:bg-slate-50 dark:hover:bg-slate-800'
                                         }`}
                                 >
                                     {isPaused ? <Play className="w-3.5 h-3.5 fill-current" /> : <Pause className="w-3.5 h-3.5" />}
@@ -881,7 +884,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                             addLog('✅ Kill Switch Executed.');
                                         } catch (e: any) { addLog(`❌ failed: ${e.message}`); }
                                     }}
-                                    className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100 transition-all text-[10px] font-bold"
+                                    className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 hover:bg-rose-100 dark:hover:bg-rose-900/30 transition-all text-[10px] font-bold"
                                 >
                                     <Octagon className="w-3.5 h-3.5" />
                                     KILL SWITCH
@@ -916,7 +919,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                             </div>
 
                             {/* Navigation Tabs */}
-                            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
+                            <div className="flex items-center gap-1 bg-background dark:bg-slate-900/50 p-1.5 rounded-xl border border-border mt-1 shadow-inner">
                                 {[
                                     { id: 'positions', label: 'Positions', icon: ListOrdered },
                                     { id: 'orders', label: 'Orders', icon: History },
@@ -928,9 +931,9 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                     <button
                                         key={tab.id}
                                         onClick={() => setActiveTab(tab.id as any)}
-                                        className={`px-3 py-1.5 rounded-md text-[10px] font-bold transition-all ${activeTab === tab.id
-                                            ? 'bg-white text-blue-600 shadow-sm border border-slate-200'
-                                            : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
+                                        className={`px-4 py-2 rounded-lg text-[10px] font-black transition-all duration-300 tracking-wider uppercase ${activeTab === tab.id
+                                            ? 'bg-blue-600 text-white shadow-lg border-blue-500 scale-[1.02]'
+                                            : 'text-slate-500 dark:text-slate-500 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800/50'
                                             }`}
                                     >
                                         <div className="flex items-center gap-1.5">
@@ -941,12 +944,19 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                 ))}
                             </div>
 
-                            <div className="w-px h-6 bg-slate-200" />
+                            <div className="w-px h-6 bg-border" />
 
                             <div className="flex items-center gap-2">
                                 <button
+                                    onClick={toggleTheme}
+                                    className="p-2 rounded-lg border bg-card border-border text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
+                                    title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+                                >
+                                    {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+                                </button>
+                                <button
                                     onClick={() => setShowClientModal(true)}
-                                    className="p-2 rounded-lg border bg-white border-slate-200 text-slate-500 hover:bg-slate-50"
+                                    className="p-2 rounded-lg border bg-card border-border text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
                                     title="Account Details"
                                 >
                                     <Shield className="w-4 h-4" />
@@ -954,15 +964,15 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                 <button
                                     onClick={() => setShowSettings(!showSettings)}
                                     className={`p-2 rounded-lg border transition-all ${showSettings
-                                        ? 'bg-blue-50 border-blue-200 text-blue-600'
-                                        : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'
+                                        ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400'
+                                        : 'bg-card border-border text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                                         }`}
                                 >
                                     <Settings className="w-4 h-4" />
                                 </button>
                                 <button
                                     onClick={handleLogout}
-                                    className="flex items-center gap-1.5 px-3 py-2 text-slate-500 hover:text-rose-600 transition-colors text-[10px] font-bold uppercase tracking-wider"
+                                    className="flex items-center gap-1.5 px-3 py-2 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors text-[10px] font-bold uppercase tracking-wider"
                                 >
                                     <LogOut className="w-3.5 h-3.5" />
                                     Logout
@@ -976,13 +986,13 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
             {/* Settings Overlay */}
             {showSettings && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white border border-slate-200 w-full max-w-md rounded-2xl shadow-2xl p-8 space-y-8 animate-in zoom-in-95 duration-200 max-h-[85vh] overflow-y-auto">
+                    <div className="bg-card border border-border w-full max-w-md rounded-2xl shadow-2xl p-8 space-y-8 animate-in zoom-in-95 duration-200 max-h-[85vh] overflow-y-auto transition-colors">
                         <div className="flex items-center justify-between">
-                            <h2 className="text-xl font-bold flex items-center gap-3 text-slate-900">
+                            <h2 className="text-xl font-bold flex items-center gap-3 text-foreground">
                                 <Settings className="text-blue-600" />
                                 Strategy Settings
                             </h2>
-                            <button onClick={() => setShowSettings(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                            <button onClick={() => setShowSettings(false)} className="text-slate-400 hover:text-foreground transition-colors">
                                 <X className="w-6 h-6" />
                             </button>
                         </div>
@@ -995,7 +1005,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                         type="time"
                                         value={settings.entryTime}
                                         onChange={e => setSettings({ ...settings, entryTime: e.target.value })}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm font-bold text-blue-600 outline-none focus:border-blue-500 transition-colors"
+                                        className="w-full bg-background dark:bg-slate-900/50 border border-border rounded-lg px-4 py-2.5 text-sm font-bold text-blue-600 dark:text-blue-400 outline-none focus:border-blue-500 transition-colors"
                                     />
                                 </div>
                                 <div className="space-y-2">
@@ -1004,7 +1014,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                         type="time"
                                         value={settings.exitTime}
                                         onChange={e => setSettings({ ...settings, exitTime: e.target.value })}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm font-bold text-blue-600 outline-none focus:border-blue-500 transition-colors"
+                                        className="w-full bg-background dark:bg-slate-900/50 border border-border rounded-lg px-4 py-2.5 text-sm font-bold text-blue-600 dark:text-blue-400 outline-none focus:border-blue-500 transition-colors"
                                     />
                                 </div>
                             </div>
@@ -1018,7 +1028,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                     type="time"
                                     value={settings.reEntryCutoffTime || '13:45'}
                                     onChange={e => setSettings({ ...settings, reEntryCutoffTime: e.target.value })}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm font-bold text-purple-600 outline-none focus:border-purple-500 transition-colors"
+                                    className="w-full bg-background dark:bg-slate-900/50 border border-border rounded-lg px-4 py-2.5 text-sm font-bold text-purple-600 dark:text-purple-400 outline-none focus:border-purple-500 transition-colors"
                                 />
                             </div>
 
@@ -1028,7 +1038,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                     type="number"
                                     value={settings.targetPnl}
                                     onChange={e => setSettings({ ...settings, targetPnl: parseInt(e.target.value) })}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm font-bold text-emerald-600 outline-none focus:border-emerald-500 transition-colors"
+                                    className="w-full bg-background dark:bg-slate-900/50 border border-border rounded-lg px-4 py-2.5 text-sm font-bold text-emerald-600 dark:text-emerald-400 outline-none focus:border-emerald-500 transition-colors"
                                 />
                             </div>
 
@@ -1038,11 +1048,11 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                     type="number"
                                     value={settings.stopLossPnl}
                                     onChange={e => setSettings({ ...settings, stopLossPnl: parseInt(e.target.value) })}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm font-bold text-rose-600 outline-none focus:border-rose-500 transition-colors"
+                                    className="w-full bg-background dark:bg-slate-900/50 border border-border rounded-lg px-4 py-2.5 text-sm font-bold text-rose-600 dark:text-rose-400 outline-none focus:border-rose-500 transition-colors"
                                 />
                             </div>
 
-                            <div className="h-px bg-slate-100 my-2" />
+                            <div className="h-px bg-border my-2" />
 
                             <div className="space-y-2">
                                 <label className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Trading Mode</label>
@@ -1051,7 +1061,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                         onClick={() => setSettings({ ...settings, isVirtual: true })}
                                         className={`py-2.5 px-4 rounded-lg font-bold text-xs transition-all ${settings.isVirtual
                                             ? 'bg-blue-600 text-white shadow-md'
-                                            : 'bg-slate-50 text-slate-500 border border-slate-200 hover:bg-slate-100'
+                                            : 'bg-background dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-border hover:bg-slate-50 dark:hover:bg-slate-700'
                                             }`}
                                     >
                                         🧪 Virtual
@@ -1060,7 +1070,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                         onClick={() => setSettings({ ...settings, isVirtual: false })}
                                         className={`py-2.5 px-4 rounded-lg font-bold text-xs transition-all ${!settings.isVirtual
                                             ? 'bg-rose-600 text-white shadow-md'
-                                            : 'bg-slate-50 text-slate-500 border border-slate-200 hover:bg-slate-100'
+                                            : 'bg-background dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-border hover:bg-slate-50 dark:hover:bg-slate-700'
                                             }`}
                                     >
                                         💰 Live
@@ -1119,17 +1129,20 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                 <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
                     <div className="flex flex-col">
                         <div className="flex items-center gap-3 mb-1">
-                            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white text-xs font-black shadow-lg shadow-blue-200">
+                            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white text-xs font-black shadow-lg dark:shadow-blue-900/20">
                                 {(clientName || 'U').charAt(0).toUpperCase()}
                             </div>
-                            <h1 className="text-2xl font-black text-slate-900 tracking-tight leading-none uppercase">
+                            <h1 className="text-2xl font-black text-foreground tracking-tight leading-none uppercase">
                                 Welcome, {clientName}
                             </h1>
                         </div>
                         <div className="flex items-center gap-2 mt-1">
-                            <span className="text-slate-500 text-xs font-medium">Monitoring</span>
-                            <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-[10px] font-bold border border-blue-100 uppercase">Iron Condor</span>
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${settings.isVirtual ? 'bg-sky-50 text-sky-700 border-sky-100' : 'bg-rose-50 text-rose-700 border-rose-100'} uppercase`}>
+                            <span className="text-slate-500 dark:text-slate-400 text-xs font-medium">Monitoring</span>
+                            <span className="px-2 py-0.5 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded text-[10px] font-bold border border-blue-100 dark:border-blue-900/30 uppercase">Iron Condor</span>
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${settings.isVirtual
+                                ? 'bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-300 border-sky-100 dark:border-sky-900/30'
+                                : 'bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-300 border-rose-100 dark:border-rose-900/30'
+                                } uppercase`}>
                                 {settings.isVirtual ? 'Virtual' : 'LIVE'} Mode
                             </span>
                         </div>
@@ -1138,55 +1151,58 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                     {/* Header Metrics Row */}
                     <div className="flex flex-row items-center gap-4">
                         {/* Total PnL */}
-                        <div className={`shadow-sm rounded-xl p-3 border w-48 transition-all duration-300 ${realTimePnL >= 0 ? 'bg-emerald-50 border-emerald-100' : 'bg-rose-50 border-rose-100'}`}>
+                        <div className={`bg-card shadow-sm rounded-xl p-3 border w-48 transition-all duration-300 ${realTimePnL >= 0
+                            ? 'border-emerald-500/30 dark:border-emerald-500/20'
+                            : 'border-rose-500/30 dark:border-rose-500/20'
+                            }`}>
                             <div className="flex flex-col items-start">
                                 <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-[10px] font-bold tracking-wider text-slate-500 uppercase">Total PnL</span>
+                                    <span className="text-[10px] font-bold tracking-wider text-slate-500 dark:text-slate-400 uppercase">Total PnL</span>
                                     {realTimePnL >= 0 ?
-                                        <TrendingUp className="w-3 h-3 text-emerald-600" /> :
-                                        <TrendingDown className="w-3 h-3 text-rose-600" />
+                                        <TrendingUp className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> :
+                                        <TrendingDown className="w-3 h-3 text-rose-600 dark:text-rose-400" />
                                     }
                                 </div>
-                                <div className={`text-2xl font-black tracking-tight ${realTimePnL >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                                <div className={`text-2xl font-black tracking-tight ${realTimePnL >= 0 ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400'}`}>
                                     <AnimatedValueText value={realTimePnL} className="" fractionDigits={2} />
                                 </div>
                             </div>
                         </div>
 
                         {/* Peak Profit */}
-                        <div className="bg-emerald-50/50 shadow-sm rounded-xl p-3 border border-emerald-100 w-48">
+                        <div className="bg-card shadow-sm rounded-xl p-3 border border-emerald-500/30 dark:border-emerald-500/20 w-48 transition-colors">
                             <div className="flex flex-col items-start">
                                 <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-[10px] font-bold tracking-wider text-slate-500 uppercase">Peak Profit</span>
+                                    <span className="text-[10px] font-bold tracking-wider text-slate-500 dark:text-slate-400 uppercase">Peak Profit</span>
                                     <TrendingUp className="w-3 h-3 text-emerald-500" />
                                 </div>
-                                <div className="text-2xl font-black tracking-tight text-emerald-700">
+                                <div className="text-2xl font-black tracking-tight text-emerald-700 dark:text-emerald-400">
                                     <AnimatedValueText value={peakProfit} className="" fractionDigits={2} />
                                 </div>
                             </div>
                         </div>
 
                         {/* Peak Loss */}
-                        <div className="bg-rose-50/50 shadow-sm rounded-xl p-3 border border-rose-100 w-48">
+                        <div className="bg-card shadow-sm rounded-xl p-3 border border-rose-500/30 dark:border-rose-500/20 w-48 transition-colors">
                             <div className="flex flex-col items-start">
                                 <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-[10px] font-bold tracking-wider text-slate-500 uppercase">Peak Loss</span>
+                                    <span className="text-[10px] font-bold tracking-wider text-slate-500 dark:text-slate-400 uppercase">Peak Loss</span>
                                     <TrendingDown className="w-3 h-3 text-rose-500" />
                                 </div>
-                                <div className="text-2xl font-black tracking-tight text-rose-700">
+                                <div className="text-2xl font-black tracking-tight text-rose-700 dark:text-rose-400">
                                     <AnimatedValueText value={peakLoss} className="" fractionDigits={2} />
                                 </div>
                             </div>
                         </div>
 
                         {/* Next Expiry */}
-                        <div className="bg-blue-50/50 shadow-sm rounded-xl p-3 border border-blue-100 w-48">
+                        <div className="bg-card shadow-sm rounded-xl p-3 border border-blue-500/30 dark:border-blue-500/20 w-48 transition-colors">
                             <div className="flex flex-col items-start">
                                 <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-[10px] font-bold tracking-wider text-slate-500 uppercase">Next Expiry</span>
+                                    <span className="text-[10px] font-bold tracking-wider text-slate-500 dark:text-slate-400 uppercase">Next Expiry</span>
                                     <Clock className="w-3 h-3 text-blue-500" />
                                 </div>
-                                <div className="text-lg font-black tracking-tight text-blue-700 whitespace-nowrap">
+                                <div className="text-lg font-black tracking-tight text-blue-500 dark:text-blue-400 whitespace-nowrap">
                                     {nextWeekExpiry && nextWeekExpiry !== 'N/A' ? (
                                         (() => {
                                             try {
@@ -1205,7 +1221,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                         </div>
 
                         {/* Current Week / Re-entry Info */}
-                        <div className={`bg-white shadow-sm rounded-xl p-3 border w-48 ${isExpiryDay ? 'border-rose-300 bg-rose-50/30' : 'border-slate-100'}`}>
+                        <div className={`bg-card shadow-sm rounded-xl p-3 border w-48 transition-colors ${isExpiryDay ? 'border-rose-300 dark:border-rose-800 bg-rose-50/30 dark:bg-rose-900/10' : 'border-border'}`}>
                             <div className="flex flex-col items-start w-full">
                                 {reEntryState && reEntryState.isEligible && reEntryState.scheduledReEntryTime && new Date(reEntryState.scheduledReEntryTime) > new Date() ? (
                                     <>
@@ -1219,8 +1235,8 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                     </>
                                 ) : (
                                     <>
-                                        <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase mb-1">Current Week</span>
-                                        <div className={`text-sm font-bold font-mono ${isExpiryDay ? 'text-rose-600' : 'text-slate-700'}`}>
+                                        <span className="text-[10px] font-black tracking-wider text-slate-500 dark:text-slate-500 uppercase mb-1">Current Week</span>
+                                        <div className={`text-sm font-black font-mono ${isExpiryDay ? 'text-rose-500 dark:text-rose-400' : 'text-slate-700 dark:text-slate-300'}`}>
                                             {currentWeekExpiry || 'N/A'}
                                             {isExpiryDay && ' 🔔'}
                                         </div>
@@ -1230,10 +1246,10 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                         </div>
 
                         {/* Target Expiry */}
-                        <div className="bg-blue-50/30 shadow-sm rounded-xl p-3 border border-blue-100 w-48">
+                        <div className="bg-card shadow-sm rounded-xl p-3 border border-blue-500/20 dark:border-blue-500/30 w-48 transition-colors">
                             <div className="flex flex-col items-start">
-                                <span className="text-[10px] font-bold tracking-wider text-blue-400 uppercase mb-1">Target Expiry</span>
-                                <div className="text-sm font-bold font-mono text-blue-700">
+                                <span className="text-[10px] font-black tracking-wider text-blue-500 dark:text-blue-500 uppercase mb-1">Target Expiry</span>
+                                <div className="text-sm font-black font-mono text-blue-500 dark:text-blue-400">
                                     {nextWeekExpiry || 'N/A'}
                                 </div>
                             </div>
@@ -1243,31 +1259,31 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
 
                 {/* Row 1: Engine & Margins & Nifty */}
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                    <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-col justify-center relative overflow-hidden">
+                    <div className="bg-card border border-border rounded-xl p-4 shadow-sm flex flex-col justify-center relative overflow-hidden transition-colors duration-300">
                         <div className="flex items-center justify-between mb-1">
                             <div className="flex items-center gap-2">
                                 <Activity className="w-3.5 h-3.5 text-blue-500" />
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Engine Activity</span>
+                                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Engine Activity</span>
                             </div>
 
                             {/* WebSocket Status Indicator */}
-                            <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md border border-slate-100 ${socketStatus.connected ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                            <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md border border-border ${socketStatus.connected ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400'}`}>
                                 <div className={`w-1 h-1 rounded-full ${socketStatus.connected ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`}></div>
                                 <span className="text-[8px] font-black uppercase tracking-tighter">
                                     {socketStatus.connected ? `${socketStatus.subscribedCount} Live` : 'Offline'}
                                 </span>
                             </div>
                         </div>
-                        <div className="text-sm font-bold text-slate-700 truncate" title={engineActivity}>{engineActivity || 'Ready'}</div>
+                        <div className="text-sm font-bold text-slate-700 dark:text-slate-300 truncate" title={engineActivity}>{engineActivity || 'Ready'}</div>
                     </div>
 
                     {/* 2. Next Task */}
-                    <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-col justify-center">
+                    <div className="bg-card border border-border rounded-xl p-4 shadow-sm flex flex-col justify-center transition-colors duration-300">
                         <div className="flex items-center gap-2 mb-1">
-                            <Clock className="w-3.5 h-3.5 text-slate-400" />
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Next Task</span>
+                            <Clock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+                            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Next Task</span>
                         </div>
-                        <div className="text-sm font-bold text-slate-700 flex items-center gap-2 truncate">
+                        <div className="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2 truncate">
                             <span className="truncate" title={nextAction}>{nextAction || 'Pending'}</span>
                             <TaskTimer taskText={nextAction} />
                         </div>
@@ -1278,7 +1294,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                         label="Required Margin"
                         value={requiredMargin}
                         icon={Shield}
-                        className="bg-white"
+                        className="bg-card"
                         valueSize="text-xl"
                     />
 
@@ -1288,29 +1304,16 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                         value={availableMargin}
                         icon={CheckCircle2}
                         type={availableMargin < requiredMargin ? 'negative' : 'neutral'}
-                        className="bg-white"
+                        className="bg-card"
                         valueSize="text-xl"
                     />
 
                     {/* 5. Nifty Ticker */}
                     {niftyData ? (
-                        <div className={`bg-white border border-slate-200 rounded-xl p-4 flex flex-col justify-center shadow-sm overflow-hidden group transition-all duration-200`}>
-                            <div className="flex items-center justify-between mb-1">
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">NIFTY 50</span>
-                                <button onClick={() => openTradingViewChart('NSE:NIFTY')} className="text-slate-400 hover:text-blue-600"><BarChart3 className="w-3 h-3" /></button>
-                            </div>
-                            <div className="flex items-baseline justify-between">
-                                <span className="text-xl font-black text-slate-900 font-mono tracking-tighter">
-                                    {niftyData.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                                </span>
-                                <span className={`text-xs font-bold font-mono ${niftyData.change >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                    {niftyData.change > 0 ? '+' : ''}{niftyData.change.toFixed(2)} ({Math.abs(niftyData.changePercent).toFixed(2)}%)
-                                </span>
-                            </div>
-                        </div>
+                        <NiftyTicker data={niftyData} />
                     ) : (
-                        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex items-center justify-center">
-                            <span className="text-xs text-slate-400 animate-pulse">Loading NIFTY...</span>
+                        <div className="bg-card border border-border rounded-xl p-4 shadow-sm flex items-center justify-center">
+                            <span className="text-xs text-slate-400 dark:text-slate-500 animate-pulse uppercase font-bold tracking-widest">Loading NIFTY...</span>
                         </div>
                     )}
                 </div>
@@ -1319,16 +1322,16 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Main Content Area */}
                     <div className="lg:col-span-2 space-y-6">
-                        <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-                            <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                                <h2 className="font-bold text-xs uppercase tracking-wider flex items-center gap-2 text-slate-700">
-                                    {activeTab === 'option-chain' && <Search className="w-4 h-4 text-blue-600" />}
+                        <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden transition-colors">
+                            <div className="p-4 border-b border-border flex items-center justify-between bg-background/50">
+                                <h2 className="font-bold text-xs uppercase tracking-wider flex items-center gap-2 text-foreground">
+                                    {activeTab === 'option-chain' && <Search className="w-4 h-4 text-blue-600 dark:text-blue-400" />}
                                     {activeTab === 'positions' ? 'Active Positions' : activeTab === 'orders' ? 'Order History' : activeTab === 'alerts' ? 'System Alerts' : activeTab === 'pnl' ? 'P&L Analytics' : activeTab === 'option-chain' ? 'Option Chain' : 'Engine Logs'}
                                 </h2>
                                 {activeTab === 'logs' && (
                                     <button
                                         onClick={() => setLogs([])}
-                                        className="text-[10px] font-bold text-slate-400 hover:text-rose-500 transition-colors uppercase tracking-widest"
+                                        className="text-[10px] font-bold text-slate-400 dark:text-slate-500 hover:text-rose-500 transition-colors uppercase tracking-widest"
                                     >
                                         Clear Logs
                                     </button>
@@ -1340,18 +1343,18 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                     <div className="overflow-x-auto">
                                         <table className="w-full text-left">
                                             <thead>
-                                                <tr className="border-b border-slate-100 bg-slate-50/30">
-                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Symbol</th>
-                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Side</th>
-                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Strike</th>
-                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Qty</th>
-                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Avg Price</th>
-                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">LTP</th>
-                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">PnL</th>
-                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Chart</th>
+                                                <tr className="border-b border-border bg-background/50">
+                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Symbol</th>
+                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">Side</th>
+                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">Strike</th>
+                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">Qty</th>
+                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">Avg Price</th>
+                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-right">LTP</th>
+                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-right">PnL</th>
+                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">Chart</th>
                                                 </tr>
                                             </thead>
-                                            <tbody className="divide-y divide-slate-100">
+                                            <tbody className="divide-y divide-border">
                                                 {testStrikes.map((leg, i) => (
                                                     <PositionRow key={leg.token || i} leg={leg} />
                                                 ))}
@@ -1371,34 +1374,34 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                     <div className="overflow-x-auto">
                                         <table className="w-full text-left">
                                             <thead>
-                                                <tr className="border-b border-slate-100 bg-slate-50/30">
-                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Time</th>
-                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Symbol</th>
-                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Side</th>
-                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Price</th>
-                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Qty</th>
-                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Status</th>
+                                                <tr className="border-b border-border bg-background/50">
+                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Time</th>
+                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Symbol</th>
+                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">Side</th>
+                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">Price</th>
+                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">Qty</th>
+                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-right">Status</th>
                                                 </tr>
                                             </thead>
-                                            <tbody className="divide-y divide-slate-100">
+                                            <tbody className="divide-y divide-border">
                                                 {orders.map((order, i) => (
-                                                    <tr key={i} className="hover:bg-slate-50/50 transition-colors">
-                                                        <td className="px-6 py-4 font-mono text-xs text-slate-600">
+                                                    <tr key={i} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+                                                        <td className="px-6 py-4 font-mono text-xs text-slate-600 dark:text-slate-400">
                                                             <div className="flex flex-col">
                                                                 <span className="font-bold">{new Date(order.created_at).toLocaleTimeString('en-IN', { hour12: false })}</span>
                                                                 <span className="text-[10px] opacity-60">{new Date(order.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</span>
                                                             </div>
                                                         </td>
-                                                        <td className="px-6 py-4 font-bold text-sm text-slate-900">{formatOptionSymbol(order.symbol)}</td>
+                                                        <td className="px-6 py-4 font-bold text-sm text-foreground">{formatOptionSymbol(order.symbol)}</td>
                                                         <td className="px-6 py-4 text-center">
-                                                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${order.side === 'BUY' ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'bg-amber-50 text-amber-700 border border-amber-100'}`}>
+                                                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${order.side === 'BUY' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border border-blue-100 dark:border-blue-800' : 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-100 dark:border-amber-800'}`}>
                                                                 {order.side}
                                                             </span>
                                                         </td>
-                                                        <td className="px-6 py-4 text-center font-mono text-sm text-slate-800">₹{order.price}</td>
-                                                        <td className="px-6 py-4 text-center font-mono text-sm text-slate-600">{order.quantity}</td>
+                                                        <td className="px-6 py-4 text-center font-mono text-sm text-slate-800 dark:text-slate-300">₹{order.price}</td>
+                                                        <td className="px-6 py-4 text-center font-mono text-sm text-slate-600 dark:text-slate-400">{order.quantity}</td>
                                                         <td className="px-6 py-4 text-right">
-                                                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${order.status === 'COMPLETE' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-slate-50 text-slate-700 border border-slate-100'}`}>
+                                                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${order.status === 'COMPLETE' ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800' : 'bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-400 border border-border'}`}>
                                                                 {order.status}
                                                             </span>
                                                         </td>
@@ -1417,27 +1420,27 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                 )
                             ) : activeTab === 'alerts' ? (
                                 alerts.length > 0 ? (
-                                    <div className="overflow-y-auto max-h-[600px] p-4 space-y-3">
+                                    <div className="overflow-y-auto max-h-[600px] p-4 space-y-2">
                                         {alerts.map((alert, i) => {
-                                            const severityColors = {
-                                                SUCCESS: 'bg-emerald-50 border-emerald-200 text-emerald-700',
-                                                ERROR: 'bg-rose-50 border-rose-200 text-rose-700',
-                                                WARNING: 'bg-amber-50 border-amber-200 text-amber-700',
-                                                INFO: 'bg-blue-50 border-blue-200 text-blue-700'
+                                            const severityStyles = {
+                                                SUCCESS: 'bg-emerald-500/5 dark:bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400',
+                                                ERROR: 'bg-rose-500/5 dark:bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400',
+                                                WARNING: 'bg-amber-500/5 dark:bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400',
+                                                INFO: 'bg-blue-500/5 dark:bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400'
                                             };
-                                            const colorClass = severityColors[alert.severity as keyof typeof severityColors] || severityColors.INFO;
+                                            const colorClass = severityStyles[alert.severity as keyof typeof severityStyles] || severityStyles.INFO;
 
                                             return (
-                                                <div key={i} className={`border rounded-xl p-4 ${colorClass} transition-all hover:shadow-md`}>
-                                                    <div className="flex items-start gap-3">
-                                                        <span className="text-2xl">{alert.icon}</span>
-                                                        <div className="flex-1">
-                                                            <div className="font-bold text-sm mb-1">{alert.title}</div>
-                                                            <div className="text-xs opacity-80 whitespace-pre-line">{alert.message}</div>
-                                                            <div className="text-[10px] font-mono mt-2 opacity-60">
-                                                                {new Date(alert.created_at).toLocaleString('en-IN')}
-                                                            </div>
+                                                <div key={i} className={`border rounded-lg px-3 py-2 ${colorClass} transition-all hover:bg-opacity-20 flex items-center justify-between gap-4 outline-none`}>
+                                                    <div className="flex items-center gap-3 min-w-0">
+                                                        <span className="text-lg flex-shrink-0">{alert.icon}</span>
+                                                        <div className="flex flex-row items-baseline gap-2 min-w-0">
+                                                            <div className="font-black text-[10px] uppercase tracking-widest whitespace-nowrap">{alert.title}</div>
+                                                            <div className="text-[11px] opacity-70 truncate font-medium">{alert.message}</div>
                                                         </div>
+                                                    </div>
+                                                    <div className="text-[9px] font-mono opacity-50 whitespace-nowrap tabular-nums">
+                                                        {new Date(alert.created_at).toLocaleTimeString('en-IN', { hour12: false })}
                                                     </div>
                                                 </div>
                                             );
@@ -1454,50 +1457,50 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                             ) : activeTab === 'pnl' ? (
                                 <div className="p-6 space-y-6">
                                     {/* Date Filter */}
-                                    <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                    <div className="flex items-center gap-4 bg-background dark:bg-slate-900/50 p-4 rounded-xl border border-border transition-colors">
                                         <div className="flex items-center gap-2">
-                                            <label className="text-sm font-bold text-slate-600">Date from:</label>
+                                            <label className="text-sm font-bold text-slate-600 dark:text-slate-400">Date from:</label>
                                             <input
                                                 type="date"
                                                 value={startDate}
                                                 onChange={(e) => setStartDate(e.target.value)}
-                                                className="px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                className="px-3 py-2 bg-background border border-border rounded-lg text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
                                             />
                                         </div>
-                                        <span className="text-slate-400">-</span>
+                                        <span className="text-slate-400 dark:text-slate-600">-</span>
                                         <div className="flex items-center gap-2">
                                             <input
                                                 type="date"
                                                 value={endDate}
                                                 onChange={(e) => setEndDate(e.target.value)}
-                                                className="px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                className="px-3 py-2 bg-background border border-border rounded-lg text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
                                             />
                                         </div>
                                     </div>
 
                                     {/* Summary Metrics */}
                                     <div className="grid grid-cols-4 gap-4">
-                                        <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-xl p-4">
-                                            <div className="text-xs font-bold text-green-700 uppercase tracking-wider mb-1">Realized P&L</div>
-                                            <div className={`text-2xl font-bold ${pnlSummary.totalPnl >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                        <div className="bg-card border border-emerald-500/30 dark:border-emerald-500/20 rounded-xl p-4 shadow-sm">
+                                            <div className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1">Realized P&L</div>
+                                            <div className={`text-2xl font-black tracking-tight ${pnlSummary.totalPnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
                                                 {pnlSummary.totalPnl >= 0 ? '+' : ''}₹{(pnlSummary.totalPnl / 1000).toFixed(2)}k
                                             </div>
                                         </div>
-                                        <div className="bg-gradient-to-br from-orange-50 to-orange-100 border border-orange-200 rounded-xl p-4">
-                                            <div className="text-xs font-bold text-orange-700 uppercase tracking-wider mb-1">Charges & taxes</div>
-                                            <div className="text-2xl font-bold text-orange-600">
+                                        <div className="bg-card border border-orange-500/30 dark:border-orange-500/20 rounded-xl p-4 shadow-sm">
+                                            <div className="text-[10px] font-black text-orange-600 dark:text-orange-400 uppercase tracking-widest mb-1">Charges & taxes</div>
+                                            <div className="text-2xl font-black tracking-tight text-orange-600 dark:text-orange-400">
                                                 ₹{pnlSummary.charges}
                                             </div>
                                         </div>
-                                        <div className="bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 rounded-xl p-4">
-                                            <div className="text-xs font-bold text-purple-700 uppercase tracking-wider mb-1">Other credits & debits</div>
-                                            <div className="text-2xl font-bold text-purple-600">
+                                        <div className="bg-card border border-purple-500/30 dark:border-purple-500/20 rounded-xl p-4 shadow-sm">
+                                            <div className="text-[10px] font-black text-purple-600 dark:text-purple-400 uppercase tracking-widest mb-1">Other credits & debits</div>
+                                            <div className="text-2xl font-black tracking-tight text-purple-600 dark:text-purple-400">
                                                 {pnlSummary.credits >= 0 ? '+' : ''}₹{pnlSummary.credits}
                                             </div>
                                         </div>
-                                        <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-4">
-                                            <div className="text-xs font-bold text-blue-700 uppercase tracking-wider mb-1">Net Realized P&L</div>
-                                            <div className={`text-2xl font-bold ${pnlSummary.netPnl >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                                        <div className="bg-card border border-blue-500/30 dark:border-blue-500/20 rounded-xl p-4 shadow-sm">
+                                            <div className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-1">Net Realized P&L</div>
+                                            <div className={`text-2xl font-black tracking-tight ${pnlSummary.netPnl >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-rose-600 dark:text-rose-400'}`}>
                                                 {pnlSummary.netPnl >= 0 ? '+' : ''}₹{(pnlSummary.netPnl / 1000).toFixed(2)}k
                                             </div>
                                         </div>
@@ -1512,21 +1515,21 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                     />
                                 </div>
                             ) : activeTab === 'logs' ? (
-                                <div className="flex-1 overflow-y-auto p-6 space-y-2 font-mono scrollbar-thin scrollbar-thumb-slate-200 max-h-[600px]">
+                                <div className="flex-1 overflow-y-auto p-6 space-y-2 font-mono custom-scrollbar max-h-[600px]">
                                     {logs.length > 0 ? (
                                         logs.map((log, i) => {
                                             const logMsg = typeof log === 'object' && log !== null ? (log as any).msg || JSON.stringify(log) : String(log);
                                             const logTime = typeof log === 'object' && log !== null ? (log as any).time || new Date().toLocaleTimeString() : new Date().toLocaleTimeString();
 
                                             return (
-                                                <div key={i} className="text-[11px] leading-relaxed animate-in slide-in-from-left-2 duration-300 py-1 border-b border-slate-50 last:border-0">
-                                                    <span className="text-blue-500 font-bold mr-2">[{logTime}]</span>
-                                                    <span className="text-slate-600">{logMsg}</span>
+                                                <div key={i} className="text-[11px] leading-relaxed animate-in slide-in-from-left-2 duration-300 py-1 border-b border-border/50 last:border-0 transition-colors">
+                                                    <span className="text-blue-600 dark:text-blue-400 font-bold mr-2">[{logTime}]</span>
+                                                    <span className="text-slate-600 dark:text-slate-400">{logMsg}</span>
                                                 </div>
                                             );
                                         })
                                     ) : (
-                                        <div className="py-20 flex items-center justify-center text-[10px] font-bold text-slate-300 uppercase tracking-widest">
+                                        <div className="py-20 flex items-center justify-center text-[10px] font-bold text-slate-300 dark:text-slate-700 uppercase tracking-widest">
                                             No recent activity detected
                                         </div>
                                     )}
@@ -1549,10 +1552,10 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
             {/* Client Details Modal */}
             {
                 showClientModal && (
-                    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-                        <div className="bg-white rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl border border-slate-200 animate-in fade-in zoom-in duration-300">
+                    <div className="fixed inset-0 bg-background/60 dark:bg-slate-950/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 transition-all">
+                        <div className="bg-card rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl border border-border animate-in fade-in zoom-in duration-300 flex flex-col">
                             {/* Modal Header */}
-                            <div className="bg-slate-900 p-8 flex justify-between items-center text-white relative">
+                            <div className="bg-slate-900 border-b border-white/5 p-8 flex justify-between items-center text-white relative">
                                 <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
                                     <Shield size={120} />
                                 </div>
@@ -1569,47 +1572,47 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                 {/* Personal & Broker Info */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                                     <div className="space-y-6">
-                                        <div className="flex items-center gap-3 border-b border-slate-100 pb-2">
+                                        <div className="flex items-center gap-3 border-b border-border pb-2 transition-colors">
                                             <div className="w-2 h-4 bg-blue-600 rounded-full" />
-                                            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Identity & Broker</h3>
+                                            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Identity & Broker</h3>
                                         </div>
                                         <div className="grid grid-cols-2 gap-6">
                                             <div>
-                                                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Client ID</label>
-                                                <p className="font-black text-slate-900 text-lg tabular-nums">{(clientDetails || userDetails)?.actid || 'N/A'}</p>
+                                                <label className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">Client ID</label>
+                                                <p className="font-black text-foreground text-lg tabular-nums transition-colors">{(clientDetails || userDetails)?.actid || 'N/A'}</p>
                                             </div>
                                             <div>
-                                                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1">User Name</label>
-                                                <p className="font-black text-slate-900 text-lg uppercase">{(userDetails || clientDetails)?.uname || 'CLIENT'}</p>
+                                                <label className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">User Name</label>
+                                                <p className="font-black text-foreground text-lg uppercase transition-colors">{(userDetails || clientDetails)?.uname || 'CLIENT'}</p>
                                             </div>
                                             <div>
-                                                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Brokerage</label>
-                                                <p className="font-black text-blue-600 text-lg italic">FINVASIA</p>
+                                                <label className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">Brokerage</label>
+                                                <p className="font-black text-blue-600 dark:text-blue-400 text-lg italic">FINVASIA</p>
                                             </div>
                                             <div>
-                                                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1">PAN Card</label>
-                                                <p className="font-black text-slate-900 text-lg uppercase">{userDetails?.pan || 'VERIFIED'}</p>
+                                                <label className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">PAN Card</label>
+                                                <p className="font-black text-foreground text-lg uppercase transition-colors">{userDetails?.pan || 'VERIFIED'}</p>
                                             </div>
                                         </div>
                                     </div>
 
                                     <div className="space-y-6">
-                                        <div className="flex items-center gap-3 border-b border-slate-100 pb-2">
+                                        <div className="flex items-center gap-3 border-b border-border pb-2 transition-colors">
                                             <div className="w-2 h-4 bg-emerald-500 rounded-full" />
-                                            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Banking Interface</h3>
+                                            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Banking Interface</h3>
                                         </div>
                                         <div className="space-y-4">
-                                            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                                                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Bank Name</label>
-                                                <p className="font-black text-slate-900 text-sm italic">{clientDetails?.bnk || 'HDFC BANK'}</p>
+                                            <div className="bg-background dark:bg-slate-900/50 p-4 rounded-2xl border border-border transition-colors">
+                                                <label className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">Bank Name</label>
+                                                <p className="font-black text-foreground text-sm italic transition-colors">{clientDetails?.bnk || 'HDFC BANK'}</p>
                                                 <div className="mt-2 flex justify-between items-center">
                                                     <div className="space-y-0.5">
-                                                        <label className="text-[8px] font-bold text-slate-300 uppercase tracking-tighter">Account</label>
-                                                        <p className="font-mono text-xs text-slate-600">****{clientDetails?.accno?.slice(-4) || '8842'}</p>
+                                                        <label className="text-[8px] font-bold text-slate-300 dark:text-slate-600 uppercase tracking-tighter transition-colors">Account</label>
+                                                        <p className="font-mono text-xs text-slate-600 dark:text-slate-400 transition-colors">****{clientDetails?.accno?.slice(-4) || '8842'}</p>
                                                     </div>
                                                     <div className="space-y-0.5 text-right">
-                                                        <label className="text-[8px] font-bold text-slate-300 uppercase tracking-tighter">IFSC</label>
-                                                        <p className="font-mono text-xs text-slate-600">{clientDetails?.ifsc || 'HDFC0000001'}</p>
+                                                        <label className="text-[8px] font-bold text-slate-300 dark:text-slate-600 uppercase tracking-tighter transition-colors">IFSC</label>
+                                                        <p className="font-mono text-xs text-slate-600 dark:text-slate-400 transition-colors">{clientDetails?.ifsc || 'HDFC0000001'}</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1619,26 +1622,26 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
 
                                 {/* Margins & Balances */}
                                 <div className="space-y-6">
-                                    <div className="flex items-center gap-3 border-b border-slate-100 pb-2">
+                                    <div className="flex items-center gap-3 border-b border-border pb-2 transition-colors">
                                         <div className="w-2 h-4 bg-amber-500 rounded-full" />
-                                        <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Financial Liquidity</h3>
+                                        <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Financial Liquidity</h3>
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                        <div className="bg-gradient-to-br from-blue-50 to-white p-5 rounded-2xl border border-blue-100/50 shadow-sm">
-                                            <label className="text-[9px] font-bold text-blue-400 uppercase tracking-widest block mb-2">Cash Available</label>
-                                            <p className="text-2xl font-black text-blue-700 tabular-nums">
+                                        <div className="bg-gradient-to-br from-blue-50 to-background dark:from-blue-900/20 dark:to-card p-5 rounded-2xl border border-blue-100/50 dark:border-blue-900/30 shadow-sm transition-colors">
+                                            <label className="text-[9px] font-bold text-blue-400 dark:text-blue-500 uppercase tracking-widest block mb-2">Cash Available</label>
+                                            <p className="text-2xl font-black text-blue-700 dark:text-blue-400 tabular-nums transition-colors">
                                                 ₹{parseFloat(margins?.cash || '0').toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                                             </p>
                                         </div>
-                                        <div className="bg-gradient-to-br from-emerald-50 to-white p-5 rounded-2xl border border-emerald-100/50 shadow-sm">
+                                        <div className="bg-gradient-to-br from-emerald-50 to-background dark:from-emerald-900/20 dark:to-card p-5 rounded-2xl border border-emerald-100/50 dark:border-emerald-900/30 shadow-sm transition-colors">
                                             <label className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest block mb-2">Total Margin</label>
-                                            <p className="text-2xl font-black text-emerald-700 tabular-nums">
+                                            <p className="text-2xl font-black text-emerald-700 dark:text-emerald-400 tabular-nums transition-colors">
                                                 ₹{parseFloat(margins?.marginused || '0').toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                                             </p>
                                         </div>
-                                        <div className="bg-gradient-to-br from-amber-50 to-white p-5 rounded-2xl border border-amber-100/50 shadow-sm">
+                                        <div className="bg-gradient-to-br from-amber-50 to-background dark:from-amber-900/20 dark:to-card p-5 rounded-2xl border border-amber-100/50 dark:border-amber-900/30 shadow-sm transition-colors">
                                             <label className="text-[9px] font-bold text-amber-500 uppercase tracking-widest block mb-2">Pay-in Today</label>
-                                            <p className="text-2xl font-black text-amber-700 tabular-nums">
+                                            <p className="text-2xl font-black text-amber-700 dark:text-amber-500 tabular-nums transition-colors">
                                                 ₹{parseFloat(margins?.payin || '0').toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                                             </p>
                                         </div>
@@ -1646,14 +1649,14 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                 </div>
 
                                 {/* Footer / Dismiss */}
-                                <div className="pt-8 border-t border-slate-100 flex justify-between items-center">
-                                    <div className="flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-tight">
+                                <div className="pt-8 border-t border-border flex justify-between items-center transition-colors">
+                                    <div className="flex items-center gap-2 text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-tight">
                                         <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                                         Account Status: Secure & Synchronized
                                     </div>
                                     <button
                                         onClick={() => setShowClientModal(false)}
-                                        className="px-10 py-4 bg-slate-900 text-white text-xs font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 active:scale-95 flex items-center gap-2"
+                                        className="px-10 py-4 bg-slate-900 dark:bg-blue-600 text-white text-xs font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-slate-800 dark:hover:bg-blue-700 transition-all shadow-xl dark:shadow-blue-900/20 active:scale-95 flex items-center gap-2"
                                     >
                                         Dismiss Module
                                     </button>

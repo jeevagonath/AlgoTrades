@@ -75,23 +75,23 @@ export function CalendarHeatmap({ data, startDate, endDate, onDateClick }: Calen
     };
 
     const getPnLColor = (pnl: number, tradeCount: number) => {
-        if (tradeCount === 0) return 'bg-slate-50 text-slate-300';
+        if (tradeCount === 0) return 'bg-background dark:bg-slate-900/50 text-slate-300 dark:text-slate-700 border-border/50';
 
-        // Profit colors (green scale)
+        // Profit colors (emerald scale)
         if (pnl > 0) {
-            if (pnl >= 2000) return 'bg-green-600 text-white';
-            if (pnl >= 1500) return 'bg-green-500 text-white';
-            if (pnl >= 1000) return 'bg-green-400 text-white';
-            if (pnl >= 500) return 'bg-green-300 text-green-900';
-            return 'bg-green-200 text-green-900';
+            if (pnl >= 2000) return 'bg-emerald-600 text-white border-emerald-500';
+            if (pnl >= 1500) return 'bg-emerald-500 text-white border-emerald-400';
+            if (pnl >= 1000) return 'bg-emerald-400 text-white border-emerald-300';
+            if (pnl >= 500) return 'bg-emerald-200 dark:bg-emerald-900/40 text-emerald-900 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800';
+            return 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-800 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900';
         }
 
-        // Loss colors (red scale)
-        if (pnl <= -2000) return 'bg-red-600 text-white';
-        if (pnl <= -1500) return 'bg-red-500 text-white';
-        if (pnl <= -1000) return 'bg-red-400 text-white';
-        if (pnl <= -500) return 'bg-red-300 text-red-900';
-        return 'bg-red-200 text-red-900';
+        // Loss colors (rose scale)
+        if (pnl <= -2000) return 'bg-rose-600 text-white border-rose-500';
+        if (pnl <= -1500) return 'bg-rose-500 text-white border-rose-400';
+        if (pnl <= -1000) return 'bg-rose-400 text-white border-rose-300';
+        if (pnl <= -500) return 'bg-rose-200 dark:bg-rose-900/40 text-rose-900 dark:text-rose-300 border-rose-300 dark:border-rose-800';
+        return 'bg-rose-100 dark:bg-rose-900/20 text-rose-800 dark:text-rose-400 border-rose-200 dark:border-rose-900';
     };
 
     const formatPnL = (pnl: number) => {
@@ -101,20 +101,20 @@ export function CalendarHeatmap({ data, startDate, endDate, onDateClick }: Calen
     return (
         <div className="space-y-4">
             {/* Legend */}
-            <div className="flex items-center justify-between px-4 py-3 bg-white rounded-xl border border-slate-200">
-                <h3 className="text-sm font-bold text-slate-900">Daily P&L Calendar</h3>
+            <div className="flex items-center justify-between px-4 py-3 bg-card rounded-xl border border-border transition-colors">
+                <h3 className="text-sm font-bold text-foreground">Daily P&L Calendar</h3>
                 <div className="flex items-center gap-4 text-xs">
                     <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded bg-red-500"></div>
-                        <span className="text-slate-600">Loss</span>
+                        <div className="w-3 h-3 rounded bg-rose-500"></div>
+                        <span className="text-slate-600 dark:text-slate-400">Loss</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded bg-slate-100 border border-slate-200"></div>
-                        <span className="text-slate-600">No Trade</span>
+                        <div className="w-3 h-3 rounded bg-slate-100 dark:bg-slate-800 border border-border"></div>
+                        <span className="text-slate-600 dark:text-slate-400">No Trade</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded bg-green-500"></div>
-                        <span className="text-slate-600">Profit</span>
+                        <div className="w-3 h-3 rounded bg-emerald-500"></div>
+                        <span className="text-slate-600 dark:text-slate-400">Profit</span>
                     </div>
                 </div>
             </div>
@@ -122,14 +122,14 @@ export function CalendarHeatmap({ data, startDate, endDate, onDateClick }: Calen
             {/* Calendar Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {months.map((monthData, idx) => (
-                    <div key={idx} className="bg-white border border-slate-200 rounded-xl p-4">
-                        <div className="text-xs font-bold text-slate-700 mb-3 text-center">
+                    <div key={idx} className="bg-card border border-border rounded-xl p-4 transition-colors">
+                        <div className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-3 text-center">
                             {monthData.month} {monthData.year}
                         </div>
                         <div className="grid grid-cols-7 gap-1">
                             {/* Day headers */}
                             {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
-                                <div key={i} className="text-[9px] font-bold text-slate-400 text-center pb-1">
+                                <div key={i} className="text-[9px] font-bold text-slate-400 dark:text-slate-600 text-center pb-1">
                                     {day}
                                 </div>
                             ))}
@@ -146,7 +146,7 @@ export function CalendarHeatmap({ data, startDate, endDate, onDateClick }: Calen
                                                 <div
                                                     className={`
                                                         aspect-square rounded flex items-center justify-center
-                                                        text-[9px] font-bold border border-slate-200
+                                                        text-[9px] font-bold border border-border
                                                         transition-all hover:scale-110 hover:shadow-md hover:z-10
                                                         ${getPnLColor(cell.pnl, cell.tradeCount)}
                                                         ${cell.tradeCount > 0 ? 'cursor-pointer' : ''}
@@ -166,10 +166,10 @@ export function CalendarHeatmap({ data, startDate, endDate, onDateClick }: Calen
                                                 </div>
                                                 {/* Tooltip */}
                                                 {cell.tradeCount > 0 && (
-                                                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-[9px] rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-20 shadow-lg">
+                                                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 border border-slate-800 text-white text-[9px] rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-20 shadow-lg">
                                                         <div className="font-bold">{cell.date}</div>
                                                         <div className={cell.pnl >= 0 ? 'text-green-300' : 'text-red-300'}>{formatPnL(cell.pnl)}</div>
-                                                        <div className="text-slate-300">{cell.tradeCount} trade{cell.tradeCount > 1 ? 's' : ''}</div>
+                                                        <div className="text-slate-300 dark:text-slate-400">{cell.tradeCount} trade{cell.tradeCount > 1 ? 's' : ''}</div>
                                                     </div>
                                                 )}
                                             </>
@@ -186,8 +186,8 @@ export function CalendarHeatmap({ data, startDate, endDate, onDateClick }: Calen
 
             {/* Empty State */}
             {months.length === 0 && (
-                <div className="bg-white border border-slate-200 rounded-xl p-12 text-center">
-                    <div className="text-slate-400 text-sm">No trade history available for the selected period</div>
+                <div className="bg-card border border-border rounded-xl p-12 text-center transition-colors">
+                    <div className="text-slate-400 dark:text-slate-600 text-sm">No trade history available for the selected period</div>
                 </div>
             )}
         </div>

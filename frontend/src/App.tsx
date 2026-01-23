@@ -45,10 +45,10 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#f8f9fc] flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin"></div>
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest animate-pulse">Initializing AlgoTrades</p>
+          <div className="w-12 h-12 border-4 border-border border-t-blue-600 rounded-full animate-spin"></div>
+          <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest animate-pulse transition-colors">Initializing AlgoTrades</p>
         </div>
       </div>
     );
@@ -61,12 +61,12 @@ function App() {
   // Show API Tester if requested
   if (showAPITester) {
     return (
-      <div className="min-h-screen bg-[#f8f9fc]">
+      <div className="min-h-screen bg-background">
         {/* Simple back button */}
-        <div className="bg-white border-b border-slate-200 px-6 py-3">
+        <div className="bg-card border-b border-border px-6 py-3 transition-colors">
           <button
             onClick={() => setShowAPITester(false)}
-            className="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-blue-600 transition-colors"
+            className="flex items-center gap-2 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
           >
             ← Back to Dashboard
           </button>

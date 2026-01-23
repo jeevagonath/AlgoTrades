@@ -218,48 +218,48 @@ export const OptionChain: React.FC<OptionChainProps> = () => {
     };
 
     return (
-        <div className="flex flex-col h-full bg-[#f8f9fc] animate-in fade-in duration-500">
+        <div className="flex flex-col h-full bg-background animate-in fade-in duration-500 transition-colors duration-300">
             {/* Compact Header Control Panel */}
-            <div className="bg-white border-b border-slate-200 px-6 py-2.5 flex items-center justify-end gap-5 shadow-sm sticky top-0 z-30">
+            <div className="bg-card border-b border-border px-6 py-2.5 flex items-center justify-end gap-5 shadow-sm sticky top-0 z-30 transition-colors duration-300">
 
                 {/* Spot & Lot - Now part of the row */}
                 <div className="flex items-center gap-3 mr-auto">
-                    <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-100 border border-slate-200">
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Spot</span>
-                        <span className="text-xs font-bold text-slate-900 font-mono">{spotPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-background dark:bg-slate-900/50 border border-border mt-1">
+                        <span className="text-[9px] font-black text-slate-500 dark:text-slate-500 uppercase tracking-widest">Spot</span>
+                        <span className="text-xs font-black text-foreground font-mono tabular-nums">{spotPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                     </div>
-                    <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-blue-50 border border-blue-100">
-                        <span className="text-[9px] font-black text-blue-400 uppercase tracking-widest">Lot</span>
-                        <span className="text-xs font-bold text-blue-700 font-mono">{lotSize}</span>
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/30 mt-1">
+                        <span className="text-[9px] font-black text-blue-500 dark:text-blue-400 uppercase tracking-widest">Lot</span>
+                        <span className="text-xs font-black text-blue-700 dark:text-blue-400 font-mono">{lotSize}</span>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
-                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Symbol</label>
+                        <label className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Symbol</label>
                         <div className="relative group min-w-[120px]">
                             <select
                                 value={index}
                                 onChange={(e) => setIndex(e.target.value)}
-                                className="w-full appearance-none bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-700 cursor-pointer hover:border-blue-300 hover:bg-white transition-all outline-none"
+                                className="w-full appearance-none bg-card border border-border rounded-lg px-3 py-1.5 text-xs font-black text-foreground cursor-pointer hover:border-blue-500 dark:hover:border-blue-400 transition-all outline-none"
                             >
                                 {indices.map(i => <option key={i} value={i}>{i}</option>)}
                             </select>
-                            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+                            <ChevronDown className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
                         </div>
                     </div>
 
                     <div className="flex items-center gap-2">
-                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Expiry</label>
+                        <label className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Expiry</label>
                         <div className="relative group min-w-[130px]">
                             <select
                                 value={selectedExpiry}
                                 onChange={(e) => setSelectedExpiry(e.target.value)}
-                                className="w-full appearance-none bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-700 cursor-pointer hover:border-blue-300 hover:bg-white transition-all outline-none"
+                                className="w-full appearance-none bg-card border border-border rounded-lg px-3 py-1.5 text-xs font-black text-foreground cursor-pointer hover:border-blue-500 dark:hover:border-blue-400 transition-all outline-none"
                             >
                                 {expiries.map(e => <option key={e} value={e}>{e}</option>)}
                             </select>
-                            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+                            <ChevronDown className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
                         </div>
                     </div>
 
@@ -276,33 +276,33 @@ export const OptionChain: React.FC<OptionChainProps> = () => {
 
             {/* Main Content Area */}
             <div className="flex-1 overflow-hidden flex flex-col px-6 py-4">
-                <div className="bg-white border border-slate-200 rounded-xl shadow-xl shadow-slate-200/50 flex flex-col flex-1 overflow-hidden">
+                <div className="bg-card border border-border rounded-xl shadow-xl shadow-slate-200/50 dark:shadow-slate-900/50 flex flex-col flex-1 overflow-hidden transition-colors duration-300">
 
                     {/* Table Header Grid */}
-                    <div className="bg-slate-50 border-b border-slate-200 grid grid-cols-[1fr_1fr_1fr] sticky top-0 z-20">
-                        <div className="px-4 py-2.5 text-[10px] font-black text-slate-600 uppercase tracking-widest text-center border-r border-slate-100">LTP (CALLS)</div>
-                        <div className="px-4 py-2.5 text-[10px] font-black text-white uppercase tracking-[0.2em] text-center bg-slate-900 relative z-10">Strike</div>
-                        <div className="px-4 py-2.5 text-[10px] font-black text-slate-600 uppercase tracking-widest text-center border-l border-slate-100">LTP (PUTS)</div>
+                    <div className="border-b border-border grid grid-cols-[1fr_1fr_1fr] sticky top-0 z-20">
+                        <div className="bg-background dark:bg-slate-900 px-4 py-3 text-[10px] font-black text-slate-500 dark:text-slate-500 uppercase tracking-widest text-center border-r border-border">LTP (CALLS)</div>
+                        <div className="bg-slate-900 dark:bg-blue-600 px-4 py-3 text-[10px] font-black text-white uppercase tracking-[0.2em] text-center relative z-10 transition-colors">Strike</div>
+                        <div className="bg-background dark:bg-slate-900 px-4 py-3 text-[10px] font-black text-slate-500 dark:text-slate-500 uppercase tracking-widest text-center border-l border-border">LTP (PUTS)</div>
                     </div>
 
                     {/* Table Dynamic Scrollable Body */}
                     <div ref={scrollContainerRef} className="flex-1 overflow-y-auto option-chain-body custom-scrollbar relative">
                         {loading && (
-                            <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] z-50 flex items-center justify-center">
+                            <div className="absolute inset-0 bg-background/60 backdrop-blur-[1px] z-50 flex items-center justify-center">
                                 <div className="flex flex-col items-center gap-3">
-                                    <div className="w-10 h-10 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin"></div>
-                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Updating Chain...</span>
+                                    <div className="w-10 h-10 border-4 border-border border-t-blue-600 rounded-full animate-spin"></div>
+                                    <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">Updating Chain...</span>
                                 </div>
                             </div>
                         )}
 
                         {rows.length === 0 && !loading && (
-                            <div className="flex flex-col items-center justify-center py-32 text-slate-300">
-                                <div className="p-8 rounded-full bg-slate-50 border border-dashed border-slate-200 mb-6">
-                                    <Activity className="w-16 h-16 opacity-10" />
+                            <div className="flex flex-col items-center justify-center py-32 text-slate-400 dark:text-slate-500">
+                                <div className="p-8 rounded-full bg-background dark:bg-slate-900/50 border border-dashed border-border mb-6">
+                                    <Activity className="w-16 h-16 opacity-20 dark:opacity-40 text-blue-500" />
                                 </div>
-                                <p className="text-xs font-black uppercase tracking-[0.3em] opacity-40">Awaiting Market Data</p>
-                                <p className="text-[10px] font-bold text-slate-400 mt-2">Select an expiry to view the option chain</p>
+                                <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500">Awaiting Market Data</p>
+                                <p className="text-[10px] font-bold text-slate-400 dark:text-slate-600 mt-2">Select an expiry to view the option chain</p>
                             </div>
                         )}
 
@@ -320,18 +320,18 @@ export const OptionChain: React.FC<OptionChainProps> = () => {
                                 <div
                                     key={row.strike}
                                     id={isAtmRow ? 'atm-row' : undefined}
-                                    className={`grid grid-cols-[1fr_1fr_1fr] border-b border-slate-100 transition-all duration-300 ${isAtmRow ? 'bg-blue-50/50' : 'hover:bg-slate-50/50'}`}
+                                    className={`grid grid-cols-[1fr_1fr_1fr] border-b border-border transition-all duration-300 ${isAtmRow ? 'bg-blue-50/50 dark:bg-blue-900/10' : 'hover:bg-slate-50/50 dark:hover:bg-slate-800/30'}`}
                                 >
                                     {/* Calls LTP */}
-                                    <div className={`px-4 py-2 text-[11px] font-bold text-center font-mono border-r border-slate-50 flex items-center justify-between group ${isCallOTM ? 'bg-amber-50/40 text-slate-400' : 'bg-white text-emerald-600'}`}>
-                                        <div className="flex-1 text-center">{row.call?.ltp.toFixed(2) || '-'}</div>
+                                    <div className={`px-4 py-3 text-[11px] font-bold text-center font-mono border-r border-border flex items-center justify-between group ${isCallOTM ? 'bg-background/80 dark:bg-slate-900/60 text-slate-500 dark:text-slate-500' : 'bg-card text-emerald-600 dark:text-emerald-400'}`}>
+                                        <div className="flex-1 text-center tabular-nums">{row.call?.ltp.toFixed(2) || '-'}</div>
                                         {row.call && (
                                             <button
                                                 onClick={() => {
                                                     const tvSymbol = formatTradingViewSymbol(row.call!.tsym);
                                                     if (tvSymbol) openTradingViewChart(tvSymbol);
                                                 }}
-                                                className="opacity-0 group-hover:opacity-100 p-1 hover:bg-slate-100 rounded transition-all text-slate-400 hover:text-blue-600"
+                                                className="opacity-0 group-hover:opacity-100 p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-all text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400"
                                                 title="View Call Chart"
                                             >
                                                 <BarChart3 className="w-3 h-3" />
@@ -340,25 +340,25 @@ export const OptionChain: React.FC<OptionChainProps> = () => {
                                     </div>
 
                                     {/* Center Strike */}
-                                    <div className={`px-4 py-2 text-[11px] font-black text-center font-mono shadow-sm relative z-10 transition-all duration-300 ${isAtmRow ? 'bg-slate-900 text-white scale-[1.02] shadow-xl z-20' : 'bg-slate-100/30 text-slate-900 border-x border-slate-100'}`}>
+                                    <div className={`px-4 py-3 text-[11px] font-black text-center font-mono shadow-sm relative z-10 transition-all duration-300 ${isAtmRow ? 'bg-slate-900 dark:bg-blue-600 text-white scale-[1.05] shadow-xl dark:shadow-blue-900/40 z-20' : 'bg-background dark:bg-slate-900/80 text-foreground dark:text-slate-200 border-x border-border font-bold'}`}>
                                         {row.strike}
                                     </div>
 
                                     {/* Puts LTP */}
-                                    <div className={`px-4 py-2 text-[11px] font-bold text-center font-mono border-l border-slate-50 flex items-center justify-between group ${isPutOTM ? 'bg-amber-50/40 text-slate-400' : 'bg-white text-emerald-600'}`}>
+                                    <div className={`px-4 py-3 text-[11px] font-bold text-center font-mono border-l border-border flex items-center justify-between group ${isPutOTM ? 'bg-background/80 dark:bg-slate-900/60 text-slate-500 dark:text-slate-500' : 'bg-card text-emerald-600 dark:text-emerald-400'}`}>
                                         {row.put && (
                                             <button
                                                 onClick={() => {
                                                     const tvSymbol = formatTradingViewSymbol(row.put!.tsym);
                                                     if (tvSymbol) openTradingViewChart(tvSymbol);
                                                 }}
-                                                className="opacity-0 group-hover:opacity-100 p-1 hover:bg-slate-100 rounded transition-all text-slate-400 hover:text-blue-600"
+                                                className="opacity-0 group-hover:opacity-100 p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-all text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400"
                                                 title="View Put Chart"
                                             >
                                                 <BarChart3 className="w-3 h-3" />
                                             </button>
                                         )}
-                                        <div className="flex-1 text-center">{row.put?.ltp.toFixed(2) || '-'}</div>
+                                        <div className="flex-1 text-center tabular-nums">{row.put?.ltp.toFixed(2) || '-'}</div>
                                     </div>
                                 </div>
                             );
@@ -378,6 +378,12 @@ export const OptionChain: React.FC<OptionChainProps> = () => {
 
             <style dangerouslySetInnerHTML={{
                 __html: `
+                .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background: rgba(255, 255, 255, 0.1);
+                }
+                .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background: rgba(255, 255, 255, 0.2);
+                }
                 .custom-scrollbar::-webkit-scrollbar {
                     width: 6px;
                 }

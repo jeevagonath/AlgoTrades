@@ -60,25 +60,25 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
     };
 
     return (
-        <div className="min-h-screen bg-[#f8f9fc] bg-linear-to-br from-white to-slate-100 flex items-center justify-center p-4 relative overflow-hidden">
+        <div className="min-h-screen bg-background bg-linear-to-br from-background to-slate-100 dark:to-slate-900 flex items-center justify-center p-4 relative overflow-hidden transition-colors duration-500">
             {/* Decorative background elements */}
-            <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/5 rounded-full blur-[120px]" />
-            <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-500/5 rounded-full blur-[120px]" />
+            <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/5 dark:bg-blue-500/10 rounded-full blur-[120px]" />
+            <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-500/5 dark:bg-purple-500/10 rounded-full blur-[120px]" />
 
             <div className="w-full max-w-md space-y-8 relative z-10">
                 <div className="text-center space-y-3">
-                    <div className="inline-flex items-center justify-center p-4 bg-white rounded-3xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] mb-2 overflow-hidden">
+                    <div className="inline-flex items-center justify-center p-4 bg-card rounded-3xl border border-border shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none mb-2 overflow-hidden transition-colors">
                         <img src="/logo.png" alt="AlgoTrades Logo" className="w-14 h-14 object-contain" />
                     </div>
                     <div className="space-y-1">
-                        <h1 className="text-4xl font-black tracking-tighter text-transparent bg-clip-text bg-linear-to-r from-slate-900 to-slate-600">
+                        <h1 className="text-4xl font-black tracking-tighter text-transparent bg-clip-text bg-linear-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400">
                             AlgoTrades
                         </h1>
-                        <p className="text-slate-400 text-sm font-semibold uppercase tracking-widest">Trading Intelligence</p>
+                        <p className="text-slate-400 dark:text-slate-500 text-sm font-semibold uppercase tracking-widest transition-colors">Trading Intelligence</p>
                     </div>
                 </div>
 
-                <div className="bg-white/80 backdrop-blur-xl border border-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] p-10 space-y-8">
+                <div className="bg-card/80 dark:bg-card/90 backdrop-blur-xl border border-border rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] dark:shadow-slate-950/20 p-10 space-y-8 transition-colors">
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {error && (
                             <div className="bg-rose-50 border border-rose-100 text-rose-600 p-4 rounded-2xl text-sm font-bold text-center animate-in shake duration-500">
@@ -96,7 +96,7 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
                                         required
                                         value={formData.userid}
                                         onChange={handleChange}
-                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-12 pr-4 text-slate-900 font-medium focus:outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500/50 transition-all placeholder:text-slate-300 shadow-sm"
+                                        className="w-full bg-background dark:bg-slate-900/50 border border-border rounded-2xl py-4 pl-12 pr-4 text-foreground font-medium focus:outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500/50 transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600 shadow-sm"
                                         placeholder="Broker User ID"
                                     />
                                 </div>
@@ -112,7 +112,7 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
                                         required
                                         value={formData.password}
                                         onChange={handleChange}
-                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-12 pr-4 text-slate-900 font-medium focus:outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500/50 transition-all placeholder:text-slate-300 shadow-sm"
+                                        className="w-full bg-background dark:bg-slate-900/50 border border-border rounded-2xl py-4 pl-12 pr-4 text-foreground font-medium focus:outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500/50 transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600 shadow-sm"
                                         placeholder="Enter Password"
                                     />
                                 </div>
@@ -129,7 +129,7 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
                                             required
                                             value={formData.twoFA}
                                             onChange={handleChange}
-                                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-12 pr-4 text-slate-900 font-medium focus:outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500/50 transition-all placeholder:text-slate-300 shadow-sm"
+                                            className="w-full bg-background dark:bg-slate-900/50 border border-border rounded-2xl py-4 pl-12 pr-4 text-foreground font-medium focus:outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500/50 transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600 shadow-sm"
                                             placeholder="123456"
                                         />
                                     </div>
@@ -144,7 +144,7 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
                                             required
                                             value={formData.vendor_code}
                                             onChange={handleChange}
-                                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-12 pr-4 text-slate-900 font-medium focus:outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500/50 transition-all placeholder:text-slate-300 shadow-sm"
+                                            className="w-full bg-background dark:bg-slate-900/50 border border-border rounded-2xl py-4 pl-12 pr-4 text-foreground font-medium focus:outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500/50 transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600 shadow-sm"
                                             placeholder="Code"
                                         />
                                     </div>
@@ -159,7 +159,7 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
                                     required
                                     value={formData.api_secret}
                                     onChange={handleChange}
-                                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-4 text-slate-900 font-medium focus:outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500/50 transition-all placeholder:text-slate-300 shadow-sm"
+                                    className="w-full bg-background dark:bg-slate-900/50 border border-border rounded-2xl py-4 px-4 text-foreground font-medium focus:outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500/50 transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600 shadow-sm"
                                     placeholder="Enter Broker API Secret"
                                 />
                             </div>
@@ -174,7 +174,7 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
                                         required
                                         value={formData.imei}
                                         onChange={handleChange}
-                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-12 pr-4 text-slate-900 font-medium focus:outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500/50 transition-all placeholder:text-slate-300 shadow-sm"
+                                        className="w-full bg-background dark:bg-slate-900/50 border border-border rounded-2xl py-4 pl-12 pr-4 text-foreground font-medium focus:outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500/50 transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600 shadow-sm"
                                         placeholder="e.g. ABC-123-XYZ"
                                     />
                                 </div>
@@ -184,7 +184,7 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-5 rounded-2xl shadow-xl shadow-slate-900/10 transition-all active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2 group relative overflow-hidden"
+                            className="w-full bg-slate-900 dark:bg-blue-600 hover:bg-slate-800 dark:hover:bg-blue-700 text-white font-bold py-5 rounded-2xl shadow-xl shadow-slate-900/10 dark:shadow-blue-900/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2 group relative overflow-hidden"
                         >
                             <div className="absolute inset-0 bg-linear-to-r from-blue-600/20 to-purple-600/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                             {loading ? (
@@ -209,15 +209,15 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
 
             {/* Password Expiry Modal */}
             {passwordExpired && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
-                    <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 space-y-6 animate-in zoom-in duration-300">
+                <div className="fixed inset-0 bg-background/60 dark:bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+                    <div className="bg-card rounded-3xl shadow-2xl max-w-md w-full p-8 space-y-6 animate-in zoom-in duration-300 border border-border">
                         <div className="flex flex-col items-center space-y-4">
-                            <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center">
-                                <Lock className="w-8 h-8 text-amber-600" />
+                            <div className="w-16 h-16 bg-amber-100 dark:bg-amber-900/20 rounded-full flex items-center justify-center">
+                                <Lock className="w-8 h-8 text-amber-600 dark:text-amber-500" />
                             </div>
                             <div className="text-center space-y-2">
-                                <h2 className="text-2xl font-bold text-slate-900">Password Expired</h2>
-                                <p className="text-slate-600 text-sm">
+                                <h2 className="text-2xl font-bold text-foreground">Password Expired</h2>
+                                <p className="text-slate-600 dark:text-slate-400 text-sm">
                                     {error || 'Your Shoonya password has expired and needs to be changed.'}
                                 </p>
                             </div>
@@ -236,14 +236,14 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
                                     setPasswordExpired(false);
                                     setError(null);
                                 }}
-                                className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-4 rounded-2xl transition-all active:scale-[0.98]"
+                                className="w-full bg-background dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-foreground font-bold py-4 rounded-2xl border border-border transition-all active:scale-[0.98]"
                             >
                                 Close
                             </button>
                         </div>
 
-                        <p className="text-xs text-slate-400 text-center">
-                            After changing your password, return here to login with your new credentials.
+                        <p className="text-xs text-slate-400 dark:text-slate-500 text-center uppercase font-bold tracking-widest transition-colors">
+                            After modifying your security credentials, return here to authenticate.
                         </p>
                     </div>
                 </div>

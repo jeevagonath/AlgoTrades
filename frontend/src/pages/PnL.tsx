@@ -72,18 +72,18 @@ export default function PnL() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 p-6">
+        <div className="min-h-screen bg-background p-6 transition-colors duration-300">
             <div className="max-w-7xl mx-auto space-y-6">
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-3xl font-black text-slate-900">P&L Analytics</h1>
-                        <p className="text-sm text-slate-600 mt-1">Track your trading performance over time</p>
+                        <h1 className="text-3xl font-black text-foreground">P&L Analytics</h1>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Track your trading performance over time</p>
                     </div>
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => window.history.back()}
-                            className="px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors"
+                            className="px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:text-foreground transition-colors"
                         >
                             ← Back to Dashboard
                         </button>
@@ -91,43 +91,43 @@ export default function PnL() {
                 </div>
 
                 {/* Filters */}
-                <div className="bg-white rounded-2xl p-6 border border-slate-200">
+                <div className="bg-card rounded-2xl p-6 border border-border shadow-sm transition-colors">
                     <div className="flex flex-wrap items-end gap-4">
                         <div className="flex-1 min-w-[200px]">
-                            <label className="block text-xs font-bold text-slate-700 mb-2">START DATE</label>
+                            <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Start Date</label>
                             <input
                                 type="date"
                                 value={startDate}
                                 onChange={(e) => setStartDate(e.target.value)}
-                                className="w-full px-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full bg-background border border-border rounded-lg text-sm text-foreground px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
                             />
                         </div>
                         <div className="flex-1 min-w-[200px]">
-                            <label className="block text-xs font-bold text-slate-700 mb-2">END DATE</label>
+                            <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">End Date</label>
                             <input
                                 type="date"
                                 value={endDate}
                                 onChange={(e) => setEndDate(e.target.value)}
-                                className="w-full px-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full bg-background border border-border rounded-lg text-sm text-foreground px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
                             />
                         </div>
                         <div className="flex-1 min-w-[200px]">
-                            <label className="block text-xs font-bold text-slate-700 mb-2">MODE</label>
+                            <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Mode</label>
                             <select
                                 value={isVirtual ? 'virtual' : 'live'}
                                 onChange={(e) => setIsVirtual(e.target.value === 'virtual')}
-                                className="w-full px-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full bg-background border border-border rounded-lg text-sm text-foreground px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors appearance-none cursor-pointer"
                             >
-                                <option value="virtual">Virtual</option>
-                                <option value="live">Live</option>
+                                <option value="virtual">Virtual Simulation</option>
+                                <option value="live">Live Trading</option>
                             </select>
                         </div>
                         <button
                             onClick={fetchData}
                             disabled={loading}
-                            className="px-6 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                            className="px-8 py-2 bg-slate-900 dark:bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-slate-800 dark:hover:bg-blue-700 transition-all shadow-lg dark:shadow-blue-900/20 active:scale-95 disabled:opacity-50"
                         >
-                            {loading ? 'Loading...' : 'Apply'}
+                            {loading ? 'Refreshing...' : 'Analyze Data'}
                         </button>
                     </div>
                 </div>
@@ -135,50 +135,50 @@ export default function PnL() {
                 {/* Summary Cards */}
                 {summary && (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div className="bg-white rounded-xl p-6 border border-slate-200">
+                        <div className="bg-card rounded-xl p-6 border border-border shadow-sm transition-colors">
                             <div className="flex items-center justify-between mb-3">
-                                <span className="text-xs font-bold text-slate-600">REALIZED P&L</span>
-                                <TrendingUp className={`w-4 h-4 ${summary.totalRealizedPnL >= 0 ? 'text-green-600' : 'text-red-600'}`} />
+                                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Realized P&L</span>
+                                <TrendingUp className={`w-4 h-4 ${summary.totalRealizedPnL >= 0 ? 'text-emerald-500' : 'text-rose-500'}`} />
                             </div>
-                            <div className={`text-2xl font-black ${summary.totalRealizedPnL >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            <div className={`text-2xl font-black ${summary.totalRealizedPnL >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
                                 {formatCurrency(summary.totalRealizedPnL)}
                             </div>
-                            <div className="text-xs text-slate-500 mt-1">{summary.totalTrades} trades</div>
+                            <div className="text-xs text-slate-400 dark:text-slate-500 mt-1 uppercase font-bold tracking-tighter">{summary.totalTrades} trades executed</div>
                         </div>
 
-                        <div className="bg-white rounded-xl p-6 border border-slate-200">
+                        <div className="bg-card rounded-xl p-6 border border-border shadow-sm transition-colors">
                             <div className="flex items-center justify-between mb-3">
-                                <span className="text-xs font-bold text-slate-600">WIN RATE</span>
-                                <Target className="w-4 h-4 text-blue-600" />
+                                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Efficiency Rate</span>
+                                <Target className="w-4 h-4 text-blue-500" />
                             </div>
-                            <div className="text-2xl font-black text-slate-900">
+                            <div className="text-2xl font-black text-foreground">
                                 {summary.winRate.toFixed(1)}%
                             </div>
-                            <div className="text-xs text-slate-500 mt-1">
-                                {summary.winningTrades}W / {summary.losingTrades}L
+                            <div className="text-xs text-slate-400 dark:text-slate-500 mt-1 uppercase font-bold tracking-tighter">
+                                {summary.winningTrades}W / {summary.losingTrades}L Ratio
                             </div>
                         </div>
 
-                        <div className="bg-white rounded-xl p-6 border border-slate-200">
+                        <div className="bg-card rounded-xl p-6 border border-border shadow-sm transition-colors">
                             <div className="flex items-center justify-between mb-3">
-                                <span className="text-xs font-bold text-slate-600">MAX PROFIT DAY</span>
-                                <Award className="w-4 h-4 text-green-600" />
+                                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Peak Performance</span>
+                                <Award className="w-4 h-4 text-emerald-500" />
                             </div>
-                            <div className="text-2xl font-black text-green-600">
+                            <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
                                 {formatCurrency(summary.maxProfitDay)}
                             </div>
-                            <div className="text-xs text-slate-500 mt-1">Best single day</div>
+                            <div className="text-xs text-slate-400 dark:text-slate-500 mt-1 uppercase font-bold tracking-tighter">Best single session</div>
                         </div>
 
-                        <div className="bg-white rounded-xl p-6 border border-slate-200">
+                        <div className="bg-card rounded-xl p-6 border border-border shadow-sm transition-colors">
                             <div className="flex items-center justify-between mb-3">
-                                <span className="text-xs font-bold text-slate-600">MAX LOSS DAY</span>
-                                <TrendingDown className="w-4 h-4 text-red-600" />
+                                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Drawdown Limit</span>
+                                <TrendingDown className="w-4 h-4 text-rose-500" />
                             </div>
-                            <div className="text-2xl font-black text-red-600">
+                            <div className="text-2xl font-black text-rose-600 dark:text-rose-400">
                                 {formatCurrency(summary.maxLossDay)}
                             </div>
-                            <div className="text-xs text-slate-500 mt-1">Worst single day</div>
+                            <div className="text-xs text-slate-400 dark:text-slate-500 mt-1 uppercase font-bold tracking-tighter">Worst single session</div>
                         </div>
                     </div>
                 )}
