@@ -364,15 +364,6 @@ export const OptionChain: React.FC<OptionChainProps> = () => {
                             );
                         })}
                     </div>
-
-                    {/* Footer Info */}
-                    <div className="mt-4 flex items-center justify-between opacity-50 px-4 pb-4">
-                        <div className="flex items-center gap-2">
-                            <Clock className="w-3 h-3" />
-                            <span className="text-[10px] font-bold uppercase tracking-widest">Live Updates Connected</span>
-                        </div>
-                        <span className="text-[10px] font-bold uppercase tracking-widest">AlgoTrades Pro v2.0</span>
-                    </div>
                 </div>
             </div>
 
