@@ -7,6 +7,7 @@ import { formatOptionSymbol } from '@/utils/formatters';
 import { useAnimatedValue, useFlashOnChange } from '@/hooks/useAnimations';
 import { CalendarHeatmap } from '@/components/CalendarHeatmap';
 import { PositionDetailsModal } from '@/components/PositionDetailsModal';
+import { OptionChain } from '@/components/OptionChain';
 import APITester from './APITester';
 
 // --- Types ---
@@ -363,7 +364,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
     const [nextWeekExpiry, setNextWeekExpiry] = useState<string>('');
     const [isExpiryDay, setIsExpiryDay] = useState(false);
 
-    const [activeTab, setActiveTab] = useState<'positions' | 'orders' | 'logs' | 'alerts' | 'pnl' | 'api'>('positions');
+    const [activeTab, setActiveTab] = useState<'positions' | 'orders' | 'logs' | 'alerts' | 'pnl' | 'api' | 'option-chain'>('positions');
     const [dailyPnL, setDailyPnL] = useState<any[]>([]);
     const [showPositionModal, setShowPositionModal] = useState(false);
     const [selectedDate, setSelectedDate] = useState('');
@@ -915,6 +916,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                     { id: 'positions', label: 'Positions', icon: ListOrdered },
                                     { id: 'orders', label: 'Orders', icon: History },
                                     { id: 'pnl', label: 'P&L Analytics', icon: BarChart3 },
+                                    { id: 'option-chain', label: 'Option Chain', icon: Search },
                                     { id: 'alerts', label: 'Alerts', icon: Bell },
                                     { id: 'logs', label: 'Logs', icon: Activity }
                                 ].map((tab) => (
@@ -1306,12 +1308,8 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                         <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
                             <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                                 <h2 className="font-bold text-xs uppercase tracking-wider flex items-center gap-2 text-slate-700">
-                                    {activeTab === 'positions' && <ListOrdered className="w-4 h-4 text-blue-600" />}
-                                    {activeTab === 'orders' && <History className="w-4 h-4 text-blue-600" />}
-                                    {activeTab === 'alerts' && <Bell className="w-4 h-4 text-blue-600" />}
-                                    {activeTab === 'logs' && <Activity className="w-4 h-4 text-blue-600" />}
-                                    {activeTab === 'pnl' && <BarChart3 className="w-4 h-4 text-blue-600" />}
-                                    {activeTab === 'positions' ? 'Active Positions' : activeTab === 'orders' ? 'Order History' : activeTab === 'alerts' ? 'System Alerts' : activeTab === 'pnl' ? 'P&L Analytics' : 'Engine Logs'}
+                                    {activeTab === 'option-chain' && <Search className="w-4 h-4 text-blue-600" />}
+                                    {activeTab === 'positions' ? 'Active Positions' : activeTab === 'orders' ? 'Order History' : activeTab === 'alerts' ? 'System Alerts' : activeTab === 'pnl' ? 'P&L Analytics' : activeTab === 'option-chain' ? 'Option Chain' : 'Engine Logs'}
                                 </h2>
                                 {activeTab === 'logs' && (
                                     <button
@@ -1518,6 +1516,10 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                             No recent activity detected
                                         </div>
                                     )}
+                                </div>
+                            ) : activeTab === 'option-chain' ? (
+                                <div className="h-[600px]">
+                                    <OptionChain />
                                 </div>
                             ) : null}
                         </div>

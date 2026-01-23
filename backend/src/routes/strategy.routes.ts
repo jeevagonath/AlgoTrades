@@ -182,6 +182,26 @@ export async function strategyRoutes(app: FastifyInstance) {
         }
     });
 
+    app.get('/option-chain', async (request, reply) => {
+        try {
+            const { symbol, strikeprice, count } = request.query as { symbol: string; strikeprice: string; count?: string };
+
+            if (!symbol || !strikeprice) {
+                return reply.status(400).send({ status: 'error', message: 'Symbol and strikeprice are required' });
+            }
+
+            const { shoonya } = await import('../services/shoonya.service');
+            if (!shoonya.isLoggedIn()) {
+                return reply.status(401).send({ status: 'error', message: 'Not logged in' });
+            }
+
+            const data = await shoonya.getOptionChain('NFO', symbol, parseFloat(strikeprice), parseInt(count || '20'));
+            return { status: 'success', data };
+        } catch (err: any) {
+            return reply.status(500).send({ status: 'error', message: err.message });
+        }
+    });
+
 
     app.get('/orders', async (request, reply) => {
         try {

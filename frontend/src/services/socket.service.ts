@@ -35,6 +35,10 @@ class SocketService {
     subscribe(tokens: string[]) {
         this.socket?.emit('subscribe', tokens);
     }
+
+    unsubscribe(tokens: string[]) {
+        this.socket?.emit('unsubscribe', tokens);
+    }
 }
 
 export const socketService = new SocketService();
