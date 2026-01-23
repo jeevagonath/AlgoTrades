@@ -1000,7 +1000,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                         <div className="space-y-6">
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Entry Time</label>
+                                    <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 tracking-wider">Entry Time</label>
                                     <input
                                         type="time"
                                         value={settings.entryTime}
@@ -1009,7 +1009,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Exit Time</label>
+                                    <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 tracking-wider">Exit Time</label>
                                     <input
                                         type="time"
                                         value={settings.exitTime}
@@ -1020,7 +1020,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">
+                                <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 tracking-wider">
                                     Re-Entry Cutoff Time
                                     <span className="ml-2 text-[9px] normal-case text-slate-400">(Positions closed before this time are eligible for re-entry)</span>
                                 </label>
@@ -1033,7 +1033,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Target Profit (₹)</label>
+                                <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 tracking-wider">Target Profit (₹)</label>
                                 <input
                                     type="number"
                                     value={settings.targetPnl}
@@ -1043,7 +1043,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Stop Loss (₹)</label>
+                                <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 tracking-wider">Stop Loss (₹)</label>
                                 <input
                                     type="number"
                                     value={settings.stopLossPnl}
@@ -1055,7 +1055,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                             <div className="h-px bg-border my-2" />
 
                             <div className="space-y-2">
-                                <label className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Trading Mode</label>
+                                <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 tracking-wider">Trading Mode</label>
                                 <div className="grid grid-cols-2 gap-3">
                                     <button
                                         onClick={() => setSettings({ ...settings, isVirtual: true })}
@@ -1080,42 +1080,40 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
 
                             <div className="space-y-4">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-bold uppercase text-slate-500 tracking-wider text-slate-500">Telegram Bot Token</label>
+                                    <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 tracking-wider">Telegram Bot Token</label>
                                     <input
                                         type="text"
                                         value={settings.telegramToken}
                                         onChange={e => setSettings({ ...settings, telegramToken: e.target.value })}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-xs font-mono text-slate-600 outline-none focus:border-blue-500 transition-colors"
+                                        className="w-full bg-background dark:bg-slate-900/50 border border-border rounded-lg px-4 py-2.5 text-xs font-mono text-slate-700 dark:text-slate-300 outline-none focus:border-blue-500 transition-colors"
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-bold uppercase text-slate-500 tracking-wider text-slate-500">Telegram Chat ID</label>
+                                    <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 tracking-wider">Telegram Chat ID</label>
                                     <input
                                         type="text"
                                         value={settings.telegramChatId}
                                         onChange={e => setSettings({ ...settings, telegramChatId: e.target.value })}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-xs font-mono text-slate-600 outline-none focus:border-blue-500 transition-colors"
+                                        className="w-full bg-background dark:bg-slate-900/50 border border-border rounded-lg px-4 py-2.5 text-xs font-mono text-slate-700 dark:text-slate-300 outline-none focus:border-blue-500 transition-colors"
                                     />
                                 </div>
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-bold uppercase text-slate-500 tracking-wider flex items-center gap-2">
-                                    📅 Manual Expiry Dates
-                                </label>
-                                <textarea
-                                    value={manualExpiriesText}
-                                    onChange={e => setManualExpiriesText(e.target.value)}
-                                    placeholder='{"expiryDates":["13-Jan-2026","20-Jan-2026", "27-Jan-2026"]}'
-                                    rows={4}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-xs font-mono text-slate-600 outline-none focus:border-blue-500 transition-colors resize-none"
-                                />
-                            </div>
+                            <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 tracking-wider flex items-center gap-2">
+                                📅 Manual Expiry Dates
+                            </label>
+                            <textarea
+                                value={manualExpiriesText}
+                                onChange={e => setManualExpiriesText(e.target.value)}
+                                placeholder='{"expiryDates":["13-Jan-2026","20-Jan-2026", "27-Jan-2026"]}'
+                                rows={4}
+                                className="w-full bg-background dark:bg-slate-900/50 border border-border rounded-lg px-4 py-3 text-xs font-mono text-slate-700 dark:text-slate-300 outline-none focus:border-blue-500 transition-colors resize-none"
+                            />
                         </div>
 
                         <button
                             onClick={handleSaveSettings}
-                            className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-all shadow-lg"
+                            className="w-full bg-slate-900 dark:bg-blue-600 hover:bg-slate-800 dark:hover:bg-blue-700 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-all shadow-lg dark:shadow-blue-900/20 active:scale-[0.98]"
                         >
                             <Save className="w-4 h-4" />
                             Save Configuration
