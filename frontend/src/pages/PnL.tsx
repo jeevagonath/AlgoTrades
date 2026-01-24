@@ -23,7 +23,6 @@ export default function PnL() {
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        // Set default date range (last 6 months)
         const end = new Date();
         const start = new Date();
         start.setMonth(start.getMonth() - 6);
