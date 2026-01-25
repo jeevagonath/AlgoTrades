@@ -681,7 +681,7 @@ export const db = {
             }
 
             return (data || []).map(d => ({
-                time: new Date(d.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+                time: new Date(d.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' }),
                 pnl: d.pnl
             }));
         } catch (err) {
@@ -742,6 +742,34 @@ export const db = {
             return { success: true, deletedCount };
         } catch (err) {
             console.error('Failed to cleanup old alerts:', err);
+            return { success: false, error: err, deletedCount: 0 };
+        }
+    },
+
+    async cleanupPnlSnapshots() {
+        try {
+            // Calculate cutoff date (30 days ago)
+            const cutoffDate = new Date();
+            cutoffDate.setDate(cutoffDate.getDate() - 30);
+            const cutoffISO = cutoffDate.toISOString();
+
+            console.log(`[DB Cleanup] Deleting PnL snapshots older than ${cutoffDate.toLocaleDateString()}...`);
+
+            const { data, error, count } = await supabase
+                .from('pnl_snapshots')
+                .delete({ count: 'exact' })
+                .lt('created_at', cutoffISO);
+
+            if (error) {
+                console.error('Supabase PnL Snapshots Cleanup Error:', error);
+                return { success: false, error, deletedCount: 0 };
+            }
+
+            const deletedCount = count || 0;
+            console.log(`[DB Cleanup] ✅ Deleted ${deletedCount} old pnl_snapshots records`);
+            return { success: true, deletedCount };
+        } catch (err) {
+            console.error('Failed to cleanup old PnL snapshots:', err);
             return { success: false, error: err, deletedCount: 0 };
         }
     }

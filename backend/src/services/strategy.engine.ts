@@ -391,9 +391,10 @@ class StrategyEngine {
                 this.addLog('🧹 [Cleanup] Running daily database cleanup...');
                 const logsResult = await db.cleanupOldLogs();
                 const alertsResult = await db.cleanupOldAlerts();
+                const pnlResult = await db.cleanupPnlSnapshots();
 
-                if (logsResult.success || alertsResult.success) {
-                    const totalDeleted = (logsResult.deletedCount || 0) + (alertsResult.deletedCount || 0);
+                if (logsResult.success || alertsResult.success || pnlResult.success) {
+                    const totalDeleted = (logsResult.deletedCount || 0) + (alertsResult.deletedCount || 0) + (pnlResult.deletedCount || 0);
                     this.addLog(`🧹 [Cleanup] Completed: ${totalDeleted} old records deleted`);
                 }
             } catch (err) {
