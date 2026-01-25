@@ -1221,7 +1221,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                 <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md border border-border ${socketStatus.connected ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400'}`}>
                                     <div className={`w-1 h-1 rounded-full ${socketStatus.connected ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`}></div>
                                     <span className="text-[8px] font-black uppercase tracking-tighter">
-                                        {socketStatus.connected ? 'LIVE' : 'OFFLINE'}
+                                        {socketStatus.connected ? `${socketStatus.subscribedCount} LIVE` : 'OFFLINE'}
                                     </span>
                                 </div>
                             </div>
