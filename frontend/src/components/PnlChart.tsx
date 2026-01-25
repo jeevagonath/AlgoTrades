@@ -57,7 +57,7 @@ export const PnlChart: React.FC<PnlChartProps> = ({ data, className }) => {
                                 color: '#f8fafc'
                             }}
                             itemStyle={{ color: '#10b981' }}
-                            formatter={(value: number) => [`₹${value.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`, 'P&L']}
+                            formatter={(value: number | undefined) => [`₹${(value ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`, 'P&L']}
                             labelStyle={{ color: '#94a3b8', marginBottom: '4px' }}
                         />
                         <Area
