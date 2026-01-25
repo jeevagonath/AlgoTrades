@@ -338,6 +338,33 @@ class ShoonyaService {
                 .catch(reject);
         });
     }
+
+    async getIndexList(exchange: string) {
+        return new Promise((resolve, reject) => {
+            if (!this.api.get_index_list) {
+                reject('API get_index_list not defined');
+                return;
+            }
+
+            if (!this.isLoggedIn()) {
+                reject('Not/Shoonya Session Invalid');
+                return;
+            }
+
+            this.api.get_index_list(exchange)
+                .then((res: any) => {
+                    if (res.stat === 'Ok') {
+                        // Log the response as requested
+                        console.log(`[Shoonya] Index List for ${exchange}:`, JSON.stringify(res.values, null, 2));
+                        resolve(res.values);
+                    } else {
+                        console.error(`[Shoonya] Failed to get index list for ${exchange}:`, res);
+                        reject(res);
+                    }
+                })
+                .catch(reject);
+        });
+    }
 }
 
 export const shoonya = new ShoonyaService();

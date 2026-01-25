@@ -21,6 +21,7 @@
     "crypto-js": "^4.2.0",
     "fastify": "^5.6.2",
     "node-cron": "^4.2.1",
+    "otpauth": "^9.4.1",
     "socket.io": "^4.8.3",
     "ws": "^8.19.0"
   },

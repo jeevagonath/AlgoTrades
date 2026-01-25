@@ -46,6 +46,7 @@ var NorenRestApi = function (params) {
     'scripinfo': '/GetSecurityInfo',
     'getquotes': '/GetQuotes',
     'basket_margin': '/MarginCalculator/BasketMargin',
+    'get_index_list': '/GetIndexList',
     'user_details': '/UserDetails',
     'client_details': '/ClientDetails',
   }
@@ -81,6 +82,11 @@ var NorenRestApi = function (params) {
       data: error.response?.data
     };
 
+    // Debug: Log full error details to console
+    if (error.response && error.response.data) {
+      console.error('[Shoonya API Valid Error Data]', JSON.stringify(error.response.data, null, 2));
+    }
+
     return Promise.reject(errorObj);
   });
 
@@ -96,10 +102,26 @@ var NorenRestApi = function (params) {
   }
 
   self.setSessionDetails = function (response) {
+    console.log('[RestApi] setSessionDetails called with:', JSON.stringify(response, null, 2));
     self.__susertoken = response.susertoken;
     self.__username = response.uid || response.actid;
     self.__accountid = response.actid || response.uid;
+    console.log(`[RestApi] Session Set: username=${self.__username}, accountid=${self.__accountid}`);
+  };
 
+  /**
+   * Description
+   * @method get_index_list
+   * @param {string} exchange
+   * @param {string} uid (optional)
+   */
+  self.get_index_list = function (exchange, uid) {
+    let values = {};
+    values["uid"] = uid || self.__username; // Use passed uid or fallback to stored username
+    values["exch"] = exchange;
+
+    let reply = post_request("get_index_list", values, self.__susertoken);
+    return reply;
   };
 
   /**
@@ -473,6 +495,21 @@ var NorenRestApi = function (params) {
     values["list"] = params.list;
 
     let reply = post_request("basket_margin", values, self.__susertoken);
+    return reply;
+  };
+
+  /**
+   * Description
+   * @method get_index_list
+   * @param {string} exchange
+   */
+  self.get_index_list = function (exchange) {
+    let values = {};
+    values["uid"] = self.__username;
+    values["actid"] = self.__accountid; // Included to match user request "apply the same uid" (and likely actid pattern)
+    values["exch"] = exchange;
+
+    let reply = post_request("get_index_list", values, self.__susertoken);
     return reply;
   };
 

@@ -13,6 +13,21 @@ export async function strategyRoutes(app: FastifyInstance) {
         }
     });
 
+    app.get('/indices', async (request: any, reply) => {
+        try {
+            if (!shoonya.isLoggedIn()) {
+                return reply.status(401).send({ status: 'error', message: 'Not logged in. Please login first.' });
+            }
+
+            const { exchange } = request.query as { exchange: string };
+            // Default to NSE if not provided
+            const data = await shoonya.getIndexList(exchange || 'NSE');
+            return { status: 'success', data };
+        } catch (err: any) {
+            return reply.status(500).send({ status: 'error', message: err.message });
+        }
+    });
+
     app.get('/nse/chain', async (request: any, reply) => {
         try {
             const { symbol } = request.query as { symbol: string };
