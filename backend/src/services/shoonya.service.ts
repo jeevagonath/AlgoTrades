@@ -359,7 +359,7 @@ class ShoonyaService {
                         resolve(res.values);
                     } else {
                         console.error(`[Shoonya] Failed to get index list for ${exchange}:`, res);
-                        reject(res);
+                        reject(new Error(res.emsg || 'Unknown Shoonya API Error'));
                     }
                 })
                 .catch(reject);

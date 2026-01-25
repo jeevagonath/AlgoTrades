@@ -8,6 +8,7 @@ import { useAnimatedValue, useFlashOnChange } from '@/hooks/useAnimations';
 import { CalendarHeatmap } from '@/components/CalendarHeatmap';
 import { PositionDetailsModal } from '@/components/PositionDetailsModal';
 import { OptionChain } from '@/components/OptionChain';
+import { IndicesWidget } from '@/components/IndicesWidget';
 import { useTheme } from '@/hooks/useTheme';
 import { Sun, Moon } from 'lucide-react';
 import APITester from './APITester';
@@ -86,39 +87,6 @@ const AnimatedMetricCard = ({
     );
 };
 
-const NiftyTicker = ({ data }: { data: any }) => {
-    const { displayValue: animatedPrice } = useAnimatedValue(data.price, 300);
-    const isFlashing = useFlashOnChange(data.price);
-
-    return (
-        <div className={`bg-card border border-border rounded-xl p-4 flex items-center justify-between shadow-sm overflow-hidden group transition-all duration-300 ${isFlashing ? 'flash-neutral' : ''}`}>
-            <div className="flex flex-col">
-                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">NIFTY 50</span>
-                <span className="text-lg font-black text-foreground font-mono tracking-tighter transition-all duration-300">
-                    {animatedPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                </span>
-            </div>
-            <div className="flex items-center gap-3">
-                <div className="flex flex-col items-end">
-                    <span className={`text-xs font-bold font-mono transition-colors duration-300 ${data.change >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-                        {data.change > 0 ? '+' : ''}{data.change.toFixed(2)}
-                    </span>
-                    <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold mt-1 transition-colors duration-300 ${data.change >= 0 ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300' : 'bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-300'}`}>
-                        {data.change >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                        {Math.abs(data.changePercent).toFixed(2)}%
-                    </div>
-                </div>
-                <button
-                    onClick={() => openTradingViewChart('NSE:NIFTY')}
-                    className="p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 text-slate-400 hover:text-blue-600 transition-colors"
-                    title="View NIFTY Chart"
-                >
-                    <BarChart3 className="w-5 h-5" />
-                </button>
-            </div>
-        </div>
-    );
-};
 
 const PositionRow = ({ leg }: { leg: LegState }) => {
     const { displayValue: animatedLtp } = useAnimatedValue(leg.ltp, 300);
@@ -407,7 +375,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
     const [nextAction, setNextAction] = useState<string>('Waiting for data...');
     const [isPaused, setIsPaused] = useState(false);
     const [manualExpiriesText, setManualExpiriesText] = useState('');
-    const [niftyData, setNiftyData] = useState<{ price: number, change: number, changePercent: number, prevClose?: number } | null>(null);
+    // const [niftyData, setNiftyData] = useState<{ price: number, change: number, changePercent: number, prevClose?: number } | null>(null);
     const [clientName, setClientName] = useState('Trade User');
     const [clientDetails, setClientDetails] = useState<any>(null);
     const [userDetails, setUserDetails] = useState<any>(null);
@@ -488,7 +456,8 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                     setLogs(logsRes.map((l: any) => ({ time: l.time, msg: l.msg })));
                 }
 
-                // 4. Fetch NIFTY Spot
+                // 4. Fetch NIFTY Spot - Moved to IndicesWidget
+                /*
                 try {
                     const niftyRes = await strategyApi.getNiftySpot();
                     if (niftyRes.status === 'success' && niftyRes.data) {
@@ -499,6 +468,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                 } catch (err) {
                     console.error('Failed to fetch NIFTY spot:', err);
                 }
+                */
 
                 // Fetch Account & Client Info
                 try {
@@ -549,28 +519,8 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
         fetchData();
 
         socketService.on('price_update', (data: any) => {
-            // Check for NIFTY update
-            if (data.token === '26000') {
-                setNiftyData(prev => {
-                    if (!data.lp) return prev;
-                    if (!prev) return prev; // Wait for initial fetch
-
-                    const price = parseFloat(data.lp);
-                    // Use prevClose from state if available
-                    const prevClose = prev.prevClose || (price / (1 + (prev.changePercent / 100)));
-
-                    const change = price - prevClose;
-                    const changePercent = prevClose > 0 ? (change / prevClose) * 100 : 0;
-
-                    return {
-                        price,
-                        change,
-                        changePercent,
-                        prevClose
-                    };
-                });
-                return;
-            }
+            // Check for NIFTY update - Handled in IndicesWidget now
+            if (data.token === '26000') return;
 
             //console.log('[Dashboard] Price Update:', data);
             // Update individual leg LTP in the table
@@ -1307,13 +1257,8 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                     />
 
                     {/* 5. Nifty Ticker */}
-                    {niftyData ? (
-                        <NiftyTicker data={niftyData} />
-                    ) : (
-                        <div className="bg-card border border-border rounded-xl p-4 shadow-sm flex items-center justify-center">
-                            <span className="text-xs text-slate-400 dark:text-slate-500 animate-pulse uppercase font-bold tracking-widest">Loading NIFTY...</span>
-                        </div>
-                    )}
+                    {/* 5. Indices Widget */}
+                    <IndicesWidget />
                 </div>
 
                 {/* Main Content Grid */}

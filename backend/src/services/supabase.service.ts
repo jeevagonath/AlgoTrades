@@ -33,6 +33,8 @@ export const db = {
         if (state.nextAction !== undefined) payload.next_action = state.nextAction;
         if (state.engineActivity !== undefined) payload.engine_activity = state.engineActivity;
         if (state.reEntryCutoffTime !== undefined) payload.re_entry_cutoff_time = state.reEntryCutoffTime;
+        if (state.requiredMargin !== undefined) payload.required_margin = state.requiredMargin;
+        if (state.availableMargin !== undefined) payload.available_margin = state.availableMargin;
         // Fix: Persist re_entry state object
         if (state.reEntry !== undefined) payload.re_entry = state.reEntry;
 

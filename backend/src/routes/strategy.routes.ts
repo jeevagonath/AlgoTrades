@@ -197,6 +197,49 @@ export async function strategyRoutes(app: FastifyInstance) {
         }
     });
 
+    app.get('/vix-spot', async (request, reply) => {
+        try {
+            const { shoonya } = await import('../services/shoonya.service');
+
+            if (!shoonya.isLoggedIn()) {
+                return reply.status(401).send({ status: 'error', message: 'Not logged in' });
+            }
+
+            // India VIX Token is 26017 on NSE
+            const quote: any = await shoonya.getQuotes('NSE', '26017');
+
+            if (quote && quote.lp) {
+                const price = parseFloat(quote.lp);
+                let prevClose = 0;
+                if (quote.c) {
+                    prevClose = parseFloat(quote.c);
+                } else if (quote.pc) {
+                    prevClose = price / (1 + parseFloat(quote.pc) / 100);
+                } else {
+                    prevClose = price;
+                }
+
+                const change = price - prevClose;
+                const changePercent = prevClose > 0 ? (change / prevClose) * 100 : 0;
+
+                return {
+                    status: 'success',
+                    data: {
+                        price,
+                        change,
+                        changePercent,
+                        prevClose,
+                        symbol: 'INDIA VIX'
+                    }
+                };
+            }
+
+            return reply.status(404).send({ status: 'error', message: 'Failed to fetch INDIA VIX data' });
+        } catch (err: any) {
+            return reply.status(500).send({ status: 'error', message: err.message });
+        }
+    });
+
     app.get('/option-chain', async (request, reply) => {
         try {
             const { symbol, expiry, strikeprice, count } = request.query as { symbol: string; expiry: string; strikeprice: string; count?: string };

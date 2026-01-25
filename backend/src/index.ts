@@ -72,8 +72,7 @@ const start = async () => {
                 if (Array.isArray(tokens) && tokens.length > 0) {
                     import('./services/shoonya.service').then(({ shoonya }) => {
                         const formattedTokens = tokens.map(t => {
-                            if (t.includes('|')) return t;
-                            return (t === '26000' || t === '26009') ? `NSE|${t}` : `NFO|${t}`;
+                            return (t === '26000' || t === '26009' || t === '26017') ? `NSE|${t}` : `NFO|${t}`;
                         });
                         shoonya.subscribe(formattedTokens);
                     });

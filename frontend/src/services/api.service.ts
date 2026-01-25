@@ -37,6 +37,7 @@ export const authApi = {
 };
 
 export const strategyApi = {
+    BASE_URL: API_BASE_URL,
     getExpiries: async () => {
         const response = await apiClient.get('/strategy/expiries');
         return response.data;
