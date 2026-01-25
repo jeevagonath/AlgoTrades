@@ -429,10 +429,10 @@ class StrategyEngine {
             await this.triggerExpirySync();
         }, tzOption));
 
-        // 1.8. Periodic Margin Check (Every 1 minute)
+        // 1.8. Periodic Margin Check & PnL Monitor (Every 1 minute)
         this.schedulers.push(cron.schedule('*/1 * * * *', async () => {
-            // Only update margin if session is active
-            await this.updateMargins();
+            // This updates margins, recalculates PnL, and checks SL/Target
+            await this.monitorPnL();
         }, tzOption));
 
 
@@ -581,27 +581,11 @@ class StrategyEngine {
         //console.log(`[Strategy] ${msg}`);
         db.addLog(msg, this.getUid());
         socketService.emit('system_log', {
-```
             time: new Date().toLocaleTimeString('en-GB', { hour12: false }),
             msg
         });
     }
 
-    public async placeOrder() {
-        if (!shoonya.isLoggedIn()) {
-            throw new Error('Shoonya session expired');
-        }
-
-        // Update margins before placing order to capture pre-trade state
-        await this.updateMargins();
-
-        const selectedLegs = this.state.selectedStrikes;
-        // The rest of the placeOrder function logic would go here.
-        // As it's not provided, I'll leave it as is, assuming it's an incomplete snippet.
-        // For now, I'll return a dummy success to keep the code syntactically valid
-        // if this function is called elsewhere (e.g., in executeRolloverSequence).
-        return { status: 'success', message: 'Order placement logic not fully implemented yet.' };
-    }
 
     public async selectStrikes(expiryDate?: string) {
         if (!shoonya.isLoggedIn()) {
@@ -622,1119 +606,1139 @@ class StrategyEngine {
 
             if (!targetExpiry) {
                 targetExpiry = this.getTradingExpiry(expiries);
-                this.addLog(`🎯 Auto - selecting NEXT WEEK expiry: ${ targetExpiry }`);
+                this.addLog(`🎯 Auto - selecting NEXT WEEK expiry: ${targetExpiry}`);
             } else {
-                this.addLog(`♻️[Re - Entry] Using PREVIOUS expiry: ${ targetExpiry }`);
+                this.addLog(`♻️[Re - Entry] Using PREVIOUS expiry: ${targetExpiry}`);
             }
 
             // Send Telegram notification
             telegramService.sendMessage(
                 `🎯 <b>Strike Selection Started </b>\n` +
-            `Expiry: ${targetExpiry}\n` +
-        `selecting 8-leg Iron Condor...`
-        );
-
-        // 3. Get NIFTY Spot to find candidates
-        const spot: any = await shoonya.getQuotes('NSE', '26000'); // Nifty 50 Index token
-        const spotPrice = parseFloat(spot.lp);
-        //console.log(`[Strategy] Nifty Spot: ${spotPrice}`);
-
-        // 4. GET ACTUAL OPTION CHAIN around spot
-        // Round spot to nearest 50 for Nifty ATM
-        const atmStrike = Math.round(spotPrice / 50) * 50;
-        const formattedDate = this.formatExpiry(targetExpiry);
-
-        // CONSTRUCT ATM SYMBOL MANUALLY (No searchScrip used for this)
-        const anchorTsym = `NIFTY${formattedDate}C${atmStrike}`;
-        //console.log(`[Strategy] Using manual anchor: ${anchorTsym} at ${atmStrike}...`);
-
-        const chain: any[] = await shoonya.getOptionChain('NFO', anchorTsym, atmStrike, 50) as any[];
-        if (!chain || chain.length === 0) throw new Error('Failed to fetch option chain');
-
-        // 4. FETCH LIVE QUOTES for all relevant strikes in the chain
-        // We need a broad enough range to find ₹150, ₹75, and ₹7 premiums.
-        //console.log(`[Strategy] Fetching live quotes for ${chain.length} strikes...`);
-        const quotes: any[] = [];
-        for (const item of chain) {
-            try {
-                const q: any = await shoonya.getQuotes('NFO', item.token);
-                if (q && q.lp) {
-                    quotes.push({ ...item, lp: parseFloat(q.lp), ls: q.ls });
-                }
-            } catch (e) {
-                console.warn(`[Strategy] Failed to fetch quote for ${item.tsym}`);
-            }
-        }
-
-        if (quotes.length === 0) throw new Error('Failed to fetch any live quotes');
-
-        const getBestMatch = (type: 'CE' | 'PE', target: number, excludeTokens: string[]) => {
-            const matches = quotes.filter(q => q.optt === type && !excludeTokens.includes(q.token));
-            if (matches.length === 0) return null;
-            return matches.reduce((prev, curr) =>
-                (Math.abs(prev.lp - target) < Math.abs(curr.lp - target) ? prev : curr)
+                `Expiry: ${targetExpiry}\n` +
+                `selecting 8-leg Iron Condor...`
             );
-        };
 
-        const selectedLegs: LegState[] = [];
-        const usedTokens: string[] = [];
+            // 3. Get NIFTY Spot to find candidates
+            const spot: any = await shoonya.getQuotes('NSE', '26000'); // Nifty 50 Index token
+            const spotPrice = parseFloat(spot.lp);
+            //console.log(`[Strategy] Nifty Spot: ${spotPrice}`);
 
-        // Helper to add leg safely
-        const addLeg = (picked: any, side: 'BUY' | 'SELL', tier: number) => {
-            if (!picked) return;
-            const leg = this.mapToLeg(picked, side, picked.lp, tier);
-            selectedLegs.push(leg);
-            usedTokens.push(picked.token);
-            //console.log(`[Selection] ${side} ${picked.tsym} at ₹${picked.lp} (Strike: ${picked.strprc})`);
-        };
+            // 4. GET ACTUAL OPTION CHAIN around spot
+            // Round spot to nearest 50 for Nifty ATM
+            const atmStrike = Math.round(spotPrice / 50) * 50;
+            const formattedDate = this.formatExpiry(targetExpiry);
 
-        // TIED 1 LOGIC (150-150 Spreads)
-        // 1. CE Buy @ 150
-        const ce150 = getBestMatch('CE', 150, usedTokens);
-        addLeg(ce150, 'BUY', 1);
+            // CONSTRUCT ATM SYMBOL MANUALLY (No searchScrip used for this)
+            const anchorTsym = `NIFTY${formattedDate}C${atmStrike}`;
+            //console.log(`[Strategy] Using manual anchor: ${anchorTsym} at ${atmStrike}...`);
 
-        // 2. CE Sell (Immediate Higher)
-        if (ce150) {
-            const nextHigher = quotes
-                .filter(q => q.optt === 'CE' && parseFloat(q.strprc) > parseFloat(ce150.strprc))
-                .sort((a, b) => parseFloat(a.strprc) - parseFloat(b.strprc))[0];
-            addLeg(nextHigher, 'SELL', 1);
-        }
+            const chain: any[] = await shoonya.getOptionChain('NFO', anchorTsym, atmStrike, 50) as any[];
+            if (!chain || chain.length === 0) throw new Error('Failed to fetch option chain');
 
-        // 3. PE Buy @ 150
-        const pe150 = getBestMatch('PE', 150, usedTokens);
-        addLeg(pe150, 'BUY', 1);
-
-        // 4. PE Sell (Immediate Lower)
-        if (pe150) {
-            const nextLower = quotes
-                .filter(q => q.optt === 'PE' && parseFloat(q.strprc) < parseFloat(pe150.strprc))
-                .sort((a, b) => parseFloat(b.strprc) - parseFloat(a.strprc))[0];
-            addLeg(nextLower, 'SELL', 1);
-        }
-
-        // TIER 2 LOGIC (75-75 Spreads)
-        // 5. CE Sell @ 75
-        const ce75 = getBestMatch('CE', 75, usedTokens);
-        addLeg(ce75, 'SELL', 2);
-
-        // 6. CE Hedge @ 7
-        const ce7 = getBestMatch('CE', 7, usedTokens);
-        addLeg(ce7, 'BUY', 2);
-
-        // 7. PE Sell @ 75
-        const pe75 = getBestMatch('PE', 75, usedTokens);
-        addLeg(pe75, 'SELL', 2);
-
-        // 8. PE Hedge @ 7
-        const pe7 = getBestMatch('PE', 7, usedTokens);
-        addLeg(pe7, 'BUY', 2);
-
-        this.state.selectedStrikes = selectedLegs;
-
-        // Reset peak values for new positions
-        this.state.peakProfit = 0;
-        this.state.peakLoss = 0;
-        this.state.pnl = 0;
-
-        // Fetch real-time LTP via GetQuotes API before WebSocket updates
-        try {
-            for (const leg of selectedLegs) {
+            // 4. FETCH LIVE QUOTES for all relevant strikes in the chain
+            // We need a broad enough range to find ₹150, ₹75, and ₹7 premiums.
+            //console.log(`[Strategy] Fetching live quotes for ${chain.length} strikes...`);
+            const quotes: any[] = [];
+            for (const item of chain) {
                 try {
-                    const quote: any = await shoonya.getQuotes('NFO', leg.token);
-                    if (quote && quote.lp) {
-                        leg.ltp = parseFloat(quote.lp);
-                        this.addLog(`📊 Initial LTP for ${leg.symbol}: ₹${quote.lp} (Entry: ₹${leg.entryPrice})`);
+                    const q: any = await shoonya.getQuotes('NFO', item.token);
+                    if (q && q.lp) {
+                        quotes.push({ ...item, lp: parseFloat(q.lp), ls: q.ls });
                     }
-                } catch (quoteErr) {
-                    console.error(`[Strategy] GetQuote Error for ${leg.symbol}:`, quoteErr);
+                } catch (e) {
+                    console.warn(`[Strategy] Failed to fetch quote for ${item.tsym}`);
                 }
             }
-            this.calculatePnL(); // Recalculate PnL with real LTPs
+
+            if (quotes.length === 0) throw new Error('Failed to fetch any live quotes');
+
+            const getBestMatch = (type: 'CE' | 'PE', target: number, excludeTokens: string[]) => {
+                const matches = quotes.filter(q => q.optt === type && !excludeTokens.includes(q.token));
+                if (matches.length === 0) return null;
+                return matches.reduce((prev, curr) =>
+                    (Math.abs(prev.lp - target) < Math.abs(curr.lp - target) ? prev : curr)
+                );
+            };
+
+            const selectedLegs: LegState[] = [];
+            const usedTokens: string[] = [];
+
+            // Helper to add leg safely
+            const addLeg = (picked: any, side: 'BUY' | 'SELL', tier: number) => {
+                if (!picked) return;
+                const leg = this.mapToLeg(picked, side, picked.lp, tier);
+                selectedLegs.push(leg);
+                usedTokens.push(picked.token);
+                //console.log(`[Selection] ${side} ${picked.tsym} at ₹${picked.lp} (Strike: ${picked.strprc})`);
+            };
+
+            // TIED 1 LOGIC (150-150 Spreads)
+            // 1. CE Buy @ 150
+            const ce150 = getBestMatch('CE', 150, usedTokens);
+            addLeg(ce150, 'BUY', 1);
+
+            // 2. CE Sell (Immediate Higher)
+            if (ce150) {
+                const nextHigher = quotes
+                    .filter(q => q.optt === 'CE' && parseFloat(q.strprc) > parseFloat(ce150.strprc))
+                    .sort((a, b) => parseFloat(a.strprc) - parseFloat(b.strprc))[0];
+                addLeg(nextHigher, 'SELL', 1);
+            }
+
+            // 3. PE Buy @ 150
+            const pe150 = getBestMatch('PE', 150, usedTokens);
+            addLeg(pe150, 'BUY', 1);
+
+            // 4. PE Sell (Immediate Lower)
+            if (pe150) {
+                const nextLower = quotes
+                    .filter(q => q.optt === 'PE' && parseFloat(q.strprc) < parseFloat(pe150.strprc))
+                    .sort((a, b) => parseFloat(b.strprc) - parseFloat(a.strprc))[0];
+                addLeg(nextLower, 'SELL', 1);
+            }
+
+            // TIER 2 LOGIC (75-75 Spreads)
+            // 5. CE Sell @ 75
+            const ce75 = getBestMatch('CE', 75, usedTokens);
+            addLeg(ce75, 'SELL', 2);
+
+            // 6. CE Hedge @ 7
+            const ce7 = getBestMatch('CE', 7, usedTokens);
+            addLeg(ce7, 'BUY', 2);
+
+            // 7. PE Sell @ 75
+            const pe75 = getBestMatch('PE', 75, usedTokens);
+            addLeg(pe75, 'SELL', 2);
+
+            // 8. PE Hedge @ 7
+            const pe7 = getBestMatch('PE', 7, usedTokens);
+            addLeg(pe7, 'BUY', 2);
+
+            this.state.selectedStrikes = selectedLegs;
+
+            // Reset peak values for new positions
+            this.state.peakProfit = 0;
+            this.state.peakLoss = 0;
+            this.state.pnl = 0;
+
+            // Fetch real-time LTP via GetQuotes API before WebSocket updates
+            try {
+                for (const leg of selectedLegs) {
+                    try {
+                        const quote: any = await shoonya.getQuotes('NFO', leg.token);
+                        if (quote && quote.lp) {
+                            leg.ltp = parseFloat(quote.lp);
+                            this.addLog(`📊 Initial LTP for ${leg.symbol}: ₹${quote.lp} (Entry: ₹${leg.entryPrice})`);
+                        }
+                    } catch (quoteErr) {
+                        console.error(`[Strategy] GetQuote Error for ${leg.symbol}:`, quoteErr);
+                    }
+                }
+                this.calculatePnL(); // Recalculate PnL with real LTPs
+            } catch (err) {
+                console.error('[Strategy] GetQuotes Error:', err);
+                this.addLog('⚠️ Could not fetch initial LTP, using entry prices');
+            }
+
+            this.startMonitoring();
+            await db.syncPositions(selectedLegs, this.getUid());
+            await this.syncToDb(true);
+
+            const ceLegs = selectedLegs.filter(l => l.type === 'CE').map(l => `${l.side} ${l.strike}`).join(', ');
+            const peLegs = selectedLegs.filter(l => l.type === 'PE').map(l => `${l.side} ${l.strike}`).join(', ');
+            telegramService.sendMessage(`🎯 <b>Strikes Selected</b>\nExpiry: ${targetExpiry}\nCE: ${ceLegs}\nPE: ${peLegs}`);
+
+            return selectedLegs;
         } catch (err) {
-            console.error('[Strategy] GetQuotes Error:', err);
-            this.addLog('⚠️ Could not fetch initial LTP, using entry prices');
+            console.error('[Strategy] Selection Error:', err);
+            throw err;
         }
-
-        this.startMonitoring();
-        await db.syncPositions(selectedLegs, this.getUid());
-        await this.syncToDb(true);
-
-        const ceLegs = selectedLegs.filter(l => l.type === 'CE').map(l => `${l.side} ${l.strike}`).join(', ');
-        const peLegs = selectedLegs.filter(l => l.type === 'PE').map(l => `${l.side} ${l.strike}`).join(', ');
-        telegramService.sendMessage(`🎯 <b>Strikes Selected</b>\nExpiry: ${targetExpiry}\nCE: ${ceLegs}\nPE: ${peLegs}`);
-
-        return selectedLegs;
-    } catch(err) {
-        console.error('[Strategy] Selection Error:', err);
-        throw err;
     }
-}
 
     private mapToLeg(picked: any, side: 'BUY' | 'SELL', targetPrice: number, tier: number): LegState {
-    return {
-        token: picked.token,
-        symbol: picked.tsym,
-        type: picked.optt as 'CE' | 'PE',
-        side,
-        strike: picked.strprc,
-        entryPrice: targetPrice,
-        ltp: targetPrice,
-        quantity: picked.ls ? parseFloat(picked.ls) : 75,
-        tier
-    };
-}
+        return {
+            token: picked.token,
+            symbol: picked.tsym,
+            type: picked.optt as 'CE' | 'PE',
+            side,
+            strike: picked.strprc,
+            entryPrice: targetPrice,
+            ltp: targetPrice,
+            quantity: picked.ls ? parseFloat(picked.ls) : 75,
+            tier
+        };
+    }
 
-    private async checkMargin(legs: LegState[]): Promise < boolean > {
-    if(this.state.isVirtual) return true;
+    private async checkMargin(legs: LegState[]): Promise<boolean> {
+        if (this.state.isVirtual) return true;
 
-    try {
-        this.addLog('🔍 Checking Margin Requirements...');
-        const marginRes: any = await shoonya.getBasketMargin(legs);
+        try {
+            this.addLog('🔍 Checking Margin Requirements...');
+            const marginRes: any = await shoonya.getBasketMargin(legs);
 
-        if(marginRes.stat !== 'Ok') {
-    const msg = `❌ Margin Check Failed: API Error - ${marginRes.emsg || 'Unknown error'}`;
-    this.addLog(msg);
-    telegramService.sendMessage(msg);
-    return false;
-}
+            if (marginRes.stat !== 'Ok') {
+                const msg = `❌ Margin Check Failed: API Error - ${marginRes.emsg || 'Unknown error'}`;
+                this.addLog(msg);
+                telegramService.sendMessage(msg);
+                return false;
+            }
 
-const limitsRes: any = await shoonya.getLimits();
-if (limitsRes.stat !== 'Ok') {
-    const msg = `❌ Margin Check Failed: Limits API Error - ${limitsRes.emsg || 'Unknown error'}`;
-    this.addLog(msg);
-    telegramService.sendMessage(msg);
-    return false;
-}
+            const limitsRes: any = await shoonya.getLimits();
+            if (limitsRes.stat !== 'Ok') {
+                const msg = `❌ Margin Check Failed: Limits API Error - ${limitsRes.emsg || 'Unknown error'}`;
+                this.addLog(msg);
+                telegramService.sendMessage(msg);
+                return false;
+            }
 
-// Parse numeric values (Shoonya returns strings)
-// Note: basket_margin field might vary, checking expected keys
-const requiredMargin = parseFloat(marginRes.basket_margin || marginRes.margin_used || '0');
-const cash = parseFloat(limitsRes.cash || '0');
-const payin = parseFloat(limitsRes.payin || '0');
-const collateral = parseFloat(limitsRes.collateral || limitsRes.collat || '0');
+            // Parse numeric values (Shoonya returns strings)
+            // Note: basket_margin field might vary, checking expected keys
+            const requiredMargin = parseFloat(marginRes.basket_margin || marginRes.margin_used || '0');
+            const cash = parseFloat(limitsRes.cash || '0');
+            const payin = parseFloat(limitsRes.payin || '0');
+            const collateral = parseFloat(limitsRes.collateral || limitsRes.collat || '0');
 
-const availableMargin = cash + payin + collateral;
+            const availableMargin = cash + payin + collateral;
 
-this.addLog(`💰 Margin: Required ₹${requiredMargin.toFixed(0)} | Avail ₹${availableMargin.toFixed(0)}`);
+            this.addLog(`💰 Margin: Required ₹${requiredMargin.toFixed(0)} | Avail ₹${availableMargin.toFixed(0)}`);
 
-this.state.requiredMargin = requiredMargin;
-this.state.availableMargin = availableMargin;
+            this.state.requiredMargin = requiredMargin;
+            this.state.availableMargin = availableMargin;
 
-if (availableMargin < requiredMargin) {
-    const shortfall = requiredMargin - availableMargin;
-    const msg = `🚨 <b>Margin Shortfall</b>\nRequired: ₹${requiredMargin.toFixed(2)}\nAvailable: ₹${availableMargin.toFixed(2)}\nShortfall: ₹${shortfall.toFixed(2)}\n⚠️ <b>Trade Aborted!</b>`;
-    telegramService.sendMessage(msg);
-    this.addLog(`❌ Margin Shortfall: ₹${shortfall.toFixed(2)}. Trade Aborted.`);
-    return false;
-}
+            if (availableMargin < requiredMargin) {
+                const shortfall = requiredMargin - availableMargin;
+                const msg = `🚨 <b>Margin Shortfall</b>\nRequired: ₹${requiredMargin.toFixed(2)}\nAvailable: ₹${availableMargin.toFixed(2)}\nShortfall: ₹${shortfall.toFixed(2)}\n⚠️ <b>Trade Aborted!</b>`;
+                telegramService.sendMessage(msg);
+                this.addLog(`❌ Margin Shortfall: ₹${shortfall.toFixed(2)}. Trade Aborted.`);
+                return false;
+            }
 
-return true;
+            return true;
 
         } catch (err: any) {
-    console.error('Margin Check Logic Error:', err);
-    this.addLog(`❌ Margin Check Ex: ${err.message}`);
-    return false;
-}
+            console.error('Margin Check Logic Error:', err);
+            this.addLog(`❌ Margin Check Ex: ${err.message}`);
+            return false;
+        }
     }
 
     public async placeOrder(isDryRun: boolean = false) {
-    if (!isDryRun && !shoonya.isLoggedIn()) {
-        throw new Error('Shoonya session expired or not logged in. Please login again.');
-    }
-    if (!isDryRun) {
-        // Checks for Real Execution
-        if (this.state.isPaused) {
-            this.addLog('⚠️ Order Placement Blocked: Strategy is PAUSED.');
-            throw new Error('Strategy is Paused.');
+        if (!isDryRun && !shoonya.isLoggedIn()) {
+            throw new Error('Shoonya session expired or not logged in. Please login again.');
         }
+        if (!isDryRun) {
+            // Checks for Real Execution
+            if (this.state.isPaused) {
+                this.addLog('⚠️ Order Placement Blocked: Strategy is PAUSED.');
+                throw new Error('Strategy is Paused.');
+            }
 
-        // Duplicate Execution Prevention
-        if (this.state.status === 'ACTIVE' || this.state.status === 'ENTRY_DONE') {
-            this.addLog('⚠️ BLOCKED: Trade already active/placed.');
-            return;
-        }
+            // Duplicate Execution Prevention
+            if (this.state.status === 'ACTIVE' || this.state.status === 'ENTRY_DONE') {
+                this.addLog('⚠️ BLOCKED: Trade already active/placed.');
+                return;
+            }
 
-        if (this.state.isTradePlaced) return;
+            if (this.state.isTradePlaced) return;
 
-        // Margin Check
-        if (!this.state.isVirtual) {
-            const hasMargin = await this.checkMargin(this.state.selectedStrikes);
-            if (!hasMargin) {
-                return { status: 'failed', reason: 'Insufficient Margin' };
+            // Margin Check
+            if (!this.state.isVirtual) {
+                const hasMargin = await this.checkMargin(this.state.selectedStrikes);
+                if (!hasMargin) {
+                    return { status: 'failed', reason: 'Insufficient Margin' };
+                }
             }
         }
-    }
 
-    try {
-        const longs = this.state.selectedStrikes.filter(s => s.side === 'BUY');
-        const shorts = this.state.selectedStrikes.filter(s => s.side === 'SELL');
+        try {
+            const longs = this.state.selectedStrikes.filter(s => s.side === 'BUY');
+            const shorts = this.state.selectedStrikes.filter(s => s.side === 'SELL');
 
-        for (const leg of longs) await this.executeLeg(leg, isDryRun);
-        for (const leg of shorts) await this.executeLeg(leg, isDryRun);
+            for (const leg of longs) await this.executeLeg(leg, isDryRun);
+            for (const leg of shorts) await this.executeLeg(leg, isDryRun);
 
-        if (!isDryRun) {
-            this.state.isTradePlaced = true;
-            this.state.isActive = true;
-            this.state.status = 'ENTRY_DONE';    // Transition to ENTRY_DONE
-            this.state.engineActivity = 'Entry Complete';
-            this.state.nextAction = 'Transitioning to Monitoring';
+            if (!isDryRun) {
+                this.state.isTradePlaced = true;
+                this.state.isActive = true;
+                this.state.status = 'ENTRY_DONE';    // Transition to ENTRY_DONE
+                this.state.engineActivity = 'Entry Complete';
+                this.state.nextAction = 'Transitioning to Monitoring';
 
-            // Track position entry date for re-entry logic
-            const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-            this.state.positionEntryDate = today;
-            this.addLog(`📅 [Entry] Position entry date recorded: ${today}`);
+                // Track position entry date for re-entry logic
+                const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+                this.state.positionEntryDate = today;
+                this.addLog(`📅 [Entry] Position entry date recorded: ${today}`);
 
-            this.startMonitoring();
-            await this.syncToDb(true);
-
-            telegramService.sendMessage(`🚀 <b>Trade Placed</b>\nAll 8 legs executed virtually for Iron Condor.`);
-
-            // Auto-transition to ACTIVE after a short delay for verification
-            setTimeout(async () => {
-                this.state.status = 'ACTIVE';
-                this.state.engineActivity = 'Monitoring Iron Condor';
-                this.state.nextAction = 'Next Weekly Expiry Roll';
+                this.startMonitoring();
                 await this.syncToDb(true);
-                this.addLog('✅ [System] Verify Complete: Engine is now ACTIVE.');
-            }, 5000);
-        }
 
-        return { status: 'success' };
-    } catch (err) {
-        console.error('Failure during sequence placement:', err);
-        throw err;
+                telegramService.sendMessage(`🚀 <b>Trade Placed</b>\nAll 8 legs executed virtually for Iron Condor.`);
+
+                // Auto-transition to ACTIVE after a short delay for verification
+                setTimeout(async () => {
+                    this.state.status = 'ACTIVE';
+                    this.state.engineActivity = 'Monitoring Iron Condor';
+                    this.state.nextAction = 'Next Weekly Expiry Roll';
+                    await this.syncToDb(true);
+                    this.addLog('✅ [System] Verify Complete: Engine is now ACTIVE.');
+                }, 5000);
+            }
+
+            return { status: 'success' };
+        } catch (err) {
+            console.error('Failure during sequence placement:', err);
+            throw err;
+        }
     }
-}
 
     public async testPlaceOrder() {
-    this.addLog('🧪 STARTING PLACE ORDER TEST (Dry Run)...');
-    // Ensure strikes are selected or mock them if needed
-    if (this.state.selectedStrikes.length === 0) {
-        this.addLog('❌ No strikes selected. Cannot test place order.');
-        throw new Error('No strikes selected.');
-    }
+        this.addLog('🧪 STARTING PLACE ORDER TEST (Dry Run)...');
+        // Ensure strikes are selected or mock them if needed
+        if (this.state.selectedStrikes.length === 0) {
+            this.addLog('❌ No strikes selected. Cannot test place order.');
+            throw new Error('No strikes selected.');
+        }
 
-    // Refresh quantities from live quotes to ensure test uses current lot sizes
-    this.addLog('🔄 Refreshing quantities from live quotes...');
-    for (const leg of this.state.selectedStrikes) {
-        try {
-            const q: any = await shoonya.getQuotes('NFO', leg.token);
-            if (q && q.ls) {
-                leg.quantity = parseFloat(q.ls);
+        // Refresh quantities from live quotes to ensure test uses current lot sizes
+        this.addLog('🔄 Refreshing quantities from live quotes...');
+        for (const leg of this.state.selectedStrikes) {
+            try {
+                const q: any = await shoonya.getQuotes('NFO', leg.token);
+                if (q && q.ls) {
+                    leg.quantity = parseFloat(q.ls);
+                }
+            } catch (e) {
+                console.warn(`Failed to refresh quote for ${leg.symbol}`);
             }
-        } catch (e) {
-            console.warn(`Failed to refresh quote for ${leg.symbol}`);
+        }
+
+        try {
+            await this.placeOrder(true);
+            this.addLog('✅ PLACE ORDER TEST COMPLETED. Check test_orders.log');
+            return { status: 'success', message: 'Logged to test_orders.log' };
+        } catch (e: any) {
+            this.addLog(`❌ TEST FAILED: ${e.message}`);
+            throw e;
         }
     }
 
-    try {
-        await this.placeOrder(true);
-        this.addLog('✅ PLACE ORDER TEST COMPLETED. Check test_orders.log');
-        return { status: 'success', message: 'Logged to test_orders.log' };
-    } catch (e: any) {
-        this.addLog(`❌ TEST FAILED: ${e.message}`);
-        throw e;
-    }
-}
-
     public async testExitOrder() {
-    this.addLog('🧪 STARTING EXIT ORDER TEST (Dry Run)...');
-    if (this.state.selectedStrikes.length === 0) {
-        this.addLog('❌ No open positions to exit. Cannot test exit order.');
-        throw new Error('No open positions.');
+        this.addLog('🧪 STARTING EXIT ORDER TEST (Dry Run)...');
+        if (this.state.selectedStrikes.length === 0) {
+            this.addLog('❌ No open positions to exit. Cannot test exit order.');
+            throw new Error('No open positions.');
+        }
+
+        const logFile = path.join(process.cwd(), 'test_orders.log');
+        const timestamp = new Date().toISOString();
+
+        // Sort: Close Shorts (SELL) first, then Longs (BUY)
+        const legsToExit = [...this.state.selectedStrikes].sort((a, b) => {
+            if (a.side === 'SELL' && b.side !== 'SELL') return -1;
+            if (b.side === 'SELL' && a.side !== 'SELL') return 1;
+            return 0;
+        });
+
+        for (const leg of legsToExit) {
+            const exitOrder = {
+                exchange: 'NFO',
+                tradingsymbol: leg.symbol,
+                quantity: leg.quantity.toString(),
+                discloseqty: '0',
+                price: '0',
+                product_type: 'M',
+                buy_or_sell: leg.side === 'BUY' ? 'S' : 'B', // Reverse
+                price_type: 'MKT',
+                retention: 'DAY',
+                remarks: 'TEST_EXIT_ORDER'
+            };
+
+            let jKey = '';
+            let session: any = {};
+            try {
+                session = await shoonya.getSessionDetails() || {};
+                jKey = await shoonya.getAuthToken();
+            } catch (e) { }
+
+            const jData = JSON.stringify({
+                ordersource: 'API',
+                uid: session.uid || session.actid,
+                actid: session.actid,
+                trantype: exitOrder.buy_or_sell,
+                prd: exitOrder.product_type,
+                exch: exitOrder.exchange,
+                tsym: exitOrder.tradingsymbol,
+                qty: exitOrder.quantity,
+                dscqty: exitOrder.discloseqty,
+                prctyp: exitOrder.price_type,
+                prc: exitOrder.price,
+                trgprc: '0',
+                ret: exitOrder.retention,
+                remarks: exitOrder.remarks
+            });
+
+            const payload = `jData=${jData}&jKey=${jKey}`;
+
+            const logEntry = `[${timestamp}] [TEST EXIT REQUEST]\nPayload: ${payload}\n---\n`;
+            fs.appendFileSync(logFile, logEntry);
+            this.addLog(`📝 Logged Exit: ${leg.symbol} (${exitOrder.buy_or_sell})`);
+        }
+
+        this.addLog('✅ EXIT ORDER TEST COMPLETED. Check test_orders.log');
+        return { status: 'success', message: 'Logged to test_orders.log' };
     }
 
-    const logFile = path.join(process.cwd(), 'test_orders.log');
-    const timestamp = new Date().toISOString();
 
-    // Sort: Close Shorts (SELL) first, then Longs (BUY)
-    const legsToExit = [...this.state.selectedStrikes].sort((a, b) => {
-        if (a.side === 'SELL' && b.side !== 'SELL') return -1;
-        if (b.side === 'SELL' && a.side !== 'SELL') return 1;
-        return 0;
-    });
+    private async executeLeg(leg: LegState, isDryRun: boolean = false) {
 
-    for (const leg of legsToExit) {
-        const exitOrder = {
+        // Construct Order Params - Compatible with RestApi.place_order wrapper
+        const orderParams = {
             exchange: 'NFO',
             tradingsymbol: leg.symbol,
             quantity: leg.quantity.toString(),
             discloseqty: '0',
             price: '0',
             product_type: 'M',
-            buy_or_sell: leg.side === 'BUY' ? 'S' : 'B', // Reverse
+            buy_or_sell: leg.side === 'BUY' ? 'B' : 'S',
             price_type: 'MKT',
+            trigger_price: '0',
             retention: 'DAY',
-            remarks: 'TEST_EXIT_ORDER'
+            remarks: isDryRun ? 'TEST_PLACE_ORDER' : 'STRATEGY_ENTRY'
         };
 
-        let jKey = '';
-        let session: any = {};
-        try {
-            session = await shoonya.getSessionDetails() || {};
-            jKey = await shoonya.getAuthToken();
-        } catch (e) { }
+        if (isDryRun) {
+            const logFile = path.join(process.cwd(), 'test_orders.log');
+            const timestamp = new Date().toISOString();
 
-        const jData = JSON.stringify({
-            ordersource: 'API',
-            uid: session.uid || session.actid,
-            actid: session.actid,
-            trantype: exitOrder.buy_or_sell,
-            prd: exitOrder.product_type,
-            exch: exitOrder.exchange,
-            tsym: exitOrder.tradingsymbol,
-            qty: exitOrder.quantity,
-            dscqty: exitOrder.discloseqty,
-            prctyp: exitOrder.price_type,
-            prc: exitOrder.price,
-            trgprc: '0',
-            ret: exitOrder.retention,
-            remarks: exitOrder.remarks
-        });
+            let jKey = '';
+            let session: any = {};
+            try {
+                session = await shoonya.getSessionDetails() || {};
+                jKey = await shoonya.getAuthToken();
+            } catch (e) { }
 
-        const payload = `jData=${jData}&jKey=${jKey}`;
+            // Manual mapping to match RestApi.js payload construction
+            const jData = JSON.stringify({
+                ordersource: 'API',
+                uid: session.uid || session.actid,
+                actid: session.actid,
+                trantype: orderParams.buy_or_sell,
+                prd: orderParams.product_type,
+                exch: orderParams.exchange,
+                tsym: orderParams.tradingsymbol,
+                qty: orderParams.quantity,
+                dscqty: orderParams.discloseqty,
+                prctyp: orderParams.price_type,
+                prc: orderParams.price,
+                trgprc: orderParams.trigger_price,
+                ret: orderParams.retention,
+                remarks: orderParams.remarks
+            });
 
-        const logEntry = `[${timestamp}] [TEST EXIT REQUEST]\nPayload: ${payload}\n---\n`;
-        fs.appendFileSync(logFile, logEntry);
-        this.addLog(`📝 Logged Exit: ${leg.symbol} (${exitOrder.buy_or_sell})`);
-    }
+            const payload = `jData=${jData}&jKey=${jKey}`;
 
-    this.addLog('✅ EXIT ORDER TEST COMPLETED. Check test_orders.log');
-    return { status: 'success', message: 'Logged to test_orders.log' };
-}
+            const logEntry = `[${timestamp}] [TEST PLACE REQUEST]\nPayload: ${payload}\n---\n`;
+            fs.appendFileSync(logFile, logEntry);
+            this.addLog(`📝 Logged Place: ${leg.symbol} (${leg.side})`);
+            return;
+        }
 
+        if (this.state.isVirtual) {
+            // Virtual execution
+            await new Promise(r => setTimeout(r, 100));
+            await db.logOrder({ ...leg, price: leg.entryPrice, status: 'COMPLETE', isVirtual: true }, this.getUid());
+            this.addLog(`[VIRTUAL] ${leg.side} ${leg.symbol} @ ₹${leg.entryPrice}`);
+        } else {
+            // Real order execution
+            try {
+                // Now using updated orderParams with correct keys for wrapper
+                const result: any = await shoonya.placeOrder(orderParams);
 
-    private async executeLeg(leg: LegState, isDryRun: boolean = false) {
+                if (result.stat === 'Ok') {
+                    const fillPrice = parseFloat(result.avgprc || leg.entryPrice);
+                    leg.entryPrice = fillPrice; // Update with actual fill price
 
-    // Construct Order Params - Compatible with RestApi.place_order wrapper
-    const orderParams = {
-        exchange: 'NFO',
-        tradingsymbol: leg.symbol,
-        quantity: leg.quantity.toString(),
-        discloseqty: '0',
-        price: '0',
-        product_type: 'M',
-        buy_or_sell: leg.side === 'BUY' ? 'B' : 'S',
-        price_type: 'MKT',
-        trigger_price: '0',
-        retention: 'DAY',
-        remarks: isDryRun ? 'TEST_PLACE_ORDER' : 'STRATEGY_ENTRY'
-    };
+                    await db.logOrder({
+                        ...leg,
+                        price: fillPrice,
+                        status: 'COMPLETE',
+                        isVirtual: false,
+                        orderId: result.norenordno
+                    }, this.getUid());
 
-    if (isDryRun) {
-        const logFile = path.join(process.cwd(), 'test_orders.log');
-        const timestamp = new Date().toISOString();
-
-        let jKey = '';
-        let session: any = {};
-        try {
-            session = await shoonya.getSessionDetails() || {};
-            jKey = await shoonya.getAuthToken();
-        } catch (e) { }
-
-        // Manual mapping to match RestApi.js payload construction
-        const jData = JSON.stringify({
-            ordersource: 'API',
-            uid: session.uid || session.actid,
-            actid: session.actid,
-            trantype: orderParams.buy_or_sell,
-            prd: orderParams.product_type,
-            exch: orderParams.exchange,
-            tsym: orderParams.tradingsymbol,
-            qty: orderParams.quantity,
-            dscqty: orderParams.discloseqty,
-            prctyp: orderParams.price_type,
-            prc: orderParams.price,
-            trgprc: orderParams.trigger_price,
-            ret: orderParams.retention,
-            remarks: orderParams.remarks
-        });
-
-        const payload = `jData=${jData}&jKey=${jKey}`;
-
-        const logEntry = `[${timestamp}] [TEST PLACE REQUEST]\nPayload: ${payload}\n---\n`;
-        fs.appendFileSync(logFile, logEntry);
-        this.addLog(`📝 Logged Place: ${leg.symbol} (${leg.side})`);
-        return;
-    }
-
-    if (this.state.isVirtual) {
-        // Virtual execution
-        await new Promise(r => setTimeout(r, 100));
-        await db.logOrder({ ...leg, price: leg.entryPrice, status: 'COMPLETE', isVirtual: true }, this.getUid());
-        this.addLog(`[VIRTUAL] ${leg.side} ${leg.symbol} @ ₹${leg.entryPrice}`);
-    } else {
-        // Real order execution
-        try {
-            // Now using updated orderParams with correct keys for wrapper
-            const result: any = await shoonya.placeOrder(orderParams);
-
-            if (result.stat === 'Ok') {
-                const fillPrice = parseFloat(result.avgprc || leg.entryPrice);
-                leg.entryPrice = fillPrice; // Update with actual fill price
-
-                await db.logOrder({
-                    ...leg,
-                    price: fillPrice,
-                    status: 'COMPLETE',
-                    isVirtual: false,
-                    orderId: result.norenordno
-                }, this.getUid());
-
-                this.addLog(`[LIVE] ${leg.side} ${leg.symbol} @ ₹${fillPrice} | Order ID: ${result.norenordno}`);
-                telegramService.sendMessage(`✅ <b>Order Filled</b>\n${leg.side} ${leg.symbol}\nPrice: ₹${fillPrice}\nQty: ${leg.quantity}\nOrder ID: ${result.norenordno}`);
-            } else {
-                throw new Error(`Order failed: ${result.emsg || 'Unknown error'}`);
+                    this.addLog(`[LIVE] ${leg.side} ${leg.symbol} @ ₹${fillPrice} | Order ID: ${result.norenordno}`);
+                    telegramService.sendMessage(`✅ <b>Order Filled</b>\n${leg.side} ${leg.symbol}\nPrice: ₹${fillPrice}\nQty: ${leg.quantity}\nOrder ID: ${result.norenordno}`);
+                } else {
+                    throw new Error(`Order failed: ${result.emsg || 'Unknown error'}`);
+                }
+            } catch (err: any) {
+                this.addLog(`[ERROR] Failed to place ${leg.side} ${leg.symbol}: ${err.message}`);
+                telegramService.sendMessage(`❌ <b>Order Failed</b>\n${leg.side} ${leg.symbol}\nError: ${err.message}`);
+                throw err;
             }
-        } catch (err: any) {
-            this.addLog(`[ERROR] Failed to place ${leg.side} ${leg.symbol}: ${err.message}`);
-            telegramService.sendMessage(`❌ <b>Order Failed</b>\n${leg.side} ${leg.symbol}\nError: ${err.message}`);
-            throw err;
         }
     }
-}
 
     private startMonitoring() {
-    if (this.isWebSocketStarted) {
-        this.resubscribe();
-        return;
+        if (this.isWebSocketStarted) {
+            this.resubscribe();
+            return;
+        }
+        shoonya.startWebSocket(
+            (tick) => this.handlePriceUpdate(tick),
+            (order) => this.handleOrderReport(order)
+        );
+        this.isWebSocketStarted = true;
+        setTimeout(() => this.resubscribe(), 1000);
     }
-    shoonya.startWebSocket(
-        (tick) => this.handlePriceUpdate(tick),
-        (order) => this.handleOrderReport(order)
-    );
-    this.isWebSocketStarted = true;
-    setTimeout(() => this.resubscribe(), 1000);
-}
 
     private resubscribe() {
-    const tokens = this.state.selectedStrikes.map(s => `NFO|${s.token}`);
-    if (tokens.length > 0) shoonya.subscribe(tokens);
-}
+        const tokens = this.state.selectedStrikes.map(s => `NFO|${s.token}`);
+        if (tokens.length > 0) shoonya.subscribe(tokens);
+    }
 
     private startHourlyPositionSync() {
-    // Clear existing timer if any
-    if (this.hourlySyncTimer) {
-        clearInterval(this.hourlySyncTimer);
-    }
-
-    // Sync positions to DB every hour
-    this.hourlySyncTimer = setInterval(async () => {
-        if (this.state.selectedStrikes.length > 0) {
-            try {
-                await db.syncPositions(this.state.selectedStrikes);
-                await this.syncToDb(true);
-                this.addLog('💾 [System] Hourly position sync completed');
-            } catch (err) {
-                console.error('[Strategy] Hourly position sync failed:', err);
-            }
-        }
-    }, this.POSITION_SYNC_INTERVAL);
-
-    this.addLog('⏰ [System] Hourly position sync timer started');
-}
-
-    private async handlePriceUpdate(tick: any) {
-    const token = tick.tk;
-    const ltp = parseFloat(tick.lp);
-    if (!token || isNaN(ltp)) return;
-
-    const legIdx = this.state.selectedStrikes.findIndex(s => s.token === token);
-
-    // Update position LTP if this is a position token
-    if (legIdx !== -1) {
-        this.state.selectedStrikes[legIdx].ltp = ltp;
-
-        // Perform strategy logic ONLY if ACTIVE
-        if (this.state.status === 'ACTIVE' && !this.state.isPaused) {
-            this.checkAdjustments(this.state.selectedStrikes[legIdx]);
-            this.checkExits();
+        // Clear existing timer if any
+        if (this.hourlySyncTimer) {
+            clearInterval(this.hourlySyncTimer);
         }
 
-        // Calculate PNL with updated prices
-        this.calculatePnL();
-    }
-
-    // Emit single consolidated price_update event with all data
-    socketService.emit('price_update', {
-        token,
-        lp: tick.lp,
-        ltp: ltp,
-        pc: tick.pc,
-        h: tick.h,
-        l: tick.l,
-        c: tick.c,
-        v: tick.v,
-        // Include position-specific data if this is a position token
-        ...(legIdx !== -1 && {
-            symbol: this.state.selectedStrikes[legIdx].symbol,
-            pnl: this.state.pnl,
-            peakProfit: this.state.peakProfit,
-            peakLoss: this.state.peakLoss
-        })
-    });
-}
-
-    private checkAdjustments(leg: LegState) {
-    if (this.state.status !== 'ACTIVE' || this.state.isPaused) return;
-
-    // Only monitor Tier 2 Sells (₹75 legs)
-    if (leg.tier !== 2 || leg.side !== 'SELL') return;
-
-    // Prevent duplicate adjustments if already handled
-    if (leg.isAdjusted) return;
-
-    const now = Date.now();
-    if (leg.ltp > 100) {
-        if (!this.state.monitoring.adjustments[leg.token]) {
-            this.state.monitoring.adjustments[leg.token] = now;
-            //console.log(`[Alert] ${leg.symbol} > 100. Timer started.`);
-        } else {
-            const elapsed = now - this.state.monitoring.adjustments[leg.token];
-            if (elapsed >= 10000) {
-                this.executeAdjustment(leg);
-                delete this.state.monitoring.adjustments[leg.token]; // Prevention of multiple fires
-            }
-        }
-    } else {
-        // Reset timer if price drops below 100
-        delete this.state.monitoring.adjustments[leg.token];
-    }
-}
-
-    private async executeAdjustment(triggeredLeg: LegState) {
-    //console.log(`[Adjustment] Triggered for ${triggeredLeg.symbol} (Stayed > 100 for 10s)`);
-
-    // Mark as adjusted immediately to prevent race conditions/double firing
-    triggeredLeg.isAdjusted = true;
-
-    // Find the next OTM hedge (50 points further)
-    try {
-        // Correctly fetch option chain starting from the triggered leg's strike
-        const chain: any[] = await shoonya.getOptionChain('NFO', triggeredLeg.symbol, parseFloat(triggeredLeg.strike), 10) as any[];
-        const scrips = (chain || []);
-        scrips.sort((a, b) => parseFloat(a.strprc) - parseFloat(b.strprc));
-
-        const currentIdx = scrips.findIndex(s => s.token === triggeredLeg.token);
-        let targetScrip;
-        if (triggeredLeg.type === 'CE') {
-            targetScrip = scrips.slice(currentIdx + 1).find(s => s.optt === 'CE'); // Next higher CE
-        } else {
-            targetScrip = [...scrips].slice(0, currentIdx).reverse().find(s => s.optt === 'PE'); // Next lower PE
-        }
-
-        if (targetScrip) {
-            // Fetch latest quotes for target scrip to get dynamic lot size (ls)
-            const quote: any = await shoonya.getQuotes('NFO', targetScrip.token);
-            const lotSize = quote && quote.ls ? parseFloat(quote.ls) : (triggeredLeg.quantity || 75);
-
-            const adjustmentLeg: LegState = {
-                token: targetScrip.token,
-                symbol: targetScrip.tsym,
-                type: targetScrip.optt as 'CE' | 'PE',
-                side: 'BUY',
-                strike: targetScrip.strprc,
-                entryPrice: quote.lp, // Market order
-                ltp: 0,
-                quantity: lotSize,
-                tier: 2 // Adjustments for Tier 2 Sell should maintain Tier 2 monitoring
-            };
-
-            // Margin Check for Adjustment
-            if (!this.state.isVirtual) {
-                const hasMargin = await this.checkMargin([adjustmentLeg]);
-                if (!hasMargin) {
-                    this.addLog(`❌ Adjustment Skipped: Insufficient Margin for ${adjustmentLeg.symbol}`);
-                    telegramService.sendMessage(`⚠️ <b>Adjustment Skipped</b>\nInsufficient Margin for ${adjustmentLeg.symbol}`);
-                    return;
+        // Sync positions to DB every hour
+        this.hourlySyncTimer = setInterval(async () => {
+            if (this.state.selectedStrikes.length > 0) {
+                try {
+                    await db.syncPositions(this.state.selectedStrikes);
+                    await this.syncToDb(true);
+                    this.addLog('💾 [System] Hourly position sync completed');
+                } catch (err) {
+                    console.error('[Strategy] Hourly position sync failed:', err);
                 }
             }
+        }, this.POSITION_SYNC_INTERVAL);
 
-            await this.executeLeg(adjustmentLeg);
-            this.state.selectedStrikes.push(adjustmentLeg);
-            this.resubscribe();
-            //console.log(`[Adjustment] Placed market BUY for ${adjustmentLeg.symbol}`);
-            telegramService.sendMessage(`⚠️ <b>Adjustment Triggered</b>\n${triggeredLeg.symbol} reached LTP ${triggeredLeg.ltp} (>100).\nNew hedge: ${adjustmentLeg.symbol} @ Market`);
-        }
-    } catch (e) {
-        console.error('Adjustment failed:', e);
+        this.addLog('⏰ [System] Hourly position sync timer started');
     }
-}
+
+    private async handlePriceUpdate(tick: any) {
+        const token = tick.tk;
+        const ltp = parseFloat(tick.lp);
+        if (!token || isNaN(ltp)) return;
+
+        const legIdx = this.state.selectedStrikes.findIndex(s => s.token === token);
+
+        // Update position LTP if this is a position token
+        if (legIdx !== -1) {
+            this.state.selectedStrikes[legIdx].ltp = ltp;
+
+            // Perform strategy logic ONLY if ACTIVE
+            if (this.state.status === 'ACTIVE' && !this.state.isPaused) {
+                this.checkAdjustments(this.state.selectedStrikes[legIdx]);
+                this.checkExits();
+            }
+
+            // Calculate PNL with updated prices
+            this.calculatePnL();
+        }
+
+        // Emit single consolidated price_update event with all data
+        socketService.emit('price_update', {
+            token,
+            lp: tick.lp,
+            ltp: ltp,
+            pc: tick.pc,
+            h: tick.h,
+            l: tick.l,
+            c: tick.c,
+            v: tick.v,
+            // Include position-specific data if this is a position token
+            ...(legIdx !== -1 && {
+                symbol: this.state.selectedStrikes[legIdx].symbol,
+                pnl: this.state.pnl,
+                peakProfit: this.state.peakProfit,
+                peakLoss: this.state.peakLoss
+            })
+        });
+    }
+
+    private checkAdjustments(leg: LegState) {
+        if (this.state.status !== 'ACTIVE' || this.state.isPaused) return;
+
+        // Only monitor Tier 2 Sells (₹75 legs)
+        if (leg.tier !== 2 || leg.side !== 'SELL') return;
+
+        // Prevent duplicate adjustments if already handled
+        if (leg.isAdjusted) return;
+
+        const now = Date.now();
+        if (leg.ltp > 100) {
+            if (!this.state.monitoring.adjustments[leg.token]) {
+                this.state.monitoring.adjustments[leg.token] = now;
+                //console.log(`[Alert] ${leg.symbol} > 100. Timer started.`);
+            } else {
+                const elapsed = now - this.state.monitoring.adjustments[leg.token];
+                if (elapsed >= 10000) {
+                    this.executeAdjustment(leg);
+                    delete this.state.monitoring.adjustments[leg.token]; // Prevention of multiple fires
+                }
+            }
+        } else {
+            // Reset timer if price drops below 100
+            delete this.state.monitoring.adjustments[leg.token];
+        }
+    }
+
+    private async executeAdjustment(triggeredLeg: LegState) {
+        //console.log(`[Adjustment] Triggered for ${triggeredLeg.symbol} (Stayed > 100 for 10s)`);
+
+        // Mark as adjusted immediately to prevent race conditions/double firing
+        triggeredLeg.isAdjusted = true;
+
+        // Find the next OTM hedge (50 points further)
+        try {
+            // Correctly fetch option chain starting from the triggered leg's strike
+            const chain: any[] = await shoonya.getOptionChain('NFO', triggeredLeg.symbol, parseFloat(triggeredLeg.strike), 10) as any[];
+            const scrips = (chain || []);
+            scrips.sort((a, b) => parseFloat(a.strprc) - parseFloat(b.strprc));
+
+            const currentIdx = scrips.findIndex(s => s.token === triggeredLeg.token);
+            let targetScrip;
+            if (triggeredLeg.type === 'CE') {
+                targetScrip = scrips.slice(currentIdx + 1).find(s => s.optt === 'CE'); // Next higher CE
+            } else {
+                targetScrip = [...scrips].slice(0, currentIdx).reverse().find(s => s.optt === 'PE'); // Next lower PE
+            }
+
+            if (targetScrip) {
+                // Fetch latest quotes for target scrip to get dynamic lot size (ls)
+                const quote: any = await shoonya.getQuotes('NFO', targetScrip.token);
+                const lotSize = quote && quote.ls ? parseFloat(quote.ls) : (triggeredLeg.quantity || 75);
+
+                const adjustmentLeg: LegState = {
+                    token: targetScrip.token,
+                    symbol: targetScrip.tsym,
+                    type: targetScrip.optt as 'CE' | 'PE',
+                    side: 'BUY',
+                    strike: targetScrip.strprc,
+                    entryPrice: quote.lp, // Market order
+                    ltp: 0,
+                    quantity: lotSize,
+                    tier: 2 // Adjustments for Tier 2 Sell should maintain Tier 2 monitoring
+                };
+
+                // Margin Check for Adjustment
+                if (!this.state.isVirtual) {
+                    const hasMargin = await this.checkMargin([adjustmentLeg]);
+                    if (!hasMargin) {
+                        this.addLog(`❌ Adjustment Skipped: Insufficient Margin for ${adjustmentLeg.symbol}`);
+                        telegramService.sendMessage(`⚠️ <b>Adjustment Skipped</b>\nInsufficient Margin for ${adjustmentLeg.symbol}`);
+                        return;
+                    }
+                }
+
+                await this.executeLeg(adjustmentLeg);
+                this.state.selectedStrikes.push(adjustmentLeg);
+                this.resubscribe();
+                //console.log(`[Adjustment] Placed market BUY for ${adjustmentLeg.symbol}`);
+                telegramService.sendMessage(`⚠️ <b>Adjustment Triggered</b>\n${triggeredLeg.symbol} reached LTP ${triggeredLeg.ltp} (>100).\nNew hedge: ${adjustmentLeg.symbol} @ Market`);
+            }
+        } catch (e) {
+            console.error('Adjustment failed:', e);
+        }
+    }
 
     private checkExits() {
-    if (this.state.isPaused) return;
+        if (this.state.isPaused) return;
 
-    const now = Date.now();
-    // Profit Exit: > target for 10s
-    if (this.state.pnl > this.state.targetPnl) {
-        if (!this.state.monitoring.profitTime) {
-            this.state.monitoring.profitTime = now;
-            // Log PnL breakdown when timer starts
-            this.addLog(`⚠️ Profit Target Timer Started: Current PnL ₹${this.state.pnl.toFixed(2)} > Target ₹${this.state.targetPnl}`);
-            this.state.selectedStrikes.forEach(l => {
-                const legPnl = (l.ltp - (l.entryPrice || 0)) * l.quantity * (l.side === 'BUY' ? 1 : -1);
-                console.log(`[PnL Debug] ${l.symbol}: LTP=${l.ltp}, Entry=${l.entryPrice}, PnL=${legPnl.toFixed(2)}`);
-            });
+        const now = Date.now();
+        // Profit Exit: > target for 10s
+        if (this.state.pnl > this.state.targetPnl) {
+            if (!this.state.monitoring.profitTime) {
+                this.state.monitoring.profitTime = now;
+                // Log PnL breakdown when timer starts
+                this.addLog(`⚠️ Profit Target Timer Started: Current PnL ₹${this.state.pnl.toFixed(2)} > Target ₹${this.state.targetPnl}`);
+                this.state.selectedStrikes.forEach(l => {
+                    const legPnl = (l.ltp - (l.entryPrice || 0)) * l.quantity * (l.side === 'BUY' ? 1 : -1);
+                    console.log(`[PnL Debug] ${l.symbol}: LTP=${l.ltp}, Entry=${l.entryPrice}, PnL=${legPnl.toFixed(2)}`);
+                });
+            }
+            else if (now - this.state.monitoring.profitTime >= 10000) {
+                this.exitAllPositions(`Profit Target ₹${this.state.targetPnl} (10s confirmation)`);
+            }
+        } else {
+            this.state.monitoring.profitTime = 0;
         }
-        else if (now - this.state.monitoring.profitTime >= 10000) {
-            this.exitAllPositions(`Profit Target ₹${this.state.targetPnl} (10s confirmation)`);
-        }
-    } else {
-        this.state.monitoring.profitTime = 0;
-    }
 
-    // Loss Exit: < stop loss for 10s
-    if (this.state.pnl < this.state.stopLossPnl) {
-        if (!this.state.monitoring.lossTime) this.state.monitoring.lossTime = now;
-        else if (now - this.state.monitoring.lossTime >= 10000) {
-            this.exitAllPositions(`Loss Limit ₹${this.state.stopLossPnl} (10s confirmation)`);
+        // Loss Exit: < stop loss for 10s
+        if (this.state.pnl < this.state.stopLossPnl) {
+            if (!this.state.monitoring.lossTime) this.state.monitoring.lossTime = now;
+            else if (now - this.state.monitoring.lossTime >= 10000) {
+                this.exitAllPositions(`Loss Limit ₹${this.state.stopLossPnl} (10s confirmation)`);
+            }
+        } else {
+            this.state.monitoring.lossTime = 0;
         }
-    } else {
-        this.state.monitoring.lossTime = 0;
     }
-}
 
     private calculatePnL() {
-    let totalPnL = 0;
-    for (const leg of this.state.selectedStrikes) {
-        // Skip PnL calculation for legs with invalid/zero entry price (pending orders)
-        // This prevents false profit spikes when a market order is placed but not yet filled/updated
-        if (!leg.entryPrice || leg.entryPrice <= 0) continue;
+        let totalPnL = 0;
+        for (const leg of this.state.selectedStrikes) {
+            // Skip PnL calculation for legs with invalid/zero entry price (pending orders)
+            // This prevents false profit spikes when a market order is placed but not yet filled/updated
+            if (!leg.entryPrice || leg.entryPrice <= 0) continue;
 
-        const multiplier = leg.side === 'BUY' ? 1 : -1;
-        totalPnL += (leg.ltp - leg.entryPrice) * leg.quantity * multiplier;
+            const multiplier = leg.side === 'BUY' ? 1 : -1;
+            totalPnL += (leg.ltp - leg.entryPrice) * leg.quantity * multiplier;
+        }
+        this.state.pnl = totalPnL;
+        if (totalPnL > this.state.peakProfit) this.state.peakProfit = totalPnL;
+        if (totalPnL < this.state.peakLoss) this.state.peakLoss = totalPnL;
     }
-    this.state.pnl = totalPnL;
-    if (totalPnL > this.state.peakProfit) this.state.peakProfit = totalPnL;
-    if (totalPnL < this.state.peakLoss) this.state.peakLoss = totalPnL;
-}
 
     private async syncToDb(forcePnl: boolean = false) {
-    const now = Date.now();
-    if (forcePnl || (now - this.lastPnlUpdateTime >= this.PNL_UPDATE_INTERVAL)) {
-        const statePayload = {
-            status: this.state.status,
-            isActive: this.state.isActive,
-            isVirtual: this.state.isVirtual,
-            isTradePlaced: this.state.isTradePlaced,
-            pnl: this.state.pnl,
-            peakProfit: this.state.peakProfit,
-            peakLoss: this.state.peakLoss,
-            requiredMargin: this.state.requiredMargin,
-            availableMargin: this.state.availableMargin,
-            entryTime: this.state.entryTime,
-            exitTime: this.state.exitTime,
-            nextAction: this.state.nextAction,
-            engineActivity: this.state.engineActivity,
-            isPaused: this.state.isPaused,
-            lastHeartbeat: new Date().toISOString(),
-            reEntry: this.state.reEntry // [NEW] Send re-entry state to frontend
-        };
+        const now = Date.now();
+        if (forcePnl || (now - this.lastPnlUpdateTime >= this.PNL_UPDATE_INTERVAL)) {
+            const statePayload = {
+                status: this.state.status,
+                isActive: this.state.isActive,
+                isVirtual: this.state.isVirtual,
+                isTradePlaced: this.state.isTradePlaced,
+                pnl: this.state.pnl,
+                peakProfit: this.state.peakProfit,
+                peakLoss: this.state.peakLoss,
+                requiredMargin: this.state.requiredMargin,
+                availableMargin: this.state.availableMargin,
+                entryTime: this.state.entryTime,
+                exitTime: this.state.exitTime,
+                nextAction: this.state.nextAction,
+                engineActivity: this.state.engineActivity,
+                isPaused: this.state.isPaused,
+                lastHeartbeat: new Date().toISOString(),
+                reEntry: this.state.reEntry // [NEW] Send re-entry state to frontend
+            };
 
-        await db.updateState(statePayload, this.getUid());
-        socketService.emit('strategy_state', statePayload);
+            await db.updateState(statePayload, this.getUid());
+            socketService.emit('strategy_state', statePayload);
 
-        this.lastPnlUpdateTime = now;
+            this.lastPnlUpdateTime = now;
+        }
     }
-}
 
     private handleOrderReport(report: any) { }
 
     async exitAllPositions(reason: string) {
-    console.log(`Exiting all positions: ${reason}`);
+        console.log(`Exiting all positions: ${reason}`);
 
-    // Sort: Close Shorts (SELL) first, then Longs (BUY)
-    const legsToExit = [...this.state.selectedStrikes].sort((a, b) => {
-        if (a.side === 'SELL' && b.side !== 'SELL') return -1;
-        if (b.side === 'SELL' && a.side !== 'SELL') return 1;
-        return 0;
-    });
+        // Sort: Close Shorts (SELL) first, then Longs (BUY)
+        const legsToExit = [...this.state.selectedStrikes].sort((a, b) => {
+            if (a.side === 'SELL' && b.side !== 'SELL') return -1;
+            if (b.side === 'SELL' && a.side !== 'SELL') return 1;
+            return 0;
+        });
 
-    // Loop and Place Exit Orders
-    for (const leg of legsToExit) {
-        if (!this.state.isVirtual) {
-            try {
-                const exitOrder = {
-                    exchange: 'NFO',
-                    tradingsymbol: leg.symbol,
-                    quantity: leg.quantity.toString(),
-                    discloseqty: '0',
-                    price: '0',
-                    product_type: 'M',
-                    buy_or_sell: leg.side === 'BUY' ? 'S' : 'B', // Reverse side
-                    price_type: 'MKT',
-                    trigger_price: '0',
-                    retention: 'DAY',
-                    remarks: `EXIT_${reason.replace(/\s+/g, '_').toUpperCase()}`.substring(0, 20) // Truncate if needed
-                };
+        // Loop and Place Exit Orders
+        for (const leg of legsToExit) {
+            if (!this.state.isVirtual) {
+                try {
+                    const exitOrder = {
+                        exchange: 'NFO',
+                        tradingsymbol: leg.symbol,
+                        quantity: leg.quantity.toString(),
+                        discloseqty: '0',
+                        price: '0',
+                        product_type: 'M',
+                        buy_or_sell: leg.side === 'BUY' ? 'S' : 'B', // Reverse side
+                        price_type: 'MKT',
+                        trigger_price: '0',
+                        retention: 'DAY',
+                        remarks: `EXIT_${reason.replace(/\s+/g, '_').toUpperCase()}`.substring(0, 20) // Truncate if needed
+                    };
 
-                this.addLog(`🔄 Exiting ${leg.symbol} (${exitOrder.buy_or_sell})...`);
-                const res: any = await shoonya.placeOrder(exitOrder);
+                    this.addLog(`🔄 Exiting ${leg.symbol} (${exitOrder.buy_or_sell})...`);
+                    const res: any = await shoonya.placeOrder(exitOrder);
 
-                if (res && res.stat === 'Ok') {
-                    this.addLog(`✅ Exit Order Sent: ${leg.symbol} | ID: ${res.norenordno}`);
-                } else {
-                    this.addLog(`❌ Exit Failed: ${leg.symbol} | ${res.emsg || 'Unknown'}`);
+                    if (res && res.stat === 'Ok') {
+                        this.addLog(`✅ Exit Order Sent: ${leg.symbol} | ID: ${res.norenordno}`);
+                    } else {
+                        this.addLog(`❌ Exit Failed: ${leg.symbol} | ${res.emsg || 'Unknown'}`);
+                    }
+                } catch (e: any) {
+                    this.addLog(`❌ Exit Exception: ${leg.symbol} | ${e.message}`);
+                    console.error('Exit Order Error:', e);
                 }
-            } catch (e: any) {
-                this.addLog(`❌ Exit Exception: ${leg.symbol} | ${e.message}`);
-                console.error('Exit Order Error:', e);
+            } else {
+                this.addLog(`[VIRTUAL] Exited ${leg.symbol} (${leg.side === 'BUY' ? 'SELL' : 'BUY'})`);
             }
-        } else {
-            this.addLog(`[VIRTUAL] Exited ${leg.symbol} (${leg.side === 'BUY' ? 'SELL' : 'BUY'})`);
         }
-    }
 
-    this.state.isActive = false;
-    this.state.isTradePlaced = false;
+        this.state.isActive = false;
+        this.state.isTradePlaced = false;
 
-    // ========== RE-ENTRY DETECTION LOGIC ==========
-    await this.detectAndScheduleReEntry(reason);
-    // ==============================================
+        // ========== RE-ENTRY DETECTION LOGIC ==========
+        await this.detectAndScheduleReEntry(reason);
+        // ==============================================
 
-    // Set status based on reason
-    if (reason.includes('Profit') || reason.includes('Loss') || reason.includes('MANUAL')) {
-        this.state.status = 'FORCE_EXITED';
-        this.state.engineActivity = 'Strategy Terminated';
-        this.state.nextAction = 'Manual Reset Required';
-    } else {
-        // Check if re-entry is scheduled before resetting to idle defaults
-        if (this.state.reEntry.isEligible && !this.state.reEntry.hasReEntered) {
-            this.state.status = 'IDLE'; // Keep as IDLE or introduce WAITING state if needed
-            this.state.engineActivity = 'Waiting for Re-Entry';
-            // Note: nextAction is already set by detectAndScheduleReEntry
+        // Set status based on reason
+        if (reason.includes('Profit') || reason.includes('Loss') || reason.includes('MANUAL')) {
+            this.state.status = 'FORCE_EXITED';
+            this.state.engineActivity = 'Strategy Terminated';
+            this.state.nextAction = 'Manual Reset Required';
         } else {
-            this.state.status = 'IDLE';
-            this.state.engineActivity = 'Waiting for Next Cycle';
-            this.state.nextAction = 'Daily 9 AM Evaluation';
+            // Check if re-entry is scheduled before resetting to idle defaults
+            if (this.state.reEntry.isEligible && !this.state.reEntry.hasReEntered) {
+                this.state.status = 'IDLE'; // Keep as IDLE or introduce WAITING state if needed
+                this.state.engineActivity = 'Waiting for Re-Entry';
+                // Note: nextAction is already set by detectAndScheduleReEntry
+            } else {
+                this.state.status = 'IDLE';
+                this.state.engineActivity = 'Waiting for Next Cycle';
+                this.state.nextAction = 'Daily 9 AM Evaluation';
+            }
         }
+
+        // Save to history before clearing
+        await db.saveTradeHistory({
+            ...this.state,
+            exitReason: reason
+        }, this.state.selectedStrikes, this.getUid());
+
+        this.state.selectedStrikes = [];
+        await db.syncPositions([], this.getUid());
+        await this.syncToDb(true);
+        socketService.emit('strategy_exit', { reason });
+
+        telegramService.sendMessage(`🏁 <b>Strategy Closed</b>\nReason: ${reason}\nFinal PnL: <b>₹${this.state.pnl.toFixed(2)}</b>`);
     }
-
-    // Save to history before clearing
-    await db.saveTradeHistory({
-        ...this.state,
-        exitReason: reason
-    }, this.state.selectedStrikes, this.getUid());
-
-    this.state.selectedStrikes = [];
-    await db.syncPositions([], this.getUid());
-    await this.syncToDb(true);
-    socketService.emit('strategy_exit', { reason });
-
-    telegramService.sendMessage(`🏁 <b>Strategy Closed</b>\nReason: ${reason}\nFinal PnL: <b>₹${this.state.pnl.toFixed(2)}</b>`);
-}
 
     // ========== RE-ENTRY FEATURE METHODS ==========
 
     private async detectAndScheduleReEntry(exitReason: string) {
-    try {
-        const exitTime = new Date();
-        const exitHour = exitTime.getHours();
-        const exitMinute = exitTime.getMinutes();
-        const exitDate = exitTime.toISOString().split('T')[0]; // YYYY-MM-DD
+        try {
+            const exitTime = new Date();
+            const exitHour = exitTime.getHours();
+            const exitMinute = exitTime.getMinutes();
+            const exitDate = exitTime.toISOString().split('T')[0]; // YYYY-MM-DD
 
-        // Parse configurable cutoff time
-        const [cutoffHour, cutoffMinute] = this.state.reEntryCutoffTime.split(':').map(Number);
+            // Parse configurable cutoff time
+            const [cutoffHour, cutoffMinute] = this.state.reEntryCutoffTime.split(':').map(Number);
 
-        // Check if exit is before cutoff time
-        const isEarlyExit = exitHour < cutoffHour || (exitHour === cutoffHour && exitMinute < cutoffMinute);
+            // Check if exit is before cutoff time
+            const isEarlyExit = exitHour < cutoffHour || (exitHour === cutoffHour && exitMinute < cutoffMinute);
 
-        if (!isEarlyExit) {
-            this.addLog(`ℹ️ [Re-Entry] Exit after ${this.state.reEntryCutoffTime}, not eligible for re-entry`);
-            return;
-        }
-
-        // Calculate position age in days
-        if (!this.state.positionEntryDate) {
-            this.addLog(`ℹ️ [Re-Entry] No entry date recorded, cannot determine position age`);
-            return;
-        }
-
-        const entryDate = new Date(this.state.positionEntryDate);
-        const exitDateObj = new Date(exitDate);
-        const positionAge = Math.floor((exitDateObj.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24));
-
-        // Check if position was taken EXACTLY yesterday (position age = 1)
-        const isYesterdayPosition = positionAge === 1;
-
-        // Check if this is NOT expiry day exit
-        const isNotExpiryDayExit = !exitReason.includes('Expiry');
-
-        if (isYesterdayPosition && isNotExpiryDayExit) {
-            // Calculate re-entry time (2 minutes from now)
-            const reEntryTime = new Date(exitTime.getTime() + 2 * 60 * 1000);
-
-            this.state.reEntry.isEligible = true;
-            this.state.reEntry.originalExitTime = exitTime.toISOString();
-            this.state.reEntry.originalExitReason = exitReason;
-            this.state.reEntry.positionAge = positionAge;
-            this.state.reEntry.scheduledReEntryTime = reEntryTime.toISOString();
-
-            this.addLog(`✅ [Re-Entry] Eligible for re-entry in 2 minutes`);
-            this.addLog(`   - Position taken on: ${this.state.positionEntryDate}`);
-            this.addLog(`   - Exited on: ${exitDate} at ${exitTime.toLocaleTimeString('en-IN')}`);
-            this.addLog(`   - Position age: ${positionAge} day (yesterday's position)`);
-            this.addLog(`   - Exit reason: ${exitReason}`);
-            this.addLog(`   - Scheduled re-entry: ${reEntryTime.toLocaleTimeString('en-IN')}`);
-
-            this.state.nextAction = `Re-Entry at ${reEntryTime.toLocaleTimeString('en-IN')} (2 min after exit)`;
-
-            // Schedule re-entry after 2 minutes
-            this.scheduleReEntry(2 * 60 * 1000); // 2 minutes in milliseconds
-        } else if (positionAge === 0) {
-            this.addLog(`ℹ️ [Re-Entry] Position taken today (same-day), not eligible for re-entry`);
-        } else if (positionAge > 1) {
-            this.addLog(`ℹ️ [Re-Entry] Position is ${positionAge} days old, not eligible for re-entry (only yesterday's positions qualify)`);
-        } else {
-            // If we are here, we might have accidentally fallen through or logic mismatch.
-            // But specifically for the "Take trade on positions entry" requirement:
-            // We need to capture the CURRENT strikes before they are cleared.
-            // NOTE: selectedStrikes are cleared in exitAllPositions AFTER this method is awaited.
-            // So we can still access them here.
-            if (this.state.reEntry.isEligible) {
-                this.state.reEntry.originalStrikes = JSON.parse(JSON.stringify(this.state.selectedStrikes));
-                this.addLog(`💾 [Re-Entry] Saved ${this.state.reEntry.originalStrikes?.length} original legs for restoration.`);
+            if (!isEarlyExit) {
+                this.addLog(`ℹ️ [Re-Entry] Exit after ${this.state.reEntryCutoffTime}, not eligible for re-entry`);
+                return;
             }
+
+            // Calculate position age in days
+            if (!this.state.positionEntryDate) {
+                this.addLog(`ℹ️ [Re-Entry] No entry date recorded, cannot determine position age`);
+                return;
+            }
+
+            const entryDate = new Date(this.state.positionEntryDate);
+            const exitDateObj = new Date(exitDate);
+            const positionAge = Math.floor((exitDateObj.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24));
+
+            // Check if position was taken EXACTLY yesterday (position age = 1)
+            const isYesterdayPosition = positionAge === 1;
+
+            // Check if this is NOT expiry day exit
+            const isNotExpiryDayExit = !exitReason.includes('Expiry');
+
+            if (isYesterdayPosition && isNotExpiryDayExit) {
+                // Calculate re-entry time (2 minutes from now)
+                const reEntryTime = new Date(exitTime.getTime() + 2 * 60 * 1000);
+
+                this.state.reEntry.isEligible = true;
+                this.state.reEntry.originalExitTime = exitTime.toISOString();
+                this.state.reEntry.originalExitReason = exitReason;
+                this.state.reEntry.positionAge = positionAge;
+                this.state.reEntry.scheduledReEntryTime = reEntryTime.toISOString();
+
+                this.addLog(`✅ [Re-Entry] Eligible for re-entry in 2 minutes`);
+                this.addLog(`   - Position taken on: ${this.state.positionEntryDate}`);
+                this.addLog(`   - Exited on: ${exitDate} at ${exitTime.toLocaleTimeString('en-IN')}`);
+                this.addLog(`   - Position age: ${positionAge} day (yesterday's position)`);
+                this.addLog(`   - Exit reason: ${exitReason}`);
+                this.addLog(`   - Scheduled re-entry: ${reEntryTime.toLocaleTimeString('en-IN')}`);
+
+                this.state.nextAction = `Re-Entry at ${reEntryTime.toLocaleTimeString('en-IN')} (2 min after exit)`;
+
+                // Schedule re-entry after 2 minutes
+                this.scheduleReEntry(2 * 60 * 1000); // 2 minutes in milliseconds
+            } else if (positionAge === 0) {
+                this.addLog(`ℹ️ [Re-Entry] Position taken today (same-day), not eligible for re-entry`);
+            } else if (positionAge > 1) {
+                this.addLog(`ℹ️ [Re-Entry] Position is ${positionAge} days old, not eligible for re-entry (only yesterday's positions qualify)`);
+            } else {
+                // If we are here, we might have accidentally fallen through or logic mismatch.
+                // But specifically for the "Take trade on positions entry" requirement:
+                // We need to capture the CURRENT strikes before they are cleared.
+                // NOTE: selectedStrikes are cleared in exitAllPositions AFTER this method is awaited.
+                // So we can still access them here.
+                if (this.state.reEntry.isEligible) {
+                    this.state.reEntry.originalStrikes = JSON.parse(JSON.stringify(this.state.selectedStrikes));
+                    this.addLog(`💾 [Re-Entry] Saved ${this.state.reEntry.originalStrikes?.length} original legs for restoration.`);
+                }
+            }
+        } catch (error: any) {
+            this.addLog(`❌ [Re-Entry] Error in detection: ${error.message}`);
         }
-    } catch (error: any) {
-        this.addLog(`❌ [Re-Entry] Error in detection: ${error.message}`);
     }
-}
 
     private scheduleReEntry(delayMs: number) {
-    // Clear any existing timer
-    if (this.reEntryTimer) {
-        clearTimeout(this.reEntryTimer);
-        this.reEntryTimer = null;
-    }
-
-    this.addLog(`⏰ [Re-Entry] Scheduling re-entry in ${delayMs / 1000} seconds`);
-
-    // Schedule re-entry
-    this.reEntryTimer = setTimeout(async () => {
-        try {
-            await this.executeReEntry();
-        } catch (error: any) {
-            this.addLog(`❌ [Re-Entry] Error during scheduled re-entry: ${error.message}`);
-        } finally {
+        // Clear any existing timer
+        if (this.reEntryTimer) {
+            clearTimeout(this.reEntryTimer);
             this.reEntryTimer = null;
         }
-    }, delayMs);
-}
+
+        this.addLog(`⏰ [Re-Entry] Scheduling re-entry in ${delayMs / 1000} seconds`);
+
+        // Schedule re-entry
+        this.reEntryTimer = setTimeout(async () => {
+            try {
+                await this.executeReEntry();
+            } catch (error: any) {
+                this.addLog(`❌ [Re-Entry] Error during scheduled re-entry: ${error.message}`);
+            } finally {
+                this.reEntryTimer = null;
+            }
+        }, delayMs);
+    }
 
     private async executeReEntry() {
-    try {
-        // Safety checks
-        if (!this.state.reEntry.isEligible) {
-            this.addLog('[Re-Entry] Not eligible for re-entry');
-            return;
-        }
-
-        if (this.state.reEntry.hasReEntered) {
-            this.addLog('[Re-Entry] Already re-entered today, skipping');
-            return;
-        }
-
-        if (this.state.isPaused) {
-            this.addLog('[Re-Entry] System is paused, skipping re-entry');
-            return;
-        }
-
-        if (this.state.status !== 'EXIT_DONE' && this.state.status !== 'FORCE_EXITED' && this.state.status !== 'IDLE') {
-            this.addLog(`[Re-Entry] Invalid status: ${this.state.status}, expected EXIT_DONE, FORCE_EXITED, or IDLE`);
-            return;
-        }
-
-        this.addLog('🔄 [Re-Entry] Executing scheduled re-entry');
-
-        // Mark as re-entered to prevent multiple attempts
-        this.state.reEntry.hasReEntered = true;
-        await this.syncToDb(true);
-
-
-        // Execute entry logic
-        this.addLog(`🔄 [Re-Entry] executing dynamic strike selection (Spot-based)...`);
-
-        // Extract expiry from original strikes if available to ensure we stick to the same week
-        let reEntryExpiry: string | undefined = undefined;
-        if (this.state.reEntry.originalStrikes && this.state.reEntry.originalStrikes.length > 0) {
-            // Parse expiry from symbol e.g., NIFTY23JAN26C24000
-            const firstLeg = this.state.reEntry.originalStrikes[0];
-            const match = firstLeg.symbol.match(/NIFTY(\d{2}[A-Z]{3}\d{2})/);
-            if (match && match[1]) {
-                // Convert 23JAN26 -> 23-JAN-2026 format expected by selectStrikes (or whatever format it uses?)
-                // Wait, selectStrikes expects normalized format if possible, or matches against getAvailableExpiries.
-                // The standard option chain format has 23JAN26. 
-                // Let's pass it as is, but we might need to verify format match.
-                // getAvailableExpiries returns "13-JAN-2026".
-                // We need to convert "27JAN26" -> "27-JAN-2026".
-
-                const rawDate = match[1]; // 23JAN26
-                const day = rawDate.substring(0, 2);
-                const month = rawDate.substring(2, 5);
-                const yearShort = rawDate.substring(5, 7);
-                reEntryExpiry = `${day}-${month}-20${yearShort}`;
-                this.addLog(`🔄 [Re-Entry] Detected Original Expiry: ${reEntryExpiry}`);
+        try {
+            // Safety checks
+            if (!this.state.reEntry.isEligible) {
+                this.addLog('[Re-Entry] Not eligible for re-entry');
+                return;
             }
+
+            if (this.state.reEntry.hasReEntered) {
+                this.addLog('[Re-Entry] Already re-entered today, skipping');
+                return;
+            }
+
+            if (this.state.isPaused) {
+                this.addLog('[Re-Entry] System is paused, skipping re-entry');
+                return;
+            }
+
+            if (this.state.status !== 'EXIT_DONE' && this.state.status !== 'FORCE_EXITED' && this.state.status !== 'IDLE') {
+                this.addLog(`[Re-Entry] Invalid status: ${this.state.status}, expected EXIT_DONE, FORCE_EXITED, or IDLE`);
+                return;
+            }
+
+            this.addLog('🔄 [Re-Entry] Executing scheduled re-entry');
+
+            // Mark as re-entered to prevent multiple attempts
+            this.state.reEntry.hasReEntered = true;
+            await this.syncToDb(true);
+
+
+            // Execute entry logic
+            this.addLog(`🔄 [Re-Entry] executing dynamic strike selection (Spot-based)...`);
+
+            // Extract expiry from original strikes if available to ensure we stick to the same week
+            let reEntryExpiry: string | undefined = undefined;
+            if (this.state.reEntry.originalStrikes && this.state.reEntry.originalStrikes.length > 0) {
+                // Parse expiry from symbol e.g., NIFTY23JAN26C24000
+                const firstLeg = this.state.reEntry.originalStrikes[0];
+                const match = firstLeg.symbol.match(/NIFTY(\d{2}[A-Z]{3}\d{2})/);
+                if (match && match[1]) {
+                    // Convert 23JAN26 -> 23-JAN-2026 format expected by selectStrikes (or whatever format it uses?)
+                    // Wait, selectStrikes expects normalized format if possible, or matches against getAvailableExpiries.
+                    // The standard option chain format has 23JAN26. 
+                    // Let's pass it as is, but we might need to verify format match.
+                    // getAvailableExpiries returns "13-JAN-2026".
+                    // We need to convert "27JAN26" -> "27-JAN-2026".
+
+                    const rawDate = match[1]; // 23JAN26
+                    const day = rawDate.substring(0, 2);
+                    const month = rawDate.substring(2, 5);
+                    const yearShort = rawDate.substring(5, 7);
+                    reEntryExpiry = `${day}-${month}-20${yearShort}`;
+                    this.addLog(`🔄 [Re-Entry] Detected Original Expiry: ${reEntryExpiry}`);
+                }
+            }
+
+
+            const expiries = await this.getAvailableExpiries();
+            if (expiries.length === 0) return false;
+            const currentExpiry = expiries[0]; // First expiry = current week
+
+            // We use standard strategy selection logic because spot price might have changed
+            // BUT we enforce the extracted expiry date
+            await this.selectStrikes(currentExpiry);
+
+            await this.placeOrder(false);
+
+            // Send notification
+            await telegramService.sendMessage(
+                `🔄 *Re-Entry Trade Executed*\n\n` +
+                `Original Exit: ${this.state.reEntry.originalExitReason}\n` +
+                `Exit Time: ${new Date(this.state.reEntry.originalExitTime).toLocaleTimeString('en-IN')}\n` +
+                `Re-Entry Time: ${new Date().toLocaleTimeString('en-IN')}\n` +
+                `Position Age: ${this.state.reEntry.positionAge} day\n\n` +
+                `New positions taken automatically.`
+            );
+
+        } catch (error: any) {
+            this.addLog(`❌ [Re-Entry] Error: ${error.message}`);
         }
-
-
-        const expiries = await this.getAvailableExpiries();
-        if (expiries.length === 0) return false;
-        const currentExpiry = expiries[0]; // First expiry = current week
-
-        // We use standard strategy selection logic because spot price might have changed
-        // BUT we enforce the extracted expiry date
-        await this.selectStrikes(currentExpiry);
-
-        await this.placeOrder(false);
-
-        // Send notification
-        await telegramService.sendMessage(
-            `🔄 *Re-Entry Trade Executed*\n\n` +
-            `Original Exit: ${this.state.reEntry.originalExitReason}\n` +
-            `Exit Time: ${new Date(this.state.reEntry.originalExitTime).toLocaleTimeString('en-IN')}\n` +
-            `Re-Entry Time: ${new Date().toLocaleTimeString('en-IN')}\n` +
-            `Position Age: ${this.state.reEntry.positionAge} day\n\n` +
-            `New positions taken automatically.`
-        );
-
-    } catch (error: any) {
-        this.addLog(`❌ [Re-Entry] Error: ${error.message}`);
     }
-}
 
     // ========== END RE-ENTRY FEATURE METHODS ==========
 
     // --- Control Methods ---
 
     async pause() {
-    this.addLog('⏸️ Strategy PAUSED by User.');
-    telegramService.sendMessage('⏸️ <b>Strategy Paused</b>');
-    await this.syncToDb();
-}
+        this.addLog('⏸️ Strategy PAUSED by User.');
+        telegramService.sendMessage('⏸️ <b>Strategy Paused</b>');
+        await this.syncToDb();
+    }
 
     async resumeMonitoring() {
-    this.addLog('▶️ Strategy RESUMED by User.' + this.state.isPaused);
-    if (!this.state.isPaused) return;
-    this.state.isPaused = false;
-    this.addLog('▶️ Strategy RESUMED by User.');
-    telegramService.sendMessage('▶️ <b>Strategy Resumed</b>');
-    await this.syncToDb();
-    if (this.state.isActive) {
-        this.checkExits();
+        this.addLog('▶️ Strategy RESUMED by User.' + this.state.isPaused);
+        if (!this.state.isPaused) return;
+        this.state.isPaused = false;
+        this.addLog('▶️ Strategy RESUMED by User.');
+        telegramService.sendMessage('▶️ <b>Strategy Resumed</b>');
+        await this.syncToDb();
+        if (this.state.isActive) {
+            this.checkExits();
+        }
     }
-}
 
     async manualExit() {
-    this.addLog('🛑 Manual Kill Switch Triggered!');
-    telegramService.sendMessage('🛑 <b>Manual Kill Switch Triggered!</b>\nExiting all positions and pausing strategy.');
-    await this.exitAllPositions('MANUAL_KILL_SWITCH');
-    // Pause after kill switch to prevent auto-reentry if any logic remains
-    this.state.isPaused = true;
-    this.state.status = 'FORCE_EXITED';
-    await this.syncToDb(true);
-}
+        this.addLog('🛑 Manual Kill Switch Triggered!');
+        telegramService.sendMessage('🛑 <b>Manual Kill Switch Triggered!</b>\nExiting all positions and pausing strategy.');
+        await this.exitAllPositions('MANUAL_KILL_SWITCH');
+        // Pause after kill switch to prevent auto-reentry if any logic remains
+        this.state.isPaused = true;
+        this.state.status = 'FORCE_EXITED';
+        await this.syncToDb(true);
+    }
 
     async resetEngine() {
-    // Only allow reset from FORCE_EXITED state
-    if (this.state.status !== 'FORCE_EXITED') {
-        throw new Error('Reset only allowed from FORCE_EXITED state');
+        // Only allow reset from FORCE_EXITED state
+        if (this.state.status !== 'FORCE_EXITED') {
+            throw new Error('Reset only allowed from FORCE_EXITED state');
+        }
+
+        this.addLog('🔄 [System] Manual engine reset initiated...');
+
+        // Clear any remaining positions (safety check)
+        if (this.state.selectedStrikes.length > 0) {
+            this.addLog('⚠️ [Reset] Clearing remaining positions...');
+            this.state.selectedStrikes = [];
+            await db.syncPositions([], this.getUid());
+        }
+
+        // Reset to IDLE state
+        this.state.status = 'IDLE';
+        this.state.isActive = false;
+        this.state.isTradePlaced = false;
+        this.state.isPaused = false;
+        this.state.pnl = 0;
+        this.state.peakProfit = 0;
+        this.state.peakLoss = 0;
+        this.state.engineActivity = 'Engine Reset';
+        this.state.nextAction = 'Daily 9 AM Evaluation';
+        this.state.monitoring = {
+            profitTime: 0,
+            lossTime: 0,
+            adjustments: {}
+        };
+
+        await this.syncToDb(true);
+        this.addLog('✅ [System] Engine manually reset to IDLE state');
+        telegramService.sendMessage('🔄 <b>Engine Reset</b>\nStatus: IDLE\nReady for next cycle');
     }
-
-    this.addLog('🔄 [System] Manual engine reset initiated...');
-
-    // Clear any remaining positions (safety check)
-    if (this.state.selectedStrikes.length > 0) {
-        this.addLog('⚠️ [Reset] Clearing remaining positions...');
-        this.state.selectedStrikes = [];
-        await db.syncPositions([], this.getUid());
-    }
-
-    // Reset to IDLE state
-    this.state.status = 'IDLE';
-    this.state.isActive = false;
-    this.state.isTradePlaced = false;
-    this.state.isPaused = false;
-    this.state.pnl = 0;
-    this.state.peakProfit = 0;
-    this.state.peakLoss = 0;
-    this.state.engineActivity = 'Engine Reset';
-    this.state.nextAction = 'Daily 9 AM Evaluation';
-    this.state.monitoring = {
-        profitTime: 0,
-        lossTime: 0,
-        adjustments: {}
-    };
-
-    await this.syncToDb(true);
-    this.addLog('✅ [System] Engine manually reset to IDLE state');
-    telegramService.sendMessage('🔄 <b>Engine Reset</b>\nStatus: IDLE\nReady for next cycle');
-}
 
     async triggerExpirySync() {
-    this.addLog('🔄 [Auto-Sync] Fetching latest expiry dates from NSE...');
-    try {
-        const data = await nseService.getOptionChainData('NIFTY');
-        // Check for both structures (indices uses records.expiryDates, contract-info uses expiryDates)
-        const expiries = (data && data.records && data.records.expiryDates)
-            ? data.records.expiryDates
-            : (data && data.expiryDates)
-                ? data.expiryDates
-                : null;
+        this.addLog('🔄 [Auto-Sync] Fetching latest expiry dates from NSE...');
+        try {
+            const data = await nseService.getOptionChainData('NIFTY');
+            // Check for both structures (indices uses records.expiryDates, contract-info uses expiryDates)
+            const expiries = (data && data.records && data.records.expiryDates)
+                ? data.records.expiryDates
+                : (data && data.expiryDates)
+                    ? data.expiryDates
+                    : null;
 
-        if (expiries) {
-            const formatted = expiries.map((d: string) => d.toUpperCase());
+            if (expiries) {
+                const formatted = expiries.map((d: string) => d.toUpperCase());
 
-            const success = await db.setManualExpiries(formatted, this.getUid());
-            if (success) {
-                this.addLog(`✅ [Auto-Sync] Updated DB with ${formatted.length} expiries from NSE.`);
-                return true;
-            } else {
-                const errorMsg = 'Failed to update DB (setManualExpiries returned false). Check RLS policies?';
-                this.addLog(`❌ [Auto-Sync] ${errorMsg}`);
-                throw new Error(errorMsg);
+                const success = await db.setManualExpiries(formatted, this.getUid());
+                if (success) {
+                    this.addLog(`✅ [Auto-Sync] Updated DB with ${formatted.length} expiries from NSE.`);
+                    return true;
+                } else {
+                    const errorMsg = 'Failed to update DB (setManualExpiries returned false). Check RLS policies?';
+                    this.addLog(`❌ [Auto-Sync] ${errorMsg}`);
+                    throw new Error(errorMsg);
+                }
             }
+            throw new Error('No expiry dates found in NSE response');
+        } catch (err: any) {
+            console.error('[Auto-Sync] Failed:', err);
+            this.addLog(`❌ [Auto-Sync] Error: ${err.message}`);
+            throw err; // Propagate error to API
         }
-        throw new Error('No expiry dates found in NSE response');
-    } catch (err: any) {
-        console.error('[Auto-Sync] Failed:', err);
-        this.addLog(`❌ [Auto-Sync] Error: ${err.message}`);
-        throw err; // Propagate error to API
     }
-}
     private async updateMargins() {
-    if (!shoonya.isLoggedIn()) return;
-    try {
-        // 1. Get Available Margin (Cash + Collateral)
-        const limits: any = await shoonya.getLimits();
-        if (limits) {
-            this.state.availableMargin = parseFloat(limits.cash) || 0;
-        }
-
-        // 2. Get Required Margin for current positions (if any)
-        if (this.state.selectedStrikes.length > 0) {
-            const marginRes: any = await shoonya.getBasketMargin(this.state.selectedStrikes);
-            if (marginRes && marginRes.margin) {
-                this.state.requiredMargin = parseFloat(marginRes.margin);
-            } else if (marginRes && marginRes.required) {
-                this.state.requiredMargin = parseFloat(marginRes.required);
+        if (!shoonya.isLoggedIn()) return;
+        try {
+            // 1. Get Available Margin (Cash + Collateral)
+            const limits: any = await shoonya.getLimits();
+            if (limits) {
+                this.state.availableMargin = parseFloat(limits.cash) || 0;
             }
-        } else {
-            this.state.requiredMargin = 0;
+
+            // 2. Get Required Margin for current positions (if any)
+            if (this.state.selectedStrikes.length > 0) {
+                const marginRes: any = await shoonya.getBasketMargin(this.state.selectedStrikes);
+                if (marginRes && marginRes.margin) {
+                    this.state.requiredMargin = parseFloat(marginRes.margin);
+                } else if (marginRes && marginRes.required) {
+                    this.state.requiredMargin = parseFloat(marginRes.required);
+                }
+            } else {
+                this.state.requiredMargin = 0;
+            }
+        } catch (err) { }
+    }
+    private async monitorPnL() {
+        if (this.state.status !== 'ACTIVE' && this.state.status !== 'ENTRY_DONE') return;
+
+        try {
+            // Update Margins periodically
+            await this.updateMargins();
+
+            // Recalculate PnL
+            await this.calculatePnL();
+
+            // Check Limits
+            if (this.state.stopLossPnl && this.state.pnl <= -this.state.stopLossPnl) {
+                this.addLog(`🛑 Stop Loss Triggered! PnL: ${this.state.pnl}`);
+                await this.exitAllPositions('Stop Loss Hit');
+                return;
+            }
+
+            if (this.state.targetPnl && this.state.pnl >= this.state.targetPnl) {
+                this.addLog(`🎉 Target Triggered! PnL: ${this.state.pnl}`);
+                await this.exitAllPositions('Target Hit');
+                return;
+            }
+
+            await this.syncToDb();
+
+        } catch (err) {
+            console.error('Monitor PnL Error:', err);
         }
-    } catch (err) { }
-}
+    }
 }
 
 export const strategyEngine = new StrategyEngine();
-
-    private async monitorPnL() {
-    if (this.state.status !== 'ACTIVE' && this.state.status !== 'ENTRY_DONE') return;
-
-    try {
-        // Update Margins periodically
-        await this.updateMargins();
-
-// ... rest of PnL logic
