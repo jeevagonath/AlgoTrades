@@ -1225,11 +1225,6 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                     </div>
                 </div>
 
-                {/* Cumulative P&L Intraday Chart */}
-                <div className="w-full">
-                    <PnlChart data={intradayPnl} className="h-[300px] w-full" />
-                </div>
-
                 {/* Row 1: Engine & Margins & Nifty */}
                 {/* Row 1: Engine & Margins & Nifty */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1293,6 +1288,12 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
 
                     {/* 3. Indices Widget (Already Stacked) */}
                     <IndicesWidget />
+                </div>
+
+
+                {/* Cumulative P&L Intraday Chart */}
+                <div className="w-full">
+                    <PnlChart data={intradayPnl} className="h-[300px] w-full" />
                 </div>
 
                 {/* Main Content Grid */}
