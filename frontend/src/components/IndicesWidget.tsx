@@ -18,23 +18,23 @@ const TickerItem = ({ label, data, icon: Icon, onChartClick, chartSymbol }: { la
     const isFlashing = useFlashOnChange(data.price);
 
     return (
-        <div className={`flex items-center justify-between gap-2 transition-all duration-300 py-1 ${isFlashing ? 'flash-neutral' : ''}`}>
+        <div className={`flex items-center justify-between gap-2 transition-all duration-300 py-0.5 ${isFlashing ? 'flash-neutral' : ''}`}>
             <div className="flex flex-col">
-                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                    {Icon && <Icon className="w-3 h-3" />}
+                <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                    {Icon && <Icon className="w-2.5 h-2.5" />}
                     {label}
                 </span>
-                <span className="text-xl font-black text-foreground font-mono tracking-tighter transition-all duration-300">
+                <span className="text-lg font-black text-foreground font-mono tracking-tighter transition-all duration-300">
                     {animatedPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                 </span>
             </div>
 
             <div className="flex flex-col items-end">
-                <span className={`text-[10px] font-bold font-mono transition-colors duration-300 ${data.change >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                <span className={`text-[9px] font-bold font-mono transition-colors duration-300 ${data.change >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
                     {data.change > 0 ? '+' : ''}{data.change.toFixed(2)}
                 </span>
-                <div className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold mt-0.5 transition-colors duration-300 ${data.change >= 0 ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300' : 'bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-300'}`}>
-                    {data.change >= 0 ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
+                <div className={`flex items-center gap-0.5 px-1 py-0.5 rounded-full text-[8px] font-bold mt-0.5 transition-colors duration-300 ${data.change >= 0 ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300' : 'bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-300'}`}>
+                    {data.change >= 0 ? <TrendingUp className="w-2 h-2" /> : <TrendingDown className="w-2 h-2" />}
                     {Math.abs(data.changePercent).toFixed(2)}%
                 </div>
             </div>
