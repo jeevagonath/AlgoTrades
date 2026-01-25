@@ -1206,58 +1206,67 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                 </div>
 
                 {/* Row 1: Engine & Margins & Nifty */}
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                    <div className="bg-card border border-border rounded-xl p-4 shadow-sm flex flex-col justify-center relative overflow-hidden transition-colors duration-300">
-                        <div className="flex items-center justify-between mb-1">
-                            <div className="flex items-center gap-2">
-                                <Activity className="w-3.5 h-3.5 text-blue-500" />
-                                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Engine Activity</span>
-                            </div>
+                {/* Row 1: Engine & Margins & Nifty */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
-                            {/* WebSocket Status Indicator */}
-                            <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md border border-border ${socketStatus.connected ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400'}`}>
-                                <div className={`w-1 h-1 rounded-full ${socketStatus.connected ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`}></div>
-                                <span className="text-[8px] font-black uppercase tracking-tighter">
-                                    {socketStatus.connected ? `${socketStatus.subscribedCount} Live` : 'Offline'}
-                                </span>
+                    {/* 1. Status Console (Engine + Next Task) */}
+                    <div className="bg-card border border-border rounded-xl p-4 shadow-sm flex flex-col divide-y divide-border justify-center h-full gap-4">
+                        {/* Top: Engine Activity */}
+                        <div className="flex flex-col justify-center pb-1">
+                            <div className="flex items-center justify-between mb-1">
+                                <div className="flex items-center gap-2">
+                                    <Activity className="w-3.5 h-3.5 text-blue-500" />
+                                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Engine Activity</span>
+                                </div>
+                                <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md border border-border ${socketStatus.connected ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400'}`}>
+                                    <div className={`w-1 h-1 rounded-full ${socketStatus.connected ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`}></div>
+                                    <span className="text-[8px] font-black uppercase tracking-tighter">
+                                        {socketStatus.connected ? 'LIVE' : 'OFFLINE'}
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="text-sm font-bold text-slate-700 dark:text-slate-300 truncate" title={engineActivity}>{engineActivity || 'Ready'}</div>
+                        </div>
+
+                        {/* Bottom: Next Task */}
+                        <div className="flex flex-col justify-center pt-3">
+                            <div className="flex items-center gap-2 mb-1">
+                                <Clock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+                                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Next Task</span>
+                            </div>
+                            <div className="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2 truncate">
+                                <span className="truncate" title={nextAction}>{nextAction || 'Pending'}</span>
+                                <TaskTimer taskText={nextAction} />
                             </div>
                         </div>
-                        <div className="text-sm font-bold text-slate-700 dark:text-slate-300 truncate" title={engineActivity}>{engineActivity || 'Ready'}</div>
                     </div>
 
-                    {/* 2. Next Task */}
-                    <div className="bg-card border border-border rounded-xl p-4 shadow-sm flex flex-col justify-center transition-colors duration-300">
-                        <div className="flex items-center gap-2 mb-1">
-                            <Clock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
-                            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Next Task</span>
+                    {/* 2. Margin Console (Required + Available) */}
+                    <div className="bg-card border border-border rounded-xl p-4 shadow-sm flex flex-col divide-y divide-border justify-center h-full gap-4">
+                        {/* Top: Required Margin */}
+                        <div className="flex flex-col justify-center pb-1">
+                            <div className="flex items-center justify-between mb-0.5">
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Required Margin</span>
+                                <Shield className="w-3.5 h-3.5 text-blue-500" />
+                            </div>
+                            <div className="text-2xl font-black tracking-tighter text-foreground">
+                                <AnimatedValueText value={requiredMargin} className="" fractionDigits={2} />
+                            </div>
                         </div>
-                        <div className="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2 truncate">
-                            <span className="truncate" title={nextAction}>{nextAction || 'Pending'}</span>
-                            <TaskTimer taskText={nextAction} />
+
+                        {/* Bottom: Available Margin */}
+                        <div className="flex flex-col justify-center pt-3">
+                            <div className="flex items-center justify-between mb-0.5">
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Available Margin</span>
+                                <CheckCircle2 className={`w-3.5 h-3.5 ${availableMargin < requiredMargin ? 'text-rose-500' : 'text-emerald-500'}`} />
+                            </div>
+                            <div className={`text-2xl font-black tracking-tighter ${availableMargin < requiredMargin ? 'text-rose-600 dark:text-rose-400' : 'text-foreground'}`}>
+                                <AnimatedValueText value={availableMargin} className="" fractionDigits={2} />
+                            </div>
                         </div>
                     </div>
 
-                    {/* 3. Required Margin */}
-                    <AnimatedMetricCard
-                        label="Required Margin"
-                        value={requiredMargin}
-                        icon={Shield}
-                        className="bg-card"
-                        valueSize="text-xl"
-                    />
-
-                    {/* 4. Available Margin */}
-                    <AnimatedMetricCard
-                        label="Available Margin"
-                        value={availableMargin}
-                        icon={CheckCircle2}
-                        type={availableMargin < requiredMargin ? 'negative' : 'neutral'}
-                        className="bg-card"
-                        valueSize="text-xl"
-                    />
-
-                    {/* 5. Nifty Ticker */}
-                    {/* 5. Indices Widget */}
+                    {/* 3. Indices Widget (Already Stacked) */}
                     <IndicesWidget />
                 </div>
 
