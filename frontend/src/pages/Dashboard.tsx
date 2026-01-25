@@ -5,6 +5,7 @@ import { strategyApi, authApi } from '@/services/api.service';
 import { formatTradingViewSymbol, getNiftySpotChartUrl, openTradingViewChart } from '@/utils/tradingview';
 import { formatOptionSymbol } from '@/utils/formatters';
 import { useAnimatedValue, useFlashOnChange } from '@/hooks/useAnimations';
+import { PnlChart } from '../components/PnlChart';
 import { CalendarHeatmap } from '@/components/CalendarHeatmap';
 import { PositionDetailsModal } from '@/components/PositionDetailsModal';
 import { OptionChain } from '@/components/OptionChain';
@@ -351,6 +352,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
     const [endDate, setEndDate] = useState(() => new Date().toISOString().split('T')[0]);
 
     // Summary metrics state
+    const [intradayPnl, setIntradayPnl] = useState<{ time: string; pnl: number }[]>([]);
     const [pnlSummary, setPnlSummary] = useState({
         totalPnl: 0,
         charges: 0,
@@ -589,6 +591,24 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
             socketService.off('system_log');
             socketService.off('strategy_state');
         };
+    }, []);
+
+    // Fetch daily P&L data when pnl tab is active or date filter changes
+    useEffect(() => {
+        const fetchIntradayPnl = async () => {
+            try {
+                const response = await strategyApi.getIntradayPnl();
+                if (response.status === 'success') {
+                    setIntradayPnl(response.data);
+                }
+            } catch (err) {
+                console.error('Failed to fetch intraday PnL', err);
+            }
+        };
+
+        fetchIntradayPnl();
+        const interval = setInterval(fetchIntradayPnl, 60000);
+        return () => clearInterval(interval);
     }, []);
 
     // Fetch daily P&L data when pnl tab is active or date filter changes
@@ -1203,6 +1223,11 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                             </div>
                         </div>
                     </div>
+                </div>
+
+                {/* Cumulative P&L Intraday Chart */}
+                <div className="w-full">
+                    <PnlChart data={intradayPnl} className="h-[300px] w-full" />
                 </div>
 
                 {/* Row 1: Engine & Margins & Nifty */}

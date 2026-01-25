@@ -1735,6 +1735,9 @@ class StrategyEngine {
 
             await this.syncToDb();
 
+            // Log PnL Snapshot for Chart
+            await db.logPnlSnapshot(this.state.pnl, this.getUid());
+
         } catch (err) {
             console.error('Monitor PnL Error:', err);
         }

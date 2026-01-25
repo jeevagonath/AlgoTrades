@@ -639,6 +639,57 @@ export const db = {
         }
     },
 
+    async logPnlSnapshot(pnl: number, uid?: string) {
+        try {
+            const { error } = await supabase
+                .from('pnl_snapshots')
+                .insert({
+                    uid: uid,
+                    pnl: pnl,
+                    created_at: new Date().toISOString()
+                });
+
+            if (error) {
+                console.error('Supabase PnL Snapshot Error:', error);
+            }
+        } catch (err) {
+            console.error('Failed to log PnL snapshot:', err);
+        }
+    },
+
+    async getIntradayPnl(uid?: string) {
+        try {
+            // Get today's date in UTC (start of day)
+            const now = new Date();
+            const startOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0)).toISOString();
+
+            let query = supabase
+                .from('pnl_snapshots')
+                .select('created_at, pnl')
+                .gte('created_at', startOfDay)
+                .order('created_at', { ascending: true });
+
+            if (uid) {
+                query = query.eq('uid', uid);
+            }
+
+            const { data, error } = await query;
+
+            if (error) {
+                console.error('Supabase Intraday PnL Load Error:', error);
+                return [];
+            }
+
+            return (data || []).map(d => ({
+                time: new Date(d.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+                pnl: d.pnl
+            }));
+        } catch (err) {
+            console.error('Failed to load intraday PnL:', err);
+            return [];
+        }
+    },
+
     async cleanupOldLogs() {
         try {
             // Calculate cutoff date (30 days ago)

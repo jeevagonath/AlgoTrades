@@ -112,6 +112,10 @@ export const strategyApi = {
         });
         return response.data;
     },
+    getIntradayPnl: async () => {
+        const response = await apiClient.get('/analytics/intraday-pnl');
+        return response.data;
+    },
 };
 
 export default apiClient;
