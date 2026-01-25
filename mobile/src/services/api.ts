@@ -107,6 +107,10 @@ export const strategyApi = {
         const response = await apiClient.post('/strategy/reset');
         return response.data;
     },
+    getIntradayPnl: async () => {
+        const response = await apiClient.get('/analytics/intraday-pnl');
+        return response.data;
+    },
 };
 
 export default apiClient;

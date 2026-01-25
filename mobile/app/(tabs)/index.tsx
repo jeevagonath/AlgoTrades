@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MetricCard } from '@/src/components/MetricCard';
 import { NiftyTicker } from '@/src/components/NiftyTicker';
+import { PnlChart } from '@/src/components/PnlChart';
 import { strategyApi, authApi } from '@/src/services/api';
 import { socketService } from '@/src/services/socket';
 import { notificationService, AlertData } from '@/src/services/notification.service';
@@ -176,6 +177,7 @@ export default function DashboardScreen() {
   const [clientName, setClientName] = useState('Trade User');
   const [currentWeekExpiry, setCurrentWeekExpiry] = useState('...');
   const [nextWeekExpiry, setNextWeekExpiry] = useState('...');
+  const [intradayPnl, setIntradayPnl] = useState<{ time: string; pnl: number }[]>([]);
 
   const fetchData = useCallback(async () => {
     try {
@@ -219,6 +221,16 @@ export default function DashboardScreen() {
         }
       } catch (err) {
         console.error('Failed to fetch expiries:', err);
+      }
+
+      // Fetch Intraday PnL
+      try {
+        const pnlRes = await strategyApi.getIntradayPnl();
+        if (pnlRes.status === 'success' && pnlRes.data) {
+          setIntradayPnl(pnlRes.data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch intraday PnL:', err);
       }
     } catch (err) {
       console.error('Failed to fetch dashboard data:', err);
@@ -429,7 +441,11 @@ export default function DashboardScreen() {
             type="negative"
             icon={TrendingDown}
             containerStyle={{ flex: 1 }}
-          />
+        </Animated.View>
+
+        {/* Intraday PnL Chart */}
+        <Animated.View entering={FadeInDown.delay(250).duration(800)}>
+          <PnlChart data={intradayPnl} />
         </Animated.View>
 
         {/* Engine Workflow (NEW) */}
