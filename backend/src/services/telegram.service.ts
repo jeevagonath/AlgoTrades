@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { db } from './supabase.service';
+import { shoonya } from './shoonya.service';
 
 class TelegramService {
     private token: string = '';
@@ -61,7 +62,11 @@ class TelegramService {
                 icon: alertMeta.icon
             };
 
-            await db.saveAlert(alertData);
+            // Get UID from session
+            const session = shoonya.getSessionDetails();
+            const uid = session?.uid || session?.actid;
+
+            await db.saveAlert(alertData, uid);
 
             // Emit real-time alert to connected clients
             import('./socket.service').then(({ socketService }) => {

@@ -177,7 +177,7 @@ class StrategyEngine {
                         }
                     }
                     this.calculatePnL(); // Recalculate PnL with fresh LTPs
-                    await db.syncPositions(positions); // Update database with fresh LTPs
+                    await db.syncPositions(positions, this.getUid()); // Update database with fresh LTPs
                 } catch (err) {
                     console.error('[Strategy] GetQuotes Error on resume:', err);
                     this.addLog('⚠️ [System] Could not fetch initial LTPs, using stored prices');
@@ -515,7 +515,7 @@ class StrategyEngine {
             telegramService.setCredentials(this.state.telegramToken, this.state.telegramChatId);
         }
 
-        await db.updateState(this.state);
+        await db.updateState(this.state, this.getUid());
         this.initScheduler();
         this.addLog(`Strategy settings updated. Entry: ${this.state.entryTime}, Exit: ${this.state.exitTime}, Re-Entry Cutoff: ${this.state.reEntryCutoffTime}, Target: ${this.state.targetPnl}, SL: ${this.state.stopLossPnl}, Mode: ${this.state.isVirtual ? 'Virtual' : 'LIVE'}`);
     }
@@ -566,9 +566,14 @@ class StrategyEngine {
         return `${day}${month}${year}`;
     }
 
+    private getUid(): string | undefined {
+        const session = shoonya.getSessionDetails();
+        return session?.uid || session?.actid;
+    }
+
     private addLog(msg: string) {
         //console.log(`[Strategy] ${msg}`);
-        db.addLog(msg);
+        db.addLog(msg, this.getUid());
         socketService.emit('system_log', {
             time: new Date().toLocaleTimeString('en-GB', { hour12: false }),
             msg
@@ -729,7 +734,7 @@ class StrategyEngine {
             }
 
             this.startMonitoring();
-            await db.syncPositions(selectedLegs);
+            await db.syncPositions(selectedLegs, this.getUid());
             await this.syncToDb(true);
 
             const ceLegs = selectedLegs.filter(l => l.type === 'CE').map(l => `${l.side} ${l.strike}`).join(', ');
@@ -1034,7 +1039,7 @@ class StrategyEngine {
         if (this.state.isVirtual) {
             // Virtual execution
             await new Promise(r => setTimeout(r, 100));
-            await db.logOrder({ ...leg, price: leg.entryPrice, status: 'COMPLETE', isVirtual: true });
+            await db.logOrder({ ...leg, price: leg.entryPrice, status: 'COMPLETE', isVirtual: true }, this.getUid());
             this.addLog(`[VIRTUAL] ${leg.side} ${leg.symbol} @ ₹${leg.entryPrice}`);
         } else {
             // Real order execution
@@ -1052,7 +1057,7 @@ class StrategyEngine {
                         status: 'COMPLETE',
                         isVirtual: false,
                         orderId: result.norenordno
-                    });
+                    }, this.getUid());
 
                     this.addLog(`[LIVE] ${leg.side} ${leg.symbol} @ ₹${fillPrice} | Order ID: ${result.norenordno}`);
                     telegramService.sendMessage(`✅ <b>Order Filled</b>\n${leg.side} ${leg.symbol}\nPrice: ₹${fillPrice}\nQty: ${leg.quantity}\nOrder ID: ${result.norenordno}`);
@@ -1304,7 +1309,7 @@ class StrategyEngine {
                 reEntry: this.state.reEntry // [NEW] Send re-entry state to frontend
             };
 
-            await db.updateState(statePayload);
+            await db.updateState(statePayload, this.getUid());
             socketService.emit('strategy_state', statePayload);
 
             this.lastPnlUpdateTime = now;
@@ -1387,10 +1392,10 @@ class StrategyEngine {
         await db.saveTradeHistory({
             ...this.state,
             exitReason: reason
-        }, this.state.selectedStrikes);
+        }, this.state.selectedStrikes, this.getUid());
 
         this.state.selectedStrikes = [];
-        await db.syncPositions([]);
+        await db.syncPositions([], this.getUid());
         await this.syncToDb(true);
         socketService.emit('strategy_exit', { reason });
 
@@ -1621,7 +1626,7 @@ class StrategyEngine {
         if (this.state.selectedStrikes.length > 0) {
             this.addLog('⚠️ [Reset] Clearing remaining positions...');
             this.state.selectedStrikes = [];
-            await db.syncPositions([]);
+            await db.syncPositions([], this.getUid());
         }
 
         // Reset to IDLE state
@@ -1659,7 +1664,7 @@ class StrategyEngine {
             if (expiries) {
                 const formatted = expiries.map((d: string) => d.toUpperCase());
 
-                const success = await db.setManualExpiries(formatted);
+                const success = await db.setManualExpiries(formatted, this.getUid());
                 if (success) {
                     this.addLog(`✅ [Auto-Sync] Updated DB with ${formatted.length} expiries from NSE.`);
                     return true;

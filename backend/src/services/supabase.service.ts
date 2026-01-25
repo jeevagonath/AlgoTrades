@@ -11,9 +11,11 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
 });
 
 export const db = {
-    async updateState(state: any) {
+    async updateState(state: any, uid?: string) {
         // Build payload dynamically to avoid sending undefined fields
         const payload: any = { id: 1, updated_at: new Date().toISOString() };
+
+        if (uid) payload.uid = uid; // Add UID to payload
 
         if (state.status !== undefined) payload.status = state.status;
         if (state.isActive !== undefined) payload.is_active = state.isActive;
@@ -59,7 +61,7 @@ export const db = {
         return { data, error };
     },
 
-    async syncPositions(legs: any[]) {
+    async syncPositions(legs: any[], uid?: string) {
         // Fetch existing positions to preserve created_at timestamps
         const { data: existingPositions } = await supabase
             .from('positions')
@@ -77,6 +79,7 @@ export const db = {
                 .insert(legs.map(l => {
                     const existingCreatedAt = existingMap.get(l.token);
                     return {
+                        uid: uid, // Add UID
                         instrument_token: l.token,
                         symbol: l.symbol,
                         type: l.type,
@@ -105,10 +108,11 @@ export const db = {
         }
     },
 
-    async logOrder(order: any) {
+    async logOrder(order: any, uid?: string) {
         const { data, error } = await supabase
             .from('order_book')
             .insert({
+                uid: uid, // Add UID
                 instrument_token: order.token,
                 symbol: order.symbol,
                 side: order.side,
@@ -145,11 +149,11 @@ export const db = {
         }));
     },
 
-    async addLog(msg: string) {
+    async addLog(msg: string, uid?: string) {
         const time = new Date().toLocaleTimeString('en-GB', { hour12: false });
         const { error } = await supabase
             .from('system_logs')
-            .insert({ msg, time, created_at: new Date().toISOString() });
+            .insert({ uid, msg, time, created_at: new Date().toISOString() });
         if (error) console.error('Supabase Log Error:', error);
     },
 
@@ -251,12 +255,13 @@ export const db = {
         }));
     },
 
-    async saveTradeHistory(state: any, legs: any[]) {
+    async saveTradeHistory(state: any, legs: any[], uid?: string) {
         try {
             // 1. Insert into trade_history
             const { data: historyData, error: historyError } = await supabase
                 .from('trade_history')
                 .insert({
+                    uid: uid, // Add UID
                     is_virtual: state.isVirtual,
                     pnl: state.pnl,
                     peak_profit: state.peakProfit,
@@ -280,6 +285,7 @@ export const db = {
                     .from('position_history_log')
                     .insert(legs.map(l => ({
                         history_id: historyData.id,
+                        uid: uid, // Add UID
                         instrument_token: l.token,
                         symbol: l.symbol,
                         type: l.type,
@@ -311,11 +317,12 @@ export const db = {
         title: string,
         message: string,
         icon?: string
-    }) {
+    }, uid?: string) {
         try {
             const { error } = await supabase
                 .from('alerts')
                 .insert({
+                    uid: uid, // Add UID
                     type: alert.type,
                     severity: alert.severity,
                     title: alert.title,
@@ -387,7 +394,7 @@ export const db = {
         }
     },
 
-    async setManualExpiries(dates: string[]) {
+    async setManualExpiries(dates: string[], uid?: string) {
         try {
             // First, deactivate all existing
             await supabase
@@ -406,6 +413,7 @@ export const db = {
             // 2. Insert new dates as active
 
             const payload = dates.map(date => ({
+                uid: uid, // Add UID
                 expiry_date: date,
                 is_active: true,
                 created_at: new Date().toISOString()
