@@ -52,7 +52,7 @@ export const IndicesWidget = () => {
             try {
                 const [niftyRes, vixRes] = await Promise.all([
                     strategyApi.getNiftySpot(),
-                    fetch(strategyApi.BASE_URL + '/strategy/vix-spot').then(res => res.json())
+                    strategyApi.getVixSpot()
                 ]);
 
                 if (niftyRes.status === 'success' && niftyRes.data) setNiftyData(niftyRes.data);

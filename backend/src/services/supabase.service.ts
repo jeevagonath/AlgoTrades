@@ -399,10 +399,19 @@ export const db = {
     async setManualExpiries(dates: string[], uid?: string) {
         try {
             // First, deactivate all existing
-            await supabase
+            // First, deactivate all existing for this user
+            let updateQuery = supabase
                 .from('manual_expiry_settings')
-                .update({ is_active: false })
-                .neq('id', 0); // Update all
+                .update({ is_active: false });
+
+            if (uid) {
+                updateQuery = updateQuery.eq('uid', uid);
+            } else {
+                // Fallback or legacy behavior: potentially risky if RLS enforces UID
+                updateQuery = updateQuery.neq('id', 0);
+            }
+
+            await updateQuery;
 
             // Then insert new ones (or update if existing)
             // We'll just insert new active rows for simplicity since it's a small table

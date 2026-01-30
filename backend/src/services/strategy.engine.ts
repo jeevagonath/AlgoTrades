@@ -114,6 +114,7 @@ class StrategyEngine {
     private POSITION_SYNC_INTERVAL = 60 * 60 * 1000; // 1 hour
     private hourlySyncTimer: NodeJS.Timeout | null = null;
     private reEntryTimer: NodeJS.Timeout | null = null; // Timer for re-entry scheduling
+    private cachedUid: string | undefined;
 
     constructor() {
         this.initScheduler();
@@ -127,6 +128,14 @@ class StrategyEngine {
             // 1. Load basic state from DB
             const savedState: any = await db.getState();
             console.log('[DEBUG] Resume Loaded State:', JSON.stringify(savedState, null, 2));
+
+            // Load UID from session DB if not already available
+            const { data: sessionData } = await db.getSession();
+            if (sessionData && sessionData.uid) {
+                this.cachedUid = sessionData.uid;
+                this.addLog(`🔑 [System] Cached UID for DB operations: ${this.cachedUid}`);
+            }
+
             if (savedState) {
                 this.state.isVirtual = savedState.isVirtual !== undefined ? savedState.isVirtual : true;
                 this.state.isPaused = savedState.isPaused !== undefined ? savedState.isPaused : false;
@@ -575,7 +584,7 @@ class StrategyEngine {
 
     private getUid(): string | undefined {
         const session = shoonya.getSessionDetails();
-        return session?.uid || session?.actid;
+        return session?.uid || session?.actid || this.cachedUid;
     }
 
     private addLog(msg: string) {
@@ -1252,7 +1261,7 @@ class StrategyEngine {
 
         const now = Date.now();
         // Profit Exit: > target for 10s
-        if (this.state.pnl > this.state.targetPnl) {
+        if (this.state.targetPnl && this.state.pnl > this.state.targetPnl) {
             if (!this.state.monitoring.profitTime) {
                 this.state.monitoring.profitTime = now;
                 // Log PnL breakdown when timer starts
@@ -1270,7 +1279,7 @@ class StrategyEngine {
         }
 
         // Loss Exit: < stop loss for 10s
-        if (this.state.pnl < this.state.stopLossPnl) {
+        if (this.state.stopLossPnl && this.state.pnl < -Math.abs(this.state.stopLossPnl)) {
             if (!this.state.monitoring.lossTime) this.state.monitoring.lossTime = now;
             else if (now - this.state.monitoring.lossTime >= 10000) {
                 this.exitAllPositions(`Loss Limit ₹${this.state.stopLossPnl} (10s confirmation)`);
@@ -1287,8 +1296,10 @@ class StrategyEngine {
             // This prevents false profit spikes when a market order is placed but not yet filled/updated
             if (!leg.entryPrice || leg.entryPrice <= 0) continue;
 
+            // If LTP is 0 (no data yet), use entry price to avoid false PnL spikes
+            const currentPrice = (leg.ltp && leg.ltp > 0) ? leg.ltp : leg.entryPrice;
             const multiplier = leg.side === 'BUY' ? 1 : -1;
-            totalPnL += (leg.ltp - leg.entryPrice) * leg.quantity * multiplier;
+            totalPnL += (currentPrice - leg.entryPrice) * leg.quantity * multiplier;
         }
         this.state.pnl = totalPnL;
         if (totalPnL > this.state.peakProfit) this.state.peakProfit = totalPnL;
@@ -1722,7 +1733,7 @@ class StrategyEngine {
             await this.calculatePnL();
 
             // Check Limits
-            if (this.state.stopLossPnl && this.state.pnl <= -this.state.stopLossPnl) {
+            if (this.state.stopLossPnl && this.state.pnl <= -Math.abs(this.state.stopLossPnl)) {
                 this.addLog(`🛑 Stop Loss Triggered! PnL: ${this.state.pnl}`);
                 await this.exitAllPositions('Stop Loss Hit');
                 return;

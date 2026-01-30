@@ -74,6 +74,10 @@ export const strategyApi = {
         const response = await apiClient.get('/strategy/nifty-spot');
         return response.data;
     },
+    getVixSpot: async () => {
+        const response = await apiClient.get('/strategy/vix-spot');
+        return response.data;
+    },
     getOrders: async () => {
         const response = await apiClient.get('/strategy/orders');
         return response.data;
