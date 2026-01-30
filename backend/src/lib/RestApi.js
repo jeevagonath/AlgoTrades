@@ -45,7 +45,7 @@ var NorenRestApi = function (params) {
     'positions': '/PositionBook',
     'scripinfo': '/GetSecurityInfo',
     'getquotes': '/GetQuotes',
-    'basket_margin': '/MarginCalculator/BasketMargin',
+    'basket_margin': '/GetBasketMargin',
     'get_index_list': '/GetIndexList',
     'user_details': '/UserDetails',
     'client_details': '/ClientDetails',
