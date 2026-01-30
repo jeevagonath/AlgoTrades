@@ -108,6 +108,7 @@ class StrategyEngine {
     };
 
     private lastPnlUpdateTime: number = 0;
+    private lastLoggedPnl: number | null = null;
     private PNL_UPDATE_INTERVAL = 5 * 60 * 1000;
     private isWebSocketStarted: boolean = false;
     private lastPositionSyncTime: number = 0;
@@ -1750,7 +1751,19 @@ class StrategyEngine {
             await this.syncToDb();
 
             // Log PnL Snapshot for Chart
-            await db.logPnlSnapshot(this.state.pnl, this.getUid());
+            const now = new Date();
+            const istNow = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+            const currentHour = istNow.getHours();
+            const currentMinute = istNow.getMinutes();
+            const isMarketOpen = (currentHour < 15) || (currentHour === 15 && currentMinute <= 30);
+
+            // Only log if market is open AND PnL has changed significantly (or first log)
+            if (isMarketOpen) {
+                if (this.lastLoggedPnl === null || this.state.pnl !== this.lastLoggedPnl) {
+                    await db.logPnlSnapshot(this.state.pnl, this.getUid());
+                    this.lastLoggedPnl = this.state.pnl;
+                }
+            }
 
         } catch (err) {
             console.error('Monitor PnL Error:', err);
