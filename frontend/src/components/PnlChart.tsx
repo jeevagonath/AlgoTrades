@@ -20,16 +20,28 @@ export const PnlChart: React.FC<PnlChartProps> = ({ data, className }) => {
     // Gradient ID for unique referencing
     const gradientId = "pnlGradient";
 
+    const gradientOffset = () => {
+        if (maxPnl <= 0) return 0;
+        if (minPnl >= 0) return 1;
+        return maxPnl / (maxPnl - minPnl);
+    };
+
+    const off = gradientOffset();
+
     return (
         <div className={`w-full h-full min-h-[300px] bg-card/50 rounded-xl p-4 border border-border ${className}`}>
             <h3 className="text-sm font-bold text-slate-400 mb-4 uppercase tracking-wider">Cumulative P&L</h3>
             <div className="h-[250px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <AreaChart data={data} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                         <defs>
                             <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                                <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                                <stop offset={off} stopColor="#10b981" stopOpacity={0.8} />
+                                <stop offset={off} stopColor="#ef4444" stopOpacity={0.8} />
+                            </linearGradient>
+                            <linearGradient id={`${gradientId}Stroke`} x1="0" y1="0" x2="0" y2="1">
+                                <stop offset={off} stopColor="#10b981" stopOpacity={1} />
+                                <stop offset={off} stopColor="#ef4444" stopOpacity={1} />
                             </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.3} />
@@ -47,7 +59,7 @@ export const PnlChart: React.FC<PnlChartProps> = ({ data, className }) => {
                             tickLine={false}
                             axisLine={false}
                             tickFormatter={(value) => `₹${value}`}
-                            domain={[minPnl - padding, maxPnl + padding]}
+                            domain={['auto', 'auto']}
                         />
                         <Tooltip
                             contentStyle={{
@@ -56,16 +68,21 @@ export const PnlChart: React.FC<PnlChartProps> = ({ data, className }) => {
                                 borderRadius: '8px',
                                 color: '#f8fafc'
                             }}
-                            itemStyle={{ color: '#10b981' }}
-                            formatter={(value: number | undefined) => [`₹${(value ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`, 'P&L']}
+                            itemStyle={{ color: '#94a3b8' }}
+                            formatter={(value: number | undefined) => [
+                                <span className={value && value >= 0 ? "text-emerald-400" : "text-rose-400"}>
+                                    ₹{(value ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                                </span>,
+                                'P&L'
+                            ]}
                             labelStyle={{ color: '#94a3b8', marginBottom: '4px' }}
                         />
                         <Area
                             type="monotone"
                             dataKey="pnl"
-                            stroke="#10b981"
+                            stroke={`url(#${gradientId}Stroke)`}
                             strokeWidth={2}
-                            fillOpacity={1}
+                            fillOpacity={0.4}
                             fill={`url(#${gradientId})`}
                             animationDuration={500}
                         />
