@@ -880,6 +880,7 @@ class StrategyEngine {
                 this.addLog(`📅 [Entry] Position entry date recorded: ${today}`);
 
                 this.startMonitoring();
+                await db.syncPositions(this.state.selectedStrikes, this.getUid());
                 await this.syncToDb(true);
 
                 telegramService.sendMessage(`🚀 <b>Trade Placed</b>\nAll 8 legs executed virtually for Iron Condor.`);
@@ -1247,6 +1248,7 @@ class StrategyEngine {
 
                 await this.executeLeg(adjustmentLeg);
                 this.state.selectedStrikes.push(adjustmentLeg);
+                await db.syncPositions(this.state.selectedStrikes, this.getUid());
                 this.resubscribe();
                 //console.log(`[Adjustment] Placed market BUY for ${adjustmentLeg.symbol}`);
                 telegramService.sendMessage(`⚠️ <b>Adjustment Triggered</b>\n${triggeredLeg.symbol} reached LTP ${triggeredLeg.ltp} (>100).\nNew hedge: ${adjustmentLeg.symbol} @ Market`);
