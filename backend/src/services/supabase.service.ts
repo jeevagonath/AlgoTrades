@@ -398,31 +398,27 @@ export const db = {
 
     async setManualExpiries(dates: string[], uid?: string) {
         try {
-            // First, deactivate all existing
-            // First, deactivate all existing for this user
-            let updateQuery = supabase
+            // 1. Delete all existing records for this user (or all if no uid provided, based on context)
+            let deleteQuery = supabase
                 .from('manual_expiry_settings')
-                .update({ is_active: false });
+                .delete();
 
             if (uid) {
-                updateQuery = updateQuery.eq('uid', uid);
+                deleteQuery = deleteQuery.eq('uid', uid);
             } else {
-                // Fallback or legacy behavior: potentially risky if RLS enforces UID
-                updateQuery = updateQuery.neq('id', 0);
+                // Warning: Without UID this deletes EVERYTHING. 
+                // Assuming this is intended for a single-tenant or strict RLS environment.
+                deleteQuery = deleteQuery.neq('id', 0);
             }
 
-            await updateQuery;
+            const { error: deleteError } = await deleteQuery;
 
-            // Then insert new ones (or update if existing)
-            // We'll just insert new active rows for simplicity since it's a small table
-            // Or ideally use upsert. Let's try upserting logic or simple insert.
-            // Simplified: Delete all active entries? No, keep history.
-            // Just insert the new batch as active.
+            if (deleteError) {
+                console.error('Supabase Manual Expiry Delete Error:', deleteError);
+                return false;
+            }
 
-            // Cleanest approach for this specific requirement:
-            // 1. Mark all as inactive
-            // 2. Insert new dates as active
-
+            // 2. Insert new dates
             const payload = dates.map(date => ({
                 uid: uid, // Add UID
                 expiry_date: date,
@@ -430,16 +426,15 @@ export const db = {
                 created_at: new Date().toISOString()
             }));
 
-            const { error } = await supabase
+            const { error: insertError } = await supabase
                 .from('manual_expiry_settings')
                 .insert(payload);
 
-            if (error) {
-                console.error('Supabase Manual Expiry Update Error:', error);
+            if (insertError) {
+                console.error('Supabase Manual Expiry Insert Error:', insertError);
                 return false;
             }
 
-            // Emit update?
             return true;
         } catch (err) {
             console.error('Failed to set manual expiries:', err);
