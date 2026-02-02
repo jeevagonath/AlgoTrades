@@ -273,33 +273,28 @@ class ShoonyaService {
         });
     }
 
-    async getBasketMargin(legs: any[]) {
+    async getBasketMargin(params: any) {
         return new Promise((resolve, reject) => {
-            // API expects: { exch, tsym, qty, prc, prd, trantype, prctyp }
-            const list = legs.map(leg => ({
-                exch: 'NFO',
-                tsym: leg.symbol,
-                qty: leg.quantity.toString(),
-                prc: (leg.entryPrice || 0).toString(),
-                prd: 'M', // NRML margin
-                trantype: leg.side === 'BUY' ? 'B' : 'S',
-                prctyp: 'MKT'
-            }));
+            console.log('[Shoonya] getBasketMargin Request:', JSON.stringify(params, null, 2));
 
             if (!this.api.basket_margin) {
                 reject('API basket_margin not defined');
                 return;
             }
 
-            this.api.basket_margin({ exchange: 'NFO', list })
+            this.api.basket_margin(params)
                 .then((res: any) => {
+                    console.log('[Shoonya] getBasketMargin Response:', JSON.stringify(res, null, 2));
                     if (res.stat === 'Ok') {
                         resolve(res);
                     } else {
                         reject(res);
                     }
                 })
-                .catch(reject);
+                .catch((err: any) => {
+                    console.error('[Shoonya] getBasketMargin Error:', err);
+                    reject(err);
+                });
         });
     }
 

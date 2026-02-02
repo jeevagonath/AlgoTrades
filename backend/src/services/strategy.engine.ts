@@ -786,7 +786,29 @@ class StrategyEngine {
 
         try {
             this.addLog('🔍 Checking Margin Requirements...');
-            const marginRes: any = await shoonya.getBasketMargin(legs);
+
+            // Prepare Order List
+            const orders = legs.map(leg => ({
+                exch: 'NFO',
+                tsym: leg.symbol,
+                qty: leg.quantity.toString(),
+                prc: (leg.entryPrice || 0).toString(),
+                prd: 'M',
+                trantype: leg.side === 'BUY' ? 'B' : 'S',
+                prctyp: 'MKT'
+            }));
+
+            if (orders.length === 0) return true;
+
+            const primaryOrder = orders[0];
+            const otherOrders = orders.slice(1);
+
+            const payload = {
+                ...primaryOrder,
+                basketlists: otherOrders.length > 0 ? otherOrders : undefined
+            };
+
+            const marginRes: any = await shoonya.getBasketMargin(payload);
 
             if (marginRes.stat !== 'Ok') {
                 const msg = `❌ Margin Check Failed: API Error - ${marginRes.emsg || 'Unknown error'}`;
@@ -1727,7 +1749,25 @@ class StrategyEngine {
 
             // 2. Get Required Margin for current positions (if any)
             if (this.state.selectedStrikes.length > 0) {
-                const marginRes: any = await shoonya.getBasketMargin(this.state.selectedStrikes);
+                const orders = this.state.selectedStrikes.map(leg => ({
+                    exch: 'NFO',
+                    tsym: leg.symbol,
+                    qty: leg.quantity.toString(),
+                    prc: (leg.entryPrice || 0).toString(),
+                    prd: 'M',
+                    trantype: leg.side === 'BUY' ? 'B' : 'S',
+                    prctyp: 'MKT'
+                }));
+
+                const primaryOrder = orders[0];
+                const otherOrders = orders.slice(1);
+
+                const payload = {
+                    ...primaryOrder,
+                    basketlists: otherOrders.length > 0 ? otherOrders : undefined
+                };
+
+                const marginRes: any = await shoonya.getBasketMargin(payload);
                 console.log('Margin Res:', marginRes);
                 if (marginRes && marginRes.margin) {
                     this.state.requiredMargin = parseFloat(marginRes.margin);
