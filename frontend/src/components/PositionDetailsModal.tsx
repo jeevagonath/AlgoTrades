@@ -1,5 +1,5 @@
-import React from 'react';
-import { X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { X, Loader2, Layers } from 'lucide-react';
 
 interface Position {
     symbol: string;
@@ -16,11 +16,52 @@ interface PositionDetailsModalProps {
     isOpen: boolean;
     onClose: () => void;
     date: string;
-    positions: Position[];
-    totalPnl: number;
+    tradeIds?: string[];
 }
 
-export function PositionDetailsModal({ isOpen, onClose, date, positions, totalPnl }: PositionDetailsModalProps) {
+export function PositionDetailsModal({ isOpen, onClose, date, tradeIds = [] }: PositionDetailsModalProps) {
+    const [positions, setPositions] = useState<Position[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [activeTab, setActiveTab] = useState(0);
+
+    // Reset tab when modal opens or date changes
+    useEffect(() => {
+        if (isOpen) {
+            setActiveTab(0);
+        }
+    }, [isOpen, date]);
+
+    useEffect(() => {
+        if (isOpen && tradeIds.length > 0) {
+            fetchTradeData(tradeIds[activeTab]);
+        } else {
+            setPositions([]);
+        }
+    }, [isOpen, tradeIds, activeTab]);
+
+    const fetchTradeData = async (tradeId: string) => {
+        setLoading(true);
+        try {
+            const API_URL = import.meta.env.VITE_API_BASE_URL || 'https://algotradesservice.onrender.com/api';
+            const res = await fetch(`${API_URL}/analytics/trade-positions/${tradeId}`);
+            const data = await res.json();
+
+            if (data.status === 'success') {
+                setPositions(data.data || []);
+            } else {
+                console.error('Failed to fetch positions:', data);
+                setPositions([]);
+            }
+        } catch (err) {
+            console.error('Error fetching trade positions:', err);
+            setPositions([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const totalPnl = positions.reduce((sum, p) => sum + (p.pnl || 0), 0);
+
     if (!isOpen) return null;
 
     return (
@@ -30,7 +71,9 @@ export function PositionDetailsModal({ isOpen, onClose, date, positions, totalPn
                 <div className="flex items-center justify-between p-6 border-b border-border bg-background/50">
                     <div>
                         <h2 className="text-xl font-bold text-foreground">Position Details</h2>
-                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{new Date(date).toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                            {new Date(date).toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                        </p>
                     </div>
                     <button
                         onClick={onClose}
@@ -40,9 +83,35 @@ export function PositionDetailsModal({ isOpen, onClose, date, positions, totalPn
                     </button>
                 </div>
 
+                {/* Tabs */}
+                {tradeIds.length > 1 && (
+                    <div className="px-6 pt-4 border-b border-border flex items-center gap-2 overflow-x-auto">
+                        {tradeIds.map((_, idx) => (
+                            <button
+                                key={idx}
+                                onClick={() => setActiveTab(idx)}
+                                className={`
+                                    px-4 py-2 text-sm font-bold rounded-t-lg transition-colors flex items-center gap-2
+                                    ${activeTab === idx
+                                        ? 'bg-background border-t border-x border-border text-foreground'
+                                        : 'bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                                    }
+                                `}
+                            >
+                                <Layers className="w-3.5 h-3.5" />
+                                Trade {idx + 1}
+                            </button>
+                        ))}
+                    </div>
+                )}
+
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto p-6">
-                    {positions.length > 0 ? (
+                <div className="flex-1 overflow-y-auto p-6 relative min-h-[300px]">
+                    {loading ? (
+                        <div className="absolute inset-0 flex items-center justify-center bg-background/50">
+                            <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+                        </div>
+                    ) : positions.length > 0 ? (
                         <div className="overflow-x-auto">
                             <table className="w-full text-left">
                                 <thead>
@@ -85,7 +154,7 @@ export function PositionDetailsModal({ isOpen, onClose, date, positions, totalPn
                         </div>
                     ) : (
                         <div className="py-20 text-center">
-                            <p className="text-slate-400 text-sm">No positions found for this date</p>
+                            <p className="text-slate-400 text-sm">No positions found for this trade</p>
                         </div>
                     )}
                 </div>
@@ -93,7 +162,9 @@ export function PositionDetailsModal({ isOpen, onClose, date, positions, totalPn
                 {/* Footer */}
                 <div className="p-6 border-t border-border bg-background/50 transition-colors">
                     <div className="flex items-center justify-between">
-                        <span className="text-sm font-bold text-slate-500 uppercase tracking-wider">Total P&L</span>
+                        <span className="text-sm font-bold text-slate-500 uppercase tracking-wider">
+                            Total P&L {tradeIds.length > 1 ? `(Trade ${activeTab + 1})` : ''}
+                        </span>
                         <span className={`text-2xl font-black font-mono ${totalPnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
                             {totalPnl >= 0 ? '+' : ''}₹{totalPnl.toFixed(2)}
                         </span>

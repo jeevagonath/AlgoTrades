@@ -340,7 +340,8 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
     const [dailyPnL, setDailyPnL] = useState<any[]>([]);
     const [showPositionModal, setShowPositionModal] = useState(false);
     const [selectedDate, setSelectedDate] = useState('');
-    const [selectedPositions, setSelectedPositions] = useState<any[]>([]);
+
+    const [selectedTradeIds, setSelectedTradeIds] = useState<string[]>([]);
     const [selectedPnL, setSelectedPnL] = useState(0);
 
     // Date filter state - default to last 4 months
@@ -652,20 +653,11 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
         console.log('📅 Date clicked:', date, 'Trade IDs:', tradeIds, 'P&L:', pnl);
         try {
             if (tradeIds.length > 0) {
-                const url = `${import.meta.env.VITE_API_BASE_URL || 'https://algotradesservice.onrender.com/api'}/analytics/trade-positions/${tradeIds[0]}`;
-                console.log('🔍 Fetching positions from:', url);
-                const res = await fetch(url);
-                const data = await res.json();
-                console.log('📊 Positions API response:', data);
-                if (data.status === 'success') {
-                    console.log('✅ Opening modal with positions:', data.data);
-                    setSelectedDate(date);
-                    setSelectedPositions(data.data || []);
-                    setSelectedPnL(pnl);
-                    setShowPositionModal(true);
-                } else {
-                    console.error('❌ API returned error:', data);
-                }
+                console.log('✅ Opening modal with trade IDs:', tradeIds);
+                setSelectedDate(date);
+                setSelectedTradeIds(tradeIds);
+                setSelectedPnL(pnl);
+                setShowPositionModal(true);
             } else {
                 console.warn('⚠️ No trade IDs provided');
             }
@@ -1650,8 +1642,7 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                 isOpen={showPositionModal}
                 onClose={() => setShowPositionModal(false)}
                 date={selectedDate}
-                positions={selectedPositions}
-                totalPnl={selectedPnL}
+                tradeIds={selectedTradeIds}
             />
         </div >
     );
