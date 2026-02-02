@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import Dashboard from './pages/Dashboard'
 import LoginPage from './pages/LoginPage'
 import APITester from './pages/APITester'
+import ApiDocs from './pages/ApiDocs'
 import { authApi } from './services/api.service'
 import { Code } from 'lucide-react'
 
@@ -10,7 +11,10 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [showAPITester, setShowAPITester] = useState(false);
 
+  const [showApiDocs, setShowApiDocs] = useState(false);
+
   useEffect(() => {
+    // ... existing useEffect
     const checkSession = async () => {
       try {
         const res = await authApi.getSession();
@@ -40,6 +44,7 @@ function App() {
       sessionStorage.clear();
       setIsAuthenticated(false);
       setShowAPITester(false);
+      setShowApiDocs(false);
     }
   };
 
@@ -62,7 +67,6 @@ function App() {
   if (showAPITester) {
     return (
       <div className="min-h-screen bg-background">
-        {/* Simple back button */}
         <div className="bg-card border-b border-border px-6 py-3 transition-colors">
           <button
             onClick={() => setShowAPITester(false)}
@@ -76,10 +80,14 @@ function App() {
     );
   }
 
+  // Show API Docs if requested
+  if (showApiDocs) {
+    return <ApiDocs onBack={() => setShowApiDocs(false)} />;
+  }
+
   // Show Dashboard with API Tester button
   return (
     <>
-      {/* Floating API Tester Button */}
       <button
         onClick={() => setShowAPITester(true)}
         className="fixed bottom-6 right-6 z-50 bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-2xl transition-all active:scale-95 flex items-center gap-2 group"
@@ -90,7 +98,7 @@ function App() {
           API Tester
         </span>
       </button>
-      <Dashboard onLogout={handleLogout} />
+      <Dashboard onLogout={handleLogout} onShowApiDocs={() => setShowApiDocs(true)} />
     </>
   );
 }

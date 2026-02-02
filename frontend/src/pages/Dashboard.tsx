@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Activity, ListOrdered, History, Bell, LogOut, TrendingUp, TrendingDown, Clock, Play, Pause, Octagon, Power, Search, Shield, Settings, Save, X, BarChart3, CheckCircle2, Circle, RotateCcw, Code } from 'lucide-react';
+import { Activity, ListOrdered, History, Bell, LogOut, TrendingUp, TrendingDown, Clock, Play, Pause, Octagon, Power, Search, Shield, Settings, Save, X, BarChart3, CheckCircle2, Circle, RotateCcw, Code, Book } from 'lucide-react';
 import { socketService, type SocketStatus } from '@/services/socket.service';
 import { strategyApi, authApi } from '@/services/api.service';
 import { formatTradingViewSymbol, getNiftySpotChartUrl, openTradingViewChart } from '@/utils/tradingview';
@@ -315,7 +315,7 @@ const TaskTimer = ({ taskText }: { taskText: string }) => {
     );
 };
 
-const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
+const Dashboard = ({ onLogout, onShowApiDocs }: { onLogout: () => void, onShowApiDocs: () => void }) => {
     const { theme, toggleTheme } = useTheme();
     const [pnl, setPnl] = useState(0);
     const [peakProfit, setPeakProfit] = useState(0);
@@ -931,6 +931,13 @@ const Dashboard = ({ onLogout }: { onLogout: () => void }) => {
                                         }`}
                                 >
                                     <Settings className="w-4 h-4" />
+                                </button>
+                                <button
+                                    onClick={onShowApiDocs}
+                                    className="p-2 rounded-lg border bg-card border-border text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
+                                    title="API Documentation"
+                                >
+                                    <Book className="w-4 h-4" />
                                 </button>
                                 <button
                                     onClick={handleLogout}
