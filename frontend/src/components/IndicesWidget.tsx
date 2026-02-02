@@ -47,22 +47,25 @@ export const IndicesWidget = () => {
     const [vixData, setVixData] = useState<MarketData | null>(null);
 
     useEffect(() => {
+        // Subscribe to sockets immediately
+        socketService.subscribe(['26000', '26017']);
+
         // Initial Fetch
         const fetchData = async () => {
+            // Nifty 50
             try {
-                const [niftyRes, vixRes] = await Promise.all([
-                    strategyApi.getNiftySpot(),
-                    strategyApi.getVixSpot()
-                ]);
-
+                const niftyRes = await strategyApi.getNiftySpot();
                 if (niftyRes.status === 'success' && niftyRes.data) setNiftyData(niftyRes.data);
-                if (vixRes.status === 'success' && vixRes.data) setVixData(vixRes.data);
-
-                // Subscribe to sockets
-                socketService.subscribe(['26000', '26017']);
-
             } catch (err) {
-                console.error('Failed to fetch indices data:', err);
+                console.error('Failed to fetch Nifty data:', err);
+            }
+
+            // India VIX
+            try {
+                const vixRes = await strategyApi.getVixSpot();
+                if (vixRes.status === 'success' && vixRes.data) setVixData(vixRes.data);
+            } catch (err) {
+                console.error('Failed to fetch VIX data:', err);
             }
         };
 
