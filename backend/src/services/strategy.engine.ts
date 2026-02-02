@@ -1417,7 +1417,7 @@ class StrategyEngine {
                     this.state.nextAction = 'Daily 9 AM Evaluation';
                 }
             }
-
+            console.log("Exit all position state : ", this.state);
             // Save to history before clearing
             await db.saveTradeHistory({
                 ...this.state,
@@ -1428,7 +1428,7 @@ class StrategyEngine {
             await db.syncPositions([], this.getUid());
             await this.syncToDb(true);
             socketService.emit('strategy_exit', { reason });
-
+            console.log("Exit all position state : ", this.state);
             telegramService.sendMessage(`🏁 <b>Strategy Closed</b>\nReason: ${reason}\nFinal PnL: <b>₹${this.state.pnl.toFixed(2)}</b>`);
 
         } finally {
@@ -1718,6 +1718,7 @@ class StrategyEngine {
     private async updateMargins() {
         if (!shoonya.isLoggedIn()) return;
         try {
+            console.log('Margin Res entered:');
             // 1. Get Available Margin (Cash + Collateral)
             const limits: any = await shoonya.getLimits();
             if (limits) {
@@ -1736,6 +1737,7 @@ class StrategyEngine {
             } else {
                 this.state.requiredMargin = 0;
             }
+            console.log('Margin Res exited:');
         } catch (err) { }
     }
     private async monitorPnL() {
