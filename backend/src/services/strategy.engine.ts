@@ -1788,10 +1788,19 @@ class StrategyEngine {
 
                 const marginRes: any = await shoonya.getBasketMargin(payload);
                 console.log('Margin Res:', marginRes);
-                if (marginRes && marginRes.margin) {
+                if (marginRes && marginRes.stat === 'Ok') {
+                    // Mapping per user request:
+                    // marginusedtrade -> Required Margin
+                    // marginused -> Available Margin
+                    if (marginRes.marginusedtrade) {
+                        this.state.requiredMargin = parseFloat(marginRes.marginusedtrade);
+                    }
+                    if (marginRes.marginused) {
+                        this.state.availableMargin = parseFloat(marginRes.marginused);
+                    }
+                } else if (marginRes && marginRes.margin) {
+                    // Fallback to old format just in case
                     this.state.requiredMargin = parseFloat(marginRes.margin);
-                } else if (marginRes && marginRes.required) {
-                    this.state.requiredMargin = parseFloat(marginRes.required);
                 }
             } else {
                 this.state.requiredMargin = 0;
