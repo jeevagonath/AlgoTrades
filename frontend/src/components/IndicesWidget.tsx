@@ -88,16 +88,18 @@ export const IndicesWidget = () => {
                 };
             };
 
-            if (data.token === '26000') {
+            const token = data.token || data.tk; // Handle both formats
+
+            if (token === '26000') {
                 setNiftyData(prev => updateState(prev, data));
-            } else if (data.token === '26017') {
+            } else if (token === '26017') {
                 setVixData(prev => updateState(prev, data));
             }
         };
 
-        socketService.on('price_update', handlePriceUpdate);
+        socketService.on('tick', handlePriceUpdate);
         return () => {
-            socketService.off('price_update', handlePriceUpdate);
+            socketService.off('tick', handlePriceUpdate);
         };
     }, []);
 
