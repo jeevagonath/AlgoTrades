@@ -441,12 +441,11 @@ class StrategyEngine {
             await this.triggerExpirySync();
         }, tzOption));
 
-        // 1.8. Periodic Margin Check & PnL Monitor (Every 1 minute)
-        this.schedulers.push(cron.schedule('*/1 * * * *', async () => {
+        // 1.8. Periodic Margin Check & PnL Monitor (Weekdays 9:10 AM - 3:35 PM, Every 1 minute)
+        this.schedulers.push(cron.schedule('*/1 9-15 * * 1-5', async () => {
             // This updates margins, recalculates PnL, and checks SL/Target
             await this.monitorPnL();
         }, tzOption));
-
 
         const isExpiry = await this.isExpiryDay();
         if (!isExpiry) return;
