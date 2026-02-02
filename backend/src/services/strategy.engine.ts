@@ -1752,7 +1752,12 @@ class StrategyEngine {
         }
     }
     private async updateMargins() {
-        if (!shoonya.isLoggedIn()) return;
+        const isLoggedIn = shoonya.isLoggedIn();
+        if (!isLoggedIn) {
+            console.log('⚠️ [UpdateMargins] Skipped: Not logged in to Shoonya');
+            return;
+        }
+
         try {
             console.log('Margin Res entered:');
             // 1. Get Available Margin (Cash + Collateral)
@@ -1795,7 +1800,11 @@ class StrategyEngine {
         } catch (err) { }
     }
     private async monitorPnL() {
-        if (this.state.status !== 'ACTIVE' && this.state.status !== 'ENTRY_DONE') return;
+        // console.log(`[MonitorPnL] Tick. Status: ${this.state.status}`);
+        if (this.state.status !== 'ACTIVE' && this.state.status !== 'ENTRY_DONE') {
+            // console.log('[MonitorPnL] Skipped (Status not ACTIVE/ENTRY_DONE)');
+            return;
+        }
 
         try {
             // Update Margins periodically
