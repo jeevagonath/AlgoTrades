@@ -1727,6 +1727,7 @@ class StrategyEngine {
             // 2. Get Required Margin for current positions (if any)
             if (this.state.selectedStrikes.length > 0) {
                 const marginRes: any = await shoonya.getBasketMargin(this.state.selectedStrikes);
+                console.log('Margin Res:', marginRes);
                 if (marginRes && marginRes.margin) {
                     this.state.requiredMargin = parseFloat(marginRes.margin);
                 } else if (marginRes && marginRes.required) {
