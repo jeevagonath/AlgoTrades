@@ -60,7 +60,19 @@ export function PositionDetailsModal({ isOpen, onClose, date, tradeIds = [] }: P
         }
     };
 
-    const totalPnl = positions.reduce((sum, p) => sum + (p.pnl || 0), 0);
+    const calculatePnl = (pos: Position) => {
+        const entry = Number(pos.entry_price) || 0;
+        const exit = Number(pos.exit_price) || 0;
+        const qty = Number(pos.quantity) || 0;
+
+        if (pos.side === 'BUY') {
+            return (exit - entry) * qty;
+        } else {
+            return (entry - exit) * qty;
+        }
+    };
+
+    const totalPnl = positions.reduce((sum, p) => sum + calculatePnl(p), 0);
 
     if (!isOpen) return null;
 
@@ -127,28 +139,31 @@ export function PositionDetailsModal({ isOpen, onClose, date, tradeIds = [] }: P
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {positions.map((position, index) => (
-                                        <tr key={index} className="border-b border-border/50 hover:bg-background/50 transition-colors">
-                                            <td className="px-4 py-3 text-sm font-medium text-foreground">{position.symbol}</td>
-                                            <td className="px-4 py-3">
-                                                <span className={`text-[10px] font-black px-2 py-1 rounded-md ${position.type === 'CE' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : 'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400'}`}>
-                                                    {position.type}
-                                                </span>
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <span className={`text-[10px] font-black px-2 py-1 rounded-md ${position.side === 'BUY' ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400'}`}>
-                                                    {position.side}
-                                                </span>
-                                            </td>
-                                            <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400 text-right font-mono">₹{position.strike ? Number(position.strike).toFixed(0) : 'N/A'}</td>
-                                            <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400 text-right font-mono">₹{position.entry_price ? Number(position.entry_price).toFixed(2) : 'N/A'}</td>
-                                            <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400 text-right font-mono">₹{position.exit_price ? Number(position.exit_price).toFixed(2) : 'N/A'}</td>
-                                            <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400 text-right font-mono">{position.quantity || 0}</td>
-                                            <td className={`px-4 py-3 text-sm font-bold text-right font-mono ${position.pnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-                                                {position.pnl ? (position.pnl >= 0 ? '+' : '') + '₹' + Number(position.pnl).toFixed(2) : '₹0.00'}
-                                            </td>
-                                        </tr>
-                                    ))}
+                                    {positions.map((position, index) => {
+                                        const pnl = calculatePnl(position);
+                                        return (
+                                            <tr key={index} className="border-b border-border/50 hover:bg-background/50 transition-colors">
+                                                <td className="px-4 py-3 text-sm font-medium text-foreground">{position.symbol}</td>
+                                                <td className="px-4 py-3">
+                                                    <span className={`text-[10px] font-black px-2 py-1 rounded-md ${position.type === 'CE' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : 'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400'}`}>
+                                                        {position.type}
+                                                    </span>
+                                                </td>
+                                                <td className="px-4 py-3">
+                                                    <span className={`text-[10px] font-black px-2 py-1 rounded-md ${position.side === 'BUY' ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400'}`}>
+                                                        {position.side}
+                                                    </span>
+                                                </td>
+                                                <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400 text-right font-mono">₹{position.strike ? Number(position.strike).toFixed(0) : 'N/A'}</td>
+                                                <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400 text-right font-mono">₹{position.entry_price ? Number(position.entry_price).toFixed(2) : 'N/A'}</td>
+                                                <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400 text-right font-mono">₹{position.exit_price ? Number(position.exit_price).toFixed(2) : 'N/A'}</td>
+                                                <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400 text-right font-mono">{position.quantity || 0}</td>
+                                                <td className={`px-4 py-3 text-sm font-bold text-right font-mono ${pnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                                                    {pnl >= 0 ? '+' : ''}₹{pnl.toFixed(2)}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
                                 </tbody>
                             </table>
                         </div>
