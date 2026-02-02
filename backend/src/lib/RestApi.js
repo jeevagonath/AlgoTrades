@@ -488,11 +488,9 @@ var NorenRestApi = function (params) {
    * @param params
    */
   self.basket_margin = function (params) {
-    let values = {};
+    let values = Object.assign({}, params);
     values["uid"] = self.__username;
     values["actid"] = self.__accountid;
-    values["exch"] = params.exchange;
-    values["list"] = params.list;
 
     let reply = post_request("basket_margin", values, self.__susertoken);
     return reply;
