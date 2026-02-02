@@ -116,6 +116,7 @@ class StrategyEngine {
     private hourlySyncTimer: NodeJS.Timeout | null = null;
     private reEntryTimer: NodeJS.Timeout | null = null; // Timer for re-entry scheduling
     private cachedUid: string | undefined;
+    private isExiting: boolean = false;
 
     constructor() {
         this.initScheduler();
@@ -1341,87 +1342,98 @@ class StrategyEngine {
     private handleOrderReport(report: any) { }
 
     async exitAllPositions(reason: string) {
+        if (this.isExiting) {
+            console.log(`[Strategy] ⚠️ Exit skipped: 'exitAllPositions' already in progress (Reason: ${reason})`);
+            return;
+        }
+
+        this.isExiting = true;
         console.log(`Exiting all positions: ${reason}`);
 
-        // Sort: Close Shorts (SELL) first, then Longs (BUY)
-        const legsToExit = [...this.state.selectedStrikes].sort((a, b) => {
-            if (a.side === 'SELL' && b.side !== 'SELL') return -1;
-            if (b.side === 'SELL' && a.side !== 'SELL') return 1;
-            return 0;
-        });
+        try {
+            // Sort: Close Shorts (SELL) first, then Longs (BUY)
+            const legsToExit = [...this.state.selectedStrikes].sort((a, b) => {
+                if (a.side === 'SELL' && b.side !== 'SELL') return -1;
+                if (b.side === 'SELL' && a.side !== 'SELL') return 1;
+                return 0;
+            });
 
-        // Loop and Place Exit Orders
-        for (const leg of legsToExit) {
-            if (!this.state.isVirtual) {
-                try {
-                    const exitOrder = {
-                        exchange: 'NFO',
-                        tradingsymbol: leg.symbol,
-                        quantity: leg.quantity.toString(),
-                        discloseqty: '0',
-                        price: '0',
-                        product_type: 'M',
-                        buy_or_sell: leg.side === 'BUY' ? 'S' : 'B', // Reverse side
-                        price_type: 'MKT',
-                        trigger_price: '0',
-                        retention: 'DAY',
-                        remarks: `EXIT_${reason.replace(/\s+/g, '_').toUpperCase()}`.substring(0, 20) // Truncate if needed
-                    };
+            // Loop and Place Exit Orders
+            for (const leg of legsToExit) {
+                if (!this.state.isVirtual) {
+                    try {
+                        const exitOrder = {
+                            exchange: 'NFO',
+                            tradingsymbol: leg.symbol,
+                            quantity: leg.quantity.toString(),
+                            discloseqty: '0',
+                            price: '0',
+                            product_type: 'M',
+                            buy_or_sell: leg.side === 'BUY' ? 'S' : 'B', // Reverse side
+                            price_type: 'MKT',
+                            trigger_price: '0',
+                            retention: 'DAY',
+                            remarks: `EXIT_${reason.replace(/\s+/g, '_').toUpperCase()}`.substring(0, 20) // Truncate if needed
+                        };
 
-                    this.addLog(`🔄 Exiting ${leg.symbol} (${exitOrder.buy_or_sell})...`);
-                    const res: any = await shoonya.placeOrder(exitOrder);
+                        this.addLog(`🔄 Exiting ${leg.symbol} (${exitOrder.buy_or_sell})...`);
+                        const res: any = await shoonya.placeOrder(exitOrder);
 
-                    if (res && res.stat === 'Ok') {
-                        this.addLog(`✅ Exit Order Sent: ${leg.symbol} | ID: ${res.norenordno}`);
-                    } else {
-                        this.addLog(`❌ Exit Failed: ${leg.symbol} | ${res.emsg || 'Unknown'}`);
+                        if (res && res.stat === 'Ok') {
+                            this.addLog(`✅ Exit Order Sent: ${leg.symbol} | ID: ${res.norenordno}`);
+                        } else {
+                            this.addLog(`❌ Exit Failed: ${leg.symbol} | ${res.emsg || 'Unknown'}`);
+                        }
+                    } catch (e: any) {
+                        this.addLog(`❌ Exit Exception: ${leg.symbol} | ${e.message}`);
+                        console.error('Exit Order Error:', e);
                     }
-                } catch (e: any) {
-                    this.addLog(`❌ Exit Exception: ${leg.symbol} | ${e.message}`);
-                    console.error('Exit Order Error:', e);
+                } else {
+                    this.addLog(`[VIRTUAL] Exited ${leg.symbol} (${leg.side === 'BUY' ? 'SELL' : 'BUY'})`);
                 }
-            } else {
-                this.addLog(`[VIRTUAL] Exited ${leg.symbol} (${leg.side === 'BUY' ? 'SELL' : 'BUY'})`);
             }
-        }
 
-        this.state.isActive = false;
-        this.state.isTradePlaced = false;
+            this.state.isActive = false;
+            this.state.isTradePlaced = false;
 
-        // ========== RE-ENTRY DETECTION LOGIC ==========
-        await this.detectAndScheduleReEntry(reason);
-        // ==============================================
+            // ========== RE-ENTRY DETECTION LOGIC ==========
+            await this.detectAndScheduleReEntry(reason);
+            // ==============================================
 
-        // Set status based on reason
-        if (reason.includes('Profit') || reason.includes('Loss') || reason.includes('MANUAL')) {
-            this.state.status = 'FORCE_EXITED';
-            this.state.engineActivity = 'Strategy Terminated';
-            this.state.nextAction = 'Manual Reset Required';
-        } else {
-            // Check if re-entry is scheduled before resetting to idle defaults
-            if (this.state.reEntry.isEligible && !this.state.reEntry.hasReEntered) {
-                this.state.status = 'IDLE'; // Keep as IDLE or introduce WAITING state if needed
-                this.state.engineActivity = 'Waiting for Re-Entry';
-                // Note: nextAction is already set by detectAndScheduleReEntry
+            // Set status based on reason
+            if (reason.includes('Profit') || reason.includes('Loss') || reason.includes('MANUAL')) {
+                this.state.status = 'FORCE_EXITED';
+                this.state.engineActivity = 'Strategy Terminated';
+                this.state.nextAction = 'Manual Reset Required';
             } else {
-                this.state.status = 'IDLE';
-                this.state.engineActivity = 'Waiting for Next Cycle';
-                this.state.nextAction = 'Daily 9 AM Evaluation';
+                // Check if re-entry is scheduled before resetting to idle defaults
+                if (this.state.reEntry.isEligible && !this.state.reEntry.hasReEntered) {
+                    this.state.status = 'IDLE'; // Keep as IDLE or introduce WAITING state if needed
+                    this.state.engineActivity = 'Waiting for Re-Entry';
+                    // Note: nextAction is already set by detectAndScheduleReEntry
+                } else {
+                    this.state.status = 'IDLE';
+                    this.state.engineActivity = 'Waiting for Next Cycle';
+                    this.state.nextAction = 'Daily 9 AM Evaluation';
+                }
             }
+
+            // Save to history before clearing
+            await db.saveTradeHistory({
+                ...this.state,
+                exitReason: reason
+            }, this.state.selectedStrikes, this.getUid());
+
+            this.state.selectedStrikes = [];
+            await db.syncPositions([], this.getUid());
+            await this.syncToDb(true);
+            socketService.emit('strategy_exit', { reason });
+
+            telegramService.sendMessage(`🏁 <b>Strategy Closed</b>\nReason: ${reason}\nFinal PnL: <b>₹${this.state.pnl.toFixed(2)}</b>`);
+
+        } finally {
+            this.isExiting = false;
         }
-
-        // Save to history before clearing
-        await db.saveTradeHistory({
-            ...this.state,
-            exitReason: reason
-        }, this.state.selectedStrikes, this.getUid());
-
-        this.state.selectedStrikes = [];
-        await db.syncPositions([], this.getUid());
-        await this.syncToDb(true);
-        socketService.emit('strategy_exit', { reason });
-
-        telegramService.sendMessage(`🏁 <b>Strategy Closed</b>\nReason: ${reason}\nFinal PnL: <b>₹${this.state.pnl.toFixed(2)}</b>`);
     }
 
     // ========== RE-ENTRY FEATURE METHODS ==========
