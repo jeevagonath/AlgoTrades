@@ -782,7 +782,8 @@ class StrategyEngine {
     }
 
     private async checkMargin(legs: LegState[]): Promise<boolean> {
-        if (this.state.isVirtual) return true;
+        // Removed early return for Virtual Mode to allow debugging/logging of margin calls
+        // if (this.state.isVirtual) return true;
 
         try {
             this.addLog('🔍 Checking Margin Requirements...');
@@ -821,6 +822,12 @@ class StrategyEngine {
             if (limitsRes.stat !== 'Ok') {
                 const msg = `❌ Margin Check Failed: Limits API Error - ${limitsRes.emsg || 'Unknown error'}`;
                 this.addLog(msg);
+
+                if (this.state.isVirtual) {
+                    this.addLog('⚠️ [Virtual] Margin check failed but ignored.');
+                    return true;
+                }
+
                 telegramService.sendMessage(msg);
                 return false;
             }
@@ -844,6 +851,12 @@ class StrategyEngine {
                 const msg = `🚨 <b>Margin Shortfall</b>\nRequired: ₹${requiredMargin.toFixed(2)}\nAvailable: ₹${availableMargin.toFixed(2)}\nShortfall: ₹${shortfall.toFixed(2)}\n⚠️ <b>Trade Aborted!</b>`;
                 telegramService.sendMessage(msg);
                 this.addLog(`❌ Margin Shortfall: ₹${shortfall.toFixed(2)}. Trade Aborted.`);
+
+                if (this.state.isVirtual) {
+                    this.addLog('⚠️ [Virtual] Margin Shortfall ignored.');
+                    return true;
+                }
+
                 return false;
             }
 
@@ -852,6 +865,8 @@ class StrategyEngine {
         } catch (err: any) {
             console.error('Margin Check Logic Error:', err);
             this.addLog(`❌ Margin Check Ex: ${err.message}`);
+
+            if (this.state.isVirtual) return true;
             return false;
         }
     }
@@ -875,12 +890,11 @@ class StrategyEngine {
 
             if (this.state.isTradePlaced) return;
 
-            // Margin Check
-            if (!this.state.isVirtual) {
-                const hasMargin = await this.checkMargin(this.state.selectedStrikes);
-                if (!hasMargin) {
-                    return { status: 'failed', reason: 'Insufficient Margin' };
-                }
+            // Margin Check (Run even for Virtual to test API)
+            const hasMargin = await this.checkMargin(this.state.selectedStrikes);
+            // Only fail if NOT virtual and check failed
+            if (!this.state.isVirtual && !hasMargin) {
+                return { status: 'failed', reason: 'Insufficient Margin' };
             }
         }
 
