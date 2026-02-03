@@ -655,7 +655,7 @@ class StrategyEngine {
             if (!chain || chain.length === 0) throw new Error('Failed to fetch option chain');
 
             // 4. FETCH LIVE QUOTES for all relevant strikes in the chain
-            // We need a broad enough range to find ₹150, ₹75, and ₹7 premiums.
+            // We need a broad enough range to find ₹150, ₹75, and ₹10 premiums.
             //console.log(`[Strategy] Fetching live quotes for ${chain.length} strikes...`);
             const quotes: any[] = [];
             for (const item of chain) {
@@ -722,7 +722,7 @@ class StrategyEngine {
             addLeg(ce75, 'SELL', 2);
 
             // 6. CE Hedge @ 7
-            const ce7 = getBestMatch('CE', 7, usedTokens);
+            const ce7 = getBestMatch('CE', 10, usedTokens);
             addLeg(ce7, 'BUY', 2);
 
             // 7. PE Sell @ 75
@@ -730,7 +730,7 @@ class StrategyEngine {
             addLeg(pe75, 'SELL', 2);
 
             // 8. PE Hedge @ 7
-            const pe7 = getBestMatch('PE', 7, usedTokens);
+            const pe7 = getBestMatch('PE', 10, usedTokens);
             addLeg(pe7, 'BUY', 2);
 
             this.state.selectedStrikes = selectedLegs;
