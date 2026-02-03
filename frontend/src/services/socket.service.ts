@@ -14,6 +14,7 @@ class SocketService {
     connect(url: string = import.meta.env.VITE_SOCKET_URL || 'https://algotradesservice.onrender.com/') {
         if (this.socket) return;
 
+        console.log('[Socket] Connecting to:', url);
         this.socket = io(url, {
             transports: ['websocket']
         });

@@ -125,6 +125,7 @@ class StrategyEngine {
 
     async resume() {
         try {
+            this.state.nextAction = 'Initializing...'; // Indicate startup in progress
             this.addLog('🔄 [System] Engine Startup: Initializing state...');
 
             // 1. Load basic state from DB
@@ -315,9 +316,13 @@ class StrategyEngine {
             await this.syncToDb(true);
             this.initScheduler();
 
-        } catch (err) {
+        } catch (err: any) {
             console.error('[Strategy] Failed to resume strategy:', err);
-            this.addLog(`❌ [System] Resume Error: ${err}`);
+            this.addLog(`❌ [System] Resume Error: ${err.message || err}`);
+            this.state.engineActivity = 'Resume Failed';
+            this.state.nextAction = 'Check System Logs';
+            this.state.status = 'IDLE'; // Fail-safe to IDLE
+            await this.syncToDb(true); // Persist error state so UI shows it
         }
     }
 
