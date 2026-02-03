@@ -1,3 +1,5 @@
+import { socketService } from './socket.service';
+
 const Api = require('../lib/RestApi');
 import { db } from './supabase.service';
 
@@ -184,9 +186,7 @@ class ShoonyaService {
 
                 this.tickListeners.forEach(cb => cb(tick));
                 // Also emit globally for UI convenience
-                import('./socket.service').then(({ socketService }) => {
-                    socketService.emit('tick', tick);
-                }).catch(() => { });
+                socketService.emit('tick', tick);
             },
             order: (order: any) => {
                 //console.log('[Shoonya] Order Update:', order);
