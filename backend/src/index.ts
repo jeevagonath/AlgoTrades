@@ -10,6 +10,8 @@ import { strategyRoutes } from './routes/strategy.routes';
 import { analyticsRoutes } from './routes/analytics.routes';
 import { proxyRoutes } from './routes/proxy.routes';
 import { strategyEngine } from './services/strategy.engine';
+import { socketService } from './services/socket.service';
+import { shoonya } from './services/shoonya.service';
 
 const app: FastifyInstance = fastify({ logger: true });
 
@@ -60,22 +62,20 @@ const start = async () => {
             }
         });
 
-        import('./services/socket.service').then(({ socketService }) => {
-            socketService.init(io);
-            console.log('[System] SocketService initialized');
-        }).catch(err => {
-            console.error('[System] Failed to init SocketService:', err);
-        });
+        // Initialize Socket Service synchronously
+        socketService.init(io);
+        console.log('[System] SocketService initialized');
 
         io.on('connection', (socket) => {
+            console.log('[System] Client connected via Socket.IO'); // Debug log
+
             socket.on('subscribe', (tokens: string[]) => {
                 if (Array.isArray(tokens) && tokens.length > 0) {
-                    import('./services/shoonya.service').then(({ shoonya }) => {
-                        const formattedTokens = tokens.map(t => {
-                            return (t === '26000' || t === '26009' || t === '26017') ? `NSE|${t}` : `NFO|${t}`;
-                        });
-                        shoonya.subscribe(formattedTokens);
+                    console.log('[System] Client requested subscription for:', tokens);
+                    const formattedTokens = tokens.map(t => {
+                        return (t === '26000' || t === '26009' || t === '26017') ? `NSE|${t}` : `NFO|${t}`;
                     });
+                    shoonya.subscribe(formattedTokens);
                 }
             });
         });
