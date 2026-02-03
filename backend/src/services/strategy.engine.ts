@@ -1137,7 +1137,7 @@ class StrategyEngine {
             (order) => this.handleOrderReport(order)
         );
         this.isWebSocketStarted = true;
-        setTimeout(() => this.resubscribe(), 1000);
+        this.resubscribe();
     }
 
     private resubscribe() {

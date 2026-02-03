@@ -7,6 +7,8 @@ class ShoonyaService {
     private tickListeners: ((tick: any) => void)[] = [];
     private orderListeners: ((order: any) => void)[] = [];
     private wsStarted: boolean = false;
+    private isSocketConnected: boolean = false;
+    private pendingSubscriptions: string[] = [];
 
     constructor() {
         this.api = new Api({});
@@ -159,10 +161,19 @@ class ShoonyaService {
         this.api.start_websocket({
             socket_open: () => {
                 //console.log('[Shoonya] WebSocket Connected');
+                this.isSocketConnected = true;
+
                 // Auto subscribe to Nifty spot
                 if (this.api.web_socket) {
                     //console.log('[Shoonya] Subscribing to Nifty Spot (NSE|26000)');
                     this.api.subscribe(['NSE|26000']);
+                }
+
+                // Flush pending subscriptions
+                if (this.pendingSubscriptions.length > 0) {
+                    console.log(`[Shoonya] Flushing ${this.pendingSubscriptions.length} pending subscriptions...`);
+                    this.api.subscribe(this.pendingSubscriptions);
+                    this.pendingSubscriptions = [];
                 }
             },
             quote: (tick: any) => {
@@ -190,19 +201,17 @@ class ShoonyaService {
             this.startWebSocket();
         }
 
-        // Small delay to ensure self.web_socket is assigned by start_websocket
-        setTimeout(() => {
-            if (this.api && this.api.web_socket) {
-                try {
-                    //console.log('[Shoonya] Subscribing to tokens:', tokens);
-                    this.api.subscribe(tokens);
-                } catch (e) {
-                    console.error('[Shoonya] Subscription error:', e);
-                }
-            } else {
-                console.warn('[Shoonya] Could not subscribe: WebSocket still not ready.');
+        if (this.isSocketConnected && this.api && this.api.web_socket) {
+            try {
+                //console.log('[Shoonya] Subscribing to tokens:', tokens);
+                this.api.subscribe(tokens);
+            } catch (e) {
+                console.error('[Shoonya] Subscription error:', e);
             }
-        }, 500);
+        } else {
+            console.log(`[Shoonya] Socket not ready. Queueing ${tokens.length} tokens for subscription.`);
+            this.pendingSubscriptions.push(...tokens);
+        }
     }
 
     unsubscribe(tokens: string[]) {
