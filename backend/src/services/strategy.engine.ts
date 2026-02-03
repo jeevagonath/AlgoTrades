@@ -342,7 +342,7 @@ class StrategyEngine {
         };
         const parts = dateStr.split('-');
         const day = parseInt(parts[0]);
-        const month = months[parts[1]];
+        const month = months[parts[1].toUpperCase()]; // Handle case sensitivity
         const year = parseInt(parts[2]);
         return new Date(year, month, day);
     }
