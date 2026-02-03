@@ -525,11 +525,21 @@ const Dashboard = ({ onLogout, onShowApiDocs }: { onLogout: () => void, onShowAp
             // Check for NIFTY update - Handled in IndicesWidget now
             if (data.token === '26000') return;
 
-            //console.log('[Dashboard] Price Update:', data);
+            // console.log('[Dashboard] Price Update:', data.token, data.ltp); 
+
             // Update individual leg LTP in the table
-            setTestStrikes(prev => prev.map(leg =>
-                leg.token === data.token ? { ...leg, ltp: data.ltp } : leg
-            ));
+            setTestStrikes(prev => {
+                // Debug if update isn't working
+                /*
+                const found = prev.find(leg => String(leg.token) === String(data.token));
+                if (!found && prev.length > 0) {
+                     console.log('[Dashboard] Token mismatch?', data.token, prev.map(p => p.token));
+                }
+                */
+                return prev.map(leg =>
+                    String(leg.token) === String(data.token) ? { ...leg, ltp: data.ltp } : leg
+                );
+            });
 
             // System updates PnL as well
             if (data.pnl !== undefined) {

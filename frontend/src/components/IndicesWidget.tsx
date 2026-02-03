@@ -72,6 +72,7 @@ export const IndicesWidget = () => {
         fetchData();
 
         const handlePriceUpdate = (data: any) => {
+            // console.log('[IndicesWidget] Received data:', data); // Uncomment for verbose debugging
             const updateState = (prev: MarketData | null, data: any) => {
                 if (!data.lp) return prev;
                 const price = parseFloat(data.lp);
@@ -89,6 +90,11 @@ export const IndicesWidget = () => {
             };
 
             const token = data.token || data.tk; // Handle both formats
+
+            // Helpful debug log if Nifty/VIX updates are missing
+            if (token === '26000' || token === '26017') {
+                console.log(`[IndicesDebug] Update for ${token}:`, data.lp);
+            }
 
             if (token === '26000') {
                 setNiftyData(prev => updateState(prev, data));
