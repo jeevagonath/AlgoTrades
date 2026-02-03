@@ -198,6 +198,7 @@ class StrategyEngine {
 
             // 3. Determine Lifecycle State
             const isExpiry = await this.isExpiryDay();
+            this.addLog(`🔍 [Debug] Is Expiry Day: ${isExpiry}`);
             const now = new Date();
             const istNow = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
             const currentMinutes = istNow.getHours() * 60 + istNow.getMinutes();
@@ -564,15 +565,17 @@ class StrategyEngine {
             const manualExpiries = await db.getManualExpiries();
 
             if (manualExpiries && manualExpiries.length > 0) {
-                //console.log(`[Strategy] Using ${manualExpiries.length} manual expiries from database`);
+                this.addLog(`[Strategy] Using ${manualExpiries.length} manual expiries from database`);
                 return manualExpiries;
             }
 
             console.error('[Strategy] No manual expiries found in database!');
+            this.addLog('⚠️ [Strategy] No manual expiries found! Please check Settings.');
             console.warn('[Strategy] Please add expiry dates in Settings → Manual Expiry Dates');
             return [];
         } catch (e) {
             console.error('Error fetching expiries:', e);
+            this.addLog(`❌ [Strategy] Error fetching expiries: ${e}`);
             return [];
         }
     }
@@ -1712,7 +1715,7 @@ class StrategyEngine {
         this.state.peakProfit = 0;
         this.state.peakLoss = 0;
         this.state.engineActivity = 'Engine Reset';
-        this.state.nextAction = 'Daily 9 AM Evaluation';
+        this.state.nextAction = 'Ready to Resume';
         this.state.monitoring = {
             profitTime: 0,
             lossTime: 0,
