@@ -1766,7 +1766,7 @@ class StrategyEngine {
         }
 
         try {
-            console.log('Margin Res entered:');
+            //console.log('Margin Res entered:');
             // 1. Get Available Margin (Cash + Collateral)
             const limits: any = await shoonya.getLimits();
             if (limits) {
@@ -1794,7 +1794,7 @@ class StrategyEngine {
                 };
 
                 const marginRes: any = await shoonya.getBasketMargin(payload);
-                console.log('Margin Res:', marginRes);
+                //console.log('Margin Res:', marginRes);
                 if (marginRes && marginRes.stat === 'Ok') {
                     // Mapping per user request:
                     // marginusedtrade -> Required Margin
@@ -1812,7 +1812,7 @@ class StrategyEngine {
             } else {
                 this.state.requiredMargin = 0;
             }
-            console.log('Margin Res exited:');
+            //console.log('Margin Res exited:');
         } catch (err) { }
     }
     private async monitorPnL() {

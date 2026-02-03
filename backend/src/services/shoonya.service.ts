@@ -284,7 +284,7 @@ class ShoonyaService {
 
     async getBasketMargin(params: any) {
         return new Promise((resolve, reject) => {
-            console.log('[Shoonya] getBasketMargin Request:', JSON.stringify(params, null, 2));
+            //console.log('[Shoonya] getBasketMargin Request:', JSON.stringify(params, null, 2));
 
             if (!this.api.basket_margin) {
                 reject('API basket_margin not defined');
@@ -293,7 +293,7 @@ class ShoonyaService {
 
             this.api.basket_margin(params)
                 .then((res: any) => {
-                    console.log('[Shoonya] getBasketMargin Response:', JSON.stringify(res, null, 2));
+                    //console.log('[Shoonya] getBasketMargin Response:', JSON.stringify(res, null, 2));
                     if (res.stat === 'Ok') {
                         resolve(res);
                     } else {
