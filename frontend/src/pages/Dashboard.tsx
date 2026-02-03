@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Activity, ListOrdered, History, Bell, LogOut, TrendingUp, TrendingDown, Clock, Play, Pause, Octagon, Power, Search, Shield, Settings, Save, X, BarChart3, CheckCircle2, Circle, RotateCcw, Code, Book } from 'lucide-react';
+import { Activity, ListOrdered, History, Bell, LogOut, TrendingUp, TrendingDown, Clock, Play, Pause, Octagon, Power, Search, Shield, Settings, Save, X, BarChart3, CheckCircle2, Circle, RotateCcw, Code, Book, ChevronLeft, ChevronRight } from 'lucide-react';
 import { socketService, type SocketStatus } from '@/services/socket.service';
 import { strategyApi, authApi } from '@/services/api.service';
 import { formatTradingViewSymbol, getNiftySpotChartUrl, openTradingViewChart } from '@/utils/tradingview';
@@ -326,6 +326,19 @@ const Dashboard = ({ onLogout, onShowApiDocs }: { onLogout: () => void, onShowAp
     const [testing, setTesting] = useState(false);
     const [logs, setLogs] = useState<{ time: string, msg: string }[]>([]);
     const [orders, setOrders] = useState<any[]>([]); // New Order State
+    const [ordersPage, setOrdersPage] = useState(1);
+    const ORDERS_PER_PAGE = 10;
+
+    // Sort orders by date (Latest First)
+    const sortedOrders = useMemo(() => {
+        return [...orders].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    }, [orders]);
+
+    const displayedOrders = useMemo(() => {
+        const start = (ordersPage - 1) * ORDERS_PER_PAGE;
+        return sortedOrders.slice(start, start + ORDERS_PER_PAGE);
+    }, [sortedOrders, ordersPage]);
+
     const [alerts, setAlerts] = useState<any[]>([]); // Alerts State
 
 
@@ -1357,45 +1370,70 @@ const Dashboard = ({ onLogout, onShowApiDocs }: { onLogout: () => void, onShowAp
                                     </div>
                                 )
                             ) : activeTab === 'orders' ? (
-                                orders.length > 0 ? (
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-left">
-                                            <thead>
-                                                <tr className="border-b border-border bg-background/50">
-                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Time</th>
-                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Symbol</th>
-                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">Side</th>
-                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">Price</th>
-                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">Qty</th>
-                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-right">Status</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-border">
-                                                {orders.map((order, i) => (
-                                                    <tr key={i} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
-                                                        <td className="px-6 py-4 font-mono text-xs text-slate-600 dark:text-slate-400">
-                                                            <div className="flex flex-col">
-                                                                <span className="font-bold">{new Date(order.created_at).toLocaleTimeString('en-IN', { hour12: false })}</span>
-                                                                <span className="text-[10px] opacity-60">{new Date(order.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</span>
-                                                            </div>
-                                                        </td>
-                                                        <td className="px-6 py-4 font-bold text-sm text-foreground">{formatOptionSymbol(order.symbol)}</td>
-                                                        <td className="px-6 py-4 text-center">
-                                                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${order.side === 'BUY' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border border-blue-100 dark:border-blue-800' : 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-100 dark:border-amber-800'}`}>
-                                                                {order.side}
-                                                            </span>
-                                                        </td>
-                                                        <td className="px-6 py-4 text-center font-mono text-sm text-slate-800 dark:text-slate-300">₹{order.price}</td>
-                                                        <td className="px-6 py-4 text-center font-mono text-sm text-slate-600 dark:text-slate-400">{order.quantity}</td>
-                                                        <td className="px-6 py-4 text-right">
-                                                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${order.status === 'COMPLETE' ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800' : 'bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-400 border border-border'}`}>
-                                                                {order.status}
-                                                            </span>
-                                                        </td>
+                                sortedOrders.length > 0 ? (
+                                    <div className="flex flex-col">
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-left">
+                                                <thead>
+                                                    <tr className="border-b border-border bg-background/50">
+                                                        <th className="px-6 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Time</th>
+                                                        <th className="px-6 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Symbol</th>
+                                                        <th className="px-6 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">Side</th>
+                                                        <th className="px-6 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">Price</th>
+                                                        <th className="px-6 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">Qty</th>
+                                                        <th className="px-6 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-right">Status</th>
                                                     </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
+                                                </thead>
+                                                <tbody className="divide-y divide-border">
+                                                    {displayedOrders.map((order, i) => (
+                                                        <tr key={i} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+                                                            <td className="px-6 py-4 font-mono text-xs text-slate-600 dark:text-slate-400">
+                                                                <div className="flex flex-col">
+                                                                    <span className="font-bold">{new Date(order.created_at).toLocaleTimeString('en-IN', { hour12: false })}</span>
+                                                                    <span className="text-[10px] opacity-60">{new Date(order.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</span>
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-6 py-4 font-bold text-sm text-foreground">{formatOptionSymbol(order.symbol)}</td>
+                                                            <td className="px-6 py-4 text-center">
+                                                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${order.side === 'BUY' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border border-blue-100 dark:border-blue-800' : 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-100 dark:border-amber-800'}`}>
+                                                                    {order.side}
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-6 py-4 text-center font-mono text-sm text-slate-800 dark:text-slate-300">₹{order.price}</td>
+                                                            <td className="px-6 py-4 text-center font-mono text-sm text-slate-600 dark:text-slate-400">{order.quantity}</td>
+                                                            <td className="px-6 py-4 text-right">
+                                                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${order.status === 'COMPLETE' ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800' : 'bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-400 border border-border'}`}>
+                                                                    {order.status}
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                        {/* Pagination Controls */}
+                                        {sortedOrders.length > ORDERS_PER_PAGE && (
+                                            <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-background/50">
+                                                <button
+                                                    onClick={() => setOrdersPage(p => Math.max(1, p - 1))}
+                                                    disabled={ordersPage === 1}
+                                                    className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30 disabled:hover:bg-transparent"
+                                                >
+                                                    <ChevronLeft className="w-4 h-4" />
+                                                </button>
+                                                <span className="text-[10px] font-bold text-slate-400">
+                                                    Page {ordersPage} of {Math.ceil(sortedOrders.length / ORDERS_PER_PAGE)}
+                                                </span>
+                                                <button
+                                                    onClick={() => setOrdersPage(p => Math.min(Math.ceil(sortedOrders.length / ORDERS_PER_PAGE), p + 1))}
+                                                    disabled={ordersPage >= Math.ceil(sortedOrders.length / ORDERS_PER_PAGE)}
+                                                    className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30 disabled:hover:bg-transparent"
+                                                >
+                                                    <ChevronRight className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 ) : (
                                     <div className="p-20 text-center space-y-4">
