@@ -6,33 +6,47 @@ export interface SocketStatus {
 }
 
 class SocketService {
-    private socket: Socket | null = null;
+    private socket: Socket;
     private isConnected: boolean = false;
     private activeSubscriptions: Set<string> = new Set();
     private statusListeners: ((status: SocketStatus) => void)[] = [];
 
-    connect(url: string = import.meta.env.VITE_SOCKET_URL || 'https://algotradesservice.onrender.com/') {
-        if (this.socket) return;
-
-        console.log('[Socket] Connecting to:', url);
+    constructor() {
+        const url = import.meta.env.VITE_SOCKET_URL || 'https://algotradesservice.onrender.com/'
+        console.log('[Socket] Initializing socket with:', url);
         this.socket = io(url, {
-            transports: ['websocket']
+            transports: ['websocket'],
+            autoConnect: false
         });
 
         this.socket.on('connect', () => {
+            console.log('[Socket] Connected');
             this.isConnected = true;
             this.notifyStatusListeners();
+            // Resubscribe to active subscriptions on reconnect
+            if (this.activeSubscriptions.size > 0) {
+                this.socket.emit('subscribe', Array.from(this.activeSubscriptions));
+            }
         });
 
         this.socket.on('disconnect', () => {
+            console.log('[Socket] Disconnected');
             this.isConnected = false;
             this.notifyStatusListeners();
         });
 
-        this.socket.on('connect_error', () => {
+        this.socket.on('connect_error', (err) => {
+            console.log('[Socket] Connect Error:', err);
             this.isConnected = false;
             this.notifyStatusListeners();
         });
+    }
+
+    connect(url?: string) {
+        if (!this.socket.connected) {
+            console.log('[Socket] Connecting...');
+            this.socket.connect();
+        }
     }
 
     private notifyStatusListeners() {
@@ -56,30 +70,30 @@ class SocketService {
     }
 
     on(event: string, callback: (data: any) => void) {
-        this.socket?.on(event, callback);
+        this.socket.on(event, callback);
     }
 
     off(event: string, callback?: (data: any) => void) {
         if (callback) {
-            this.socket?.off(event, callback);
+            this.socket.off(event, callback);
         } else {
-            this.socket?.off(event);
+            this.socket.off(event);
         }
     }
 
     emit(event: string, data: any) {
-        this.socket?.emit(event, data);
+        this.socket.emit(event, data);
     }
 
     subscribe(tokens: string[]) {
         tokens.forEach(t => this.activeSubscriptions.add(t));
-        this.socket?.emit('subscribe', tokens);
+        this.socket.emit('subscribe', tokens);
         this.notifyStatusListeners();
     }
 
     unsubscribe(tokens: string[]) {
         tokens.forEach(t => this.activeSubscriptions.delete(t));
-        this.socket?.emit('unsubscribe', tokens);
+        this.socket.emit('unsubscribe', tokens);
         this.notifyStatusListeners();
     }
 }
