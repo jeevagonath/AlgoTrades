@@ -161,6 +161,11 @@ class StrategyEngine {
 
                 this.state.requiredMargin = savedState.requiredMargin || 0;
                 this.state.availableMargin = savedState.availableMargin || 0;
+
+                // Restore position entry date
+                if (savedState.positionEntryDate) {
+                    this.state.positionEntryDate = savedState.positionEntryDate;
+                }
             }
 
             // 2. Load positions
@@ -1372,6 +1377,7 @@ class StrategyEngine {
                 engineActivity: this.state.engineActivity,
                 isPaused: this.state.isPaused,
                 lastHeartbeat: new Date().toISOString(),
+                positionEntryDate: this.state.positionEntryDate, // Persist entry date
                 reEntry: this.state.reEntry // [NEW] Send re-entry state to frontend
             };
 
@@ -1515,7 +1521,10 @@ class StrategyEngine {
             // Check if this is NOT expiry day exit
             const isNotExpiryDayExit = !exitReason.includes('Expiry');
 
-            if (isYesterdayPosition && isNotExpiryDayExit) {
+            // Allow Same Day (Age 0) OR Yesterday (Age 1)
+            const isEligibleAge = positionAge === 0 || positionAge === 1;
+
+            if (isEligibleAge && isNotExpiryDayExit) {
                 // Calculate re-entry time (2 minutes from now)
                 const reEntryTime = new Date(exitTime.getTime() + 2 * 60 * 1000);
 
@@ -1528,7 +1537,9 @@ class StrategyEngine {
                 this.addLog(`✅ [Re-Entry] Eligible for re-entry in 2 minutes`);
                 this.addLog(`   - Position taken on: ${this.state.positionEntryDate}`);
                 this.addLog(`   - Exited on: ${exitDate} at ${exitTime.toLocaleTimeString('en-IN')}`);
-                this.addLog(`   - Position age: ${positionAge} day (yesterday's position)`);
+                this.addLog(`   - Position taken on: ${this.state.positionEntryDate}`);
+                this.addLog(`   - Exited on: ${exitDate} at ${exitTime.toLocaleTimeString('en-IN')}`);
+                this.addLog(`   - Position age: ${positionAge} days`);
                 this.addLog(`   - Exit reason: ${exitReason}`);
                 this.addLog(`   - Scheduled re-entry: ${reEntryTime.toLocaleTimeString('en-IN')}`);
 
@@ -1536,10 +1547,8 @@ class StrategyEngine {
 
                 // Schedule re-entry after 2 minutes
                 this.scheduleReEntry(2 * 60 * 1000); // 2 minutes in milliseconds
-            } else if (positionAge === 0) {
-                this.addLog(`ℹ️ [Re-Entry] Position taken today (same-day), not eligible for re-entry`);
             } else if (positionAge > 1) {
-                this.addLog(`ℹ️ [Re-Entry] Position is ${positionAge} days old, not eligible for re-entry (only yesterday's positions qualify)`);
+                this.addLog(`ℹ️ [Re-Entry] Position is ${positionAge} days old, not eligible for re-entry (Max 1 day old allowed)`);
             } else {
                 // If we are here, we might have accidentally fallen through or logic mismatch.
                 // But specifically for the "Take trade on positions entry" requirement:
