@@ -282,28 +282,35 @@ class StrategyEngine {
                 this.state.isActive = false;
 
                 // [RECOVERY] Check for pending re-entry
-                if (savedState?.reEntry?.isEligible && savedState.reEntry.scheduledReEntryTime) {
-                    const scheduledTime = new Date(savedState.reEntry.scheduledReEntryTime);
-                    const now = new Date();
+                if (savedState?.reEntry?.isEligible) {
+                    // Case 1: Scheduled timer exists
+                    if (savedState.reEntry.scheduledReEntryTime) {
+                        const scheduledTime = new Date(savedState.reEntry.scheduledReEntryTime);
+                        const now = new Date();
 
-                    if (scheduledTime > now) {
-                        const delay = scheduledTime.getTime() - now.getTime();
-                        this.addLog(`♻️ [Recovery] Found pending re-entry scheduled at ${scheduledTime.toLocaleTimeString('en-IN')}`);
+                        if (scheduledTime > now) {
+                            const delay = scheduledTime.getTime() - now.getTime();
+                            this.addLog(`♻️ [Recovery] Found pending re-entry scheduled at ${scheduledTime.toLocaleTimeString('en-IN')}`);
 
-                        // Restore re-entry state
-                        this.state.reEntry = savedState.reEntry;
+                            // Restore re-entry state
+                            this.state.reEntry = savedState.reEntry;
 
-                        // Set Status
-                        this.state.status = 'IDLE';
-                        this.state.engineActivity = 'Waiting for Re-Entry';
-                        this.state.nextAction = `Re-Entry at ${scheduledTime.toLocaleTimeString('en-IN')}`;
+                            // Set Status
+                            this.state.status = 'IDLE';
+                            this.state.engineActivity = 'Waiting for Re-Entry';
+                            this.state.nextAction = `Re-Entry at ${scheduledTime.toLocaleTimeString('en-IN')}`;
 
-                        // Restart Timer
-                        this.scheduleReEntry(delay);
-                    } else {
-                        this.addLog(`⚠️ [Recovery] Missed past re-entry time (${scheduledTime.toLocaleTimeString('en-IN')}). Executing immediate re-entry...`);
-                        // If we missed it by a small margin (e.g. restart took 1 min), maybe execute?
-                        // For safety, let's just execute immediately if it was supposed to happen recently.
+                            // Restart Timer
+                            this.scheduleReEntry(delay);
+                        } else {
+                            this.addLog(`⚠️ [Recovery] Missed past re-entry time (${scheduledTime.toLocaleTimeString('en-IN')}). Executing immediate re-entry...`);
+                            this.state.reEntry = savedState.reEntry;
+                            this.executeReEntry();
+                        }
+                    }
+                    // Case 2: No time scheduled (Manual Override)
+                    else {
+                        this.addLog(`⚠️ [Recovery] Found eligible re-entry with MISSING schedule time. Treating as Manual Override -> Executing immediate re-entry.`);
                         this.state.reEntry = savedState.reEntry;
                         this.executeReEntry();
                     }
@@ -1648,8 +1655,8 @@ class StrategyEngine {
             const currentExpiry = expiries[0]; // First expiry = current week
 
             // We use standard strategy selection logic because spot price might have changed
-            // BUT we enforce the extracted expiry date
-            await this.selectStrikes(currentExpiry);
+            // BUT we enforce the extracted expiry date if available
+            await this.selectStrikes(reEntryExpiry || currentExpiry);
 
             await this.placeOrder(false);
 
