@@ -1457,21 +1457,20 @@ class StrategyEngine {
             // ==============================================
 
             // Set status based on reason
-            if (reason.includes('Profit') || reason.includes('Loss') || reason.includes('MANUAL')) {
+            // Check if re-entry is scheduled FIRST
+            if (this.state.reEntry.isEligible && !this.state.reEntry.hasReEntered && !reason.includes('MANUAL')) {
+                this.state.status = 'IDLE'; // Pending/Waiting state
+                this.state.engineActivity = 'Waiting for Re-Entry';
+                // nextAction is set in detectAndScheduleReEntry
+                this.addLog('ℹ️ [Status] Keeping engine IDLE for Re-Entry');
+            } else if (reason.includes('Profit') || reason.includes('Loss') || reason.includes('MANUAL')) {
                 this.state.status = 'FORCE_EXITED';
                 this.state.engineActivity = 'Strategy Terminated';
                 this.state.nextAction = 'Manual Reset Required';
             } else {
-                // Check if re-entry is scheduled before resetting to idle defaults
-                if (this.state.reEntry.isEligible && !this.state.reEntry.hasReEntered) {
-                    this.state.status = 'IDLE'; // Keep as IDLE or introduce WAITING state if needed
-                    this.state.engineActivity = 'Waiting for Re-Entry';
-                    // Note: nextAction is already set by detectAndScheduleReEntry
-                } else {
-                    this.state.status = 'IDLE';
-                    this.state.engineActivity = 'Waiting for Next Cycle';
-                    this.state.nextAction = 'Daily 9 AM Evaluation';
-                }
+                this.state.status = 'IDLE';
+                this.state.engineActivity = 'Waiting for Next Cycle';
+                this.state.nextAction = 'Daily 9 AM Evaluation';
             }
             console.log("Exit all position state : ", this.state);
             // Save to history before clearing
@@ -1554,18 +1553,13 @@ class StrategyEngine {
 
                 // Schedule re-entry after 2 minutes
                 this.scheduleReEntry(2 * 60 * 1000); // 2 minutes in milliseconds
+
+                // Save original strikes for restoration/expiry tracking
+                this.state.reEntry.originalStrikes = JSON.parse(JSON.stringify(this.state.selectedStrikes));
+                this.addLog(`💾 [Re-Entry] Saved ${this.state.reEntry.originalStrikes?.length} original legs for restoration.`);
+
             } else if (positionAge > 1) {
                 this.addLog(`ℹ️ [Re-Entry] Position is ${positionAge} days old, not eligible for re-entry (Max 1 day old allowed)`);
-            } else {
-                // If we are here, we might have accidentally fallen through or logic mismatch.
-                // But specifically for the "Take trade on positions entry" requirement:
-                // We need to capture the CURRENT strikes before they are cleared.
-                // NOTE: selectedStrikes are cleared in exitAllPositions AFTER this method is awaited.
-                // So we can still access them here.
-                if (this.state.reEntry.isEligible) {
-                    this.state.reEntry.originalStrikes = JSON.parse(JSON.stringify(this.state.selectedStrikes));
-                    this.addLog(`💾 [Re-Entry] Saved ${this.state.reEntry.originalStrikes?.length} original legs for restoration.`);
-                }
             }
         } catch (error: any) {
             this.addLog(`❌ [Re-Entry] Error in detection: ${error.message}`);
