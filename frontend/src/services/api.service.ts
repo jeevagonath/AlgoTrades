@@ -66,6 +66,10 @@ export const strategyApi = {
         const response = await apiClient.post('/strategy/manual-expiries', { expiries });
         return response.data;
     },
+    syncExpiries: async () => {
+        const response = await apiClient.post('/strategy/sync-expiries');
+        return response.data;
+    },
     getManualExpiries: async () => {
         const response = await apiClient.get('/strategy/manual-expiries');
         return response.data;
