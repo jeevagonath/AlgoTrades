@@ -454,8 +454,8 @@ class StrategyEngine {
             await this.initScheduler();
         }, tzOption));
 
-        // 1.5. Automated Expiry Sync from NSE at 9:08 AM (Delayed to avoid pre-open volatility)
-        this.schedulers.push(cron.schedule('8 9 * * *', async () => {
+        // 1.5. Automated Expiry Sync from NSE (Hourly from 9:08 AM)
+        this.schedulers.push(cron.schedule('8 9-15 * * *', async () => {
             await this.triggerExpirySync();
         }, tzOption));
 
