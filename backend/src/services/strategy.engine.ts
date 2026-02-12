@@ -454,8 +454,8 @@ class StrategyEngine {
             await this.initScheduler();
         }, tzOption));
 
-        // 1.5. Automated Expiry Sync from NSE at 9:05 AM
-        this.schedulers.push(cron.schedule('5 9 * * *', async () => {
+        // 1.5. Automated Expiry Sync from NSE at 9:08 AM (Delayed to avoid pre-open volatility)
+        this.schedulers.push(cron.schedule('8 9 * * *', async () => {
             await this.triggerExpirySync();
         }, tzOption));
 
@@ -1738,34 +1738,46 @@ class StrategyEngine {
     }
 
     async triggerExpirySync() {
-        this.addLog('🔄 [Auto-Sync] Fetching latest expiry dates from NSE...');
-        try {
-            const data = await nseService.getOptionChainData('NIFTY');
-            // Check for both structures (indices uses records.expiryDates, contract-info uses expiryDates)
-            const expiries = (data && data.records && data.records.expiryDates)
-                ? data.records.expiryDates
-                : (data && data.expiryDates)
-                    ? data.expiryDates
-                    : null;
+        const maxAttempts = 3;
+        let attempt = 0;
 
-            if (expiries) {
-                const formatted = expiries.map((d: string) => d.toUpperCase());
+        while (attempt < maxAttempts) {
+            attempt++;
+            this.addLog(`🔄 [Auto-Sync] Attempt ${attempt}/${maxAttempts}: Fetching latest expiry dates from NSE...`);
 
-                const success = await db.setManualExpiries(formatted, this.getUid());
-                if (success) {
-                    this.addLog(`✅ [Auto-Sync] Updated DB with ${formatted.length} expiries from NSE.`);
-                    return true;
-                } else {
-                    const errorMsg = 'Failed to update DB (setManualExpiries returned false). Check RLS policies?';
-                    this.addLog(`❌ [Auto-Sync] ${errorMsg}`);
-                    throw new Error(errorMsg);
+            try {
+                const data = await nseService.getOptionChainData('NIFTY');
+                // Check for both structures (indices uses records.expiryDates, contract-info uses expiryDates)
+                const expiries = (data && data.records && data.records.expiryDates)
+                    ? data.records.expiryDates
+                    : (data && data.expiryDates)
+                        ? data.expiryDates
+                        : null;
+
+                if (expiries) {
+                    const formatted = expiries.map((d: string) => d.toUpperCase());
+
+                    const success = await db.setManualExpiries(formatted, this.getUid());
+                    if (success) {
+                        this.addLog(`✅ [Auto-Sync] Updated DB with ${formatted.length} expiries from NSE.`);
+                        return true;
+                    } else {
+                        throw new Error('Failed to update DB (setManualExpiries returned false). Check RLS policies?');
+                    }
                 }
+                throw new Error('No expiry dates found in NSE response');
+            } catch (err: any) {
+                console.error(`[Auto-Sync] Attempt ${attempt} Failed:`, err);
+
+                if (attempt === maxAttempts) {
+                    this.addLog(`❌ [Auto-Sync] Final Failure after ${maxAttempts} attempts: ${err.message}`);
+                    throw err; // Propagate error to API on final failure
+                }
+
+                this.addLog(`⚠️ [Auto-Sync] Attempt ${attempt} failed: ${err.message}. Retrying in 5s...`);
+                // Wait 5 seconds before retry
+                await new Promise(r => setTimeout(r, 5000));
             }
-            throw new Error('No expiry dates found in NSE response');
-        } catch (err: any) {
-            console.error('[Auto-Sync] Failed:', err);
-            this.addLog(`❌ [Auto-Sync] Error: ${err.message}`);
-            throw err; // Propagate error to API
         }
     }
     private async updateMargins() {
