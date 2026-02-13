@@ -18,11 +18,13 @@
     "@fastify/websocket": "^11.2.0",
     "@supabase/supabase-js": "^2.89.0",
     "axios": "^1.13.2",
+    "axios-cookiejar-support": "^6.0.5",
     "crypto-js": "^4.2.0",
     "fastify": "^5.6.2",
     "node-cron": "^4.2.1",
     "otpauth": "^9.4.1",
     "socket.io": "^4.8.3",
+    "tough-cookie": "^6.0.0",
     "ws": "^8.19.0"
   },
   "devDependencies": {
