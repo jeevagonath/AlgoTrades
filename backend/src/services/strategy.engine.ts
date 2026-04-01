@@ -1738,7 +1738,28 @@ class StrategyEngine {
     }
 
     async triggerExpirySync() {
-        debugger;
+        // Guard: only sync if today >= the first stored expiry date (i.e. data is stale)
+        try {
+            const storedExpiries = await db.getManualExpiries();
+            if (storedExpiries && storedExpiries.length > 0) {
+                const firstExpiry = this.parseExpiryDate(storedExpiries[0]);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0); // Normalize to start of day
+                firstExpiry.setHours(0, 0, 0, 0);
+
+                if (today < firstExpiry) {
+                    this.addLog(`⏭️ [Auto-Sync] Skipped — first stored expiry (${storedExpiries[0]}) is still upcoming. No refresh needed.`);
+                    return false;
+                }
+                this.addLog(`🔁 [Auto-Sync] First expiry ${storedExpiries[0]} reached or passed — refreshing from NSE...`);
+            } else {
+                this.addLog(`🔁 [Auto-Sync] No stored expiries found — fetching from NSE...`);
+            }
+        } catch (guardErr: any) {
+            // If guard check fails, proceed with sync anyway (fail-safe)
+            this.addLog(`⚠️ [Auto-Sync] Guard check failed (${guardErr.message}), proceeding with sync...`);
+        }
+
         const maxAttempts = 3;
         let attempt = 0;
 
@@ -1756,11 +1777,12 @@ class StrategyEngine {
                         : null;
 
                 if (expiries) {
-                    const formatted = expiries.map((d: string) => d.toUpperCase());
+                    // Normalize: trim and uppercase so "24-Mar-2026" → "24-MAR-2026"
+                    const formatted = expiries.map((d: string) => d.trim().toUpperCase());
 
                     const success = await db.setManualExpiries(formatted, this.getUid());
                     if (success) {
-                        this.addLog(`✅ [Auto-Sync] Updated DB with ${formatted.length} expiries from NSE.`);
+                        this.addLog(`✅ [Auto-Sync] Updated DB with ${formatted.length} expiries. Next: ${formatted[0]} → ${formatted[1] || '-'}`);
                         return true;
                     } else {
                         throw new Error('Failed to update DB (setManualExpiries returned false). Check RLS policies?');
@@ -1772,7 +1794,7 @@ class StrategyEngine {
 
                 if (attempt === maxAttempts) {
                     this.addLog(`❌ [Auto-Sync] Final Failure after ${maxAttempts} attempts: ${err.message}`);
-                    throw err; // Propagate error to API on final failure
+                    return false; // Don't throw — cron should not crash on NSE failures
                 }
 
                 this.addLog(`⚠️ [Auto-Sync] Attempt ${attempt} failed: ${err.message}. Retrying in 5s...`);
@@ -1780,7 +1802,9 @@ class StrategyEngine {
                 await new Promise(r => setTimeout(r, 5000));
             }
         }
+        return false;
     }
+
     private async updateMargins() {
         const isLoggedIn = shoonya.isLoggedIn();
         if (!isLoggedIn) {

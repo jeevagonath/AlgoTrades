@@ -55,6 +55,12 @@ const start = async () => {
         await app.listen({ port: PORT, host: '0.0.0.0' });
         console.log(`[System] HTTP Server is listening at 0.0.0.0:${PORT}`);
 
+        // Log outbound IP for Shoonya IP whitelist configuration (visible in Render logs only)
+        fetch('https://api.ipify.org?format=json')
+            .then(r => r.json())
+            .then((d: any) => console.log(`[System] Outbound IP: ${d.ip}`))
+            .catch(() => console.warn('[System] Could not determine outbound IP'));
+
         // Initialize Socket.io after server is listening
         const io = new Server(app.server, {
             cors: {

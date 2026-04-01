@@ -114,16 +114,31 @@ export async function strategyRoutes(app: FastifyInstance) {
 
     app.post('/manual-expiries', async (request, reply) => {
         try {
-            const { expiries } = request.body as { expiries: string[] };
+            const body = request.body as any;
 
-            if (!expiries || !Array.isArray(expiries)) {
-                return reply.status(400).send({ status: 'error', message: 'Invalid expiries format' });
+            // Support both { expiries: [...] } and the raw NSE format { expiryDates: [...] }
+            let rawExpiries: any = body?.expiries ?? body?.expiryDates ?? null;
+
+            if (!rawExpiries || !Array.isArray(rawExpiries)) {
+                return reply.status(400).send({
+                    status: 'error',
+                    message: 'Invalid expiries format. Expected: { "expiries": ["24-Mar-2026", ...] }'
+                });
+            }
+
+            // Normalize: uppercase all strings, skip non-strings
+            const expiries: string[] = rawExpiries
+                .filter((d: any) => typeof d === 'string' && d.trim().length > 0)
+                .map((d: string) => d.trim().toUpperCase());
+
+            if (expiries.length === 0) {
+                return reply.status(400).send({ status: 'error', message: 'No valid expiry date strings found in array' });
             }
 
             const success = await db.setManualExpiries(expiries);
 
             if (success) {
-                return { status: 'success', message: `Saved ${expiries.length} expiry dates` };
+                return { status: 'success', message: `Saved ${expiries.length} expiry dates`, data: expiries };
             } else {
                 return reply.status(500).send({ status: 'error', message: 'Failed to save expiries' });
             }

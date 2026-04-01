@@ -66,6 +66,40 @@ class ShoonyaService {
         });
     }
 
+    /**
+     * New GenAcsTok OAuth flow — exchanges the browser-login code for an access token.
+     * @param code      Code from Shoonya browser redirect URL
+     * @param appKey    Client Id from Shoonya API Key page
+     * @param secretKey Secret Code from Shoonya API Key page
+     */
+    async loginWithCode(code: string, appKey: string, secretKey: string) {
+        return new Promise((resolve, reject) => {
+            this.api.gen_access_token(code, appKey, secretKey)
+                .then(async (res: any) => {
+                    if (res.stat === 'Ok') {
+                        // Map access_token → susertoken for full app compatibility
+                        const sessionData = {
+                            ...res,
+                            susertoken: res.access_token,
+                            uid: appKey,
+                            actid: appKey
+                        };
+                        this.session = sessionData;
+                        // Persist session to Supabase
+                        await db.saveSession({
+                            uid: appKey,
+                            susertoken: res.access_token,
+                            actid: appKey
+                        });
+                        resolve(sessionData);
+                    } else {
+                        reject(res);
+                    }
+                })
+                .catch(reject);
+        });
+    }
+
     async logout() {
         try {
             // Shoonya API might have a logout, but if it's just local session clearing:

@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 
 let { API } = require("./config");
+const loginEndpoint = API.loginEndpoint || API.endpoint;
 const WS = require("./WebSocket");
 
 const logFile = path.join(process.cwd(), 'shoonya_api.log');
@@ -24,6 +25,7 @@ var NorenRestApi = function (params) {
   var debug = API.debug
   var routes = {
     'authorize': '/QuickAuth',
+    'gen_access_token': '/GenAcsTok',
     'logout': '/Logout',
     'forgot_password': '/ForgotPassword',
     'watchlist_names': '/MWList',
@@ -101,6 +103,14 @@ var NorenRestApi = function (params) {
     return axios.post(url, payload);
   }
 
+  // Uses the new login endpoint (NorenWClientAPI) — no session key appended
+  function post_login_request(route, params) {
+    let url = loginEndpoint + routes[route];
+    let payload = 'jData=' + JSON.stringify(params);
+    console.log(`[Shoonya] LOGIN POST ${url} payload: ${payload}`);
+    return axios.post(url, payload);
+  }
+
   self.setSessionDetails = function (response) {
     console.log('[RestApi] setSessionDetails called with:', JSON.stringify(response, null, 2));
     self.__susertoken = response.susertoken;
@@ -152,7 +162,6 @@ var NorenRestApi = function (params) {
       "imei": params.imei
     };
 
-    //console.log(authparams);
     let auth_data = post_request("authorize", authparams);
 
     auth_data
@@ -165,6 +174,42 @@ var NorenRestApi = function (params) {
       });
 
     return auth_data;
+  };
+
+  /**
+   * New GenAcsTok OAuth exchange — replaces QuickAuth for the new Shoonya API.
+   * @param {string} code     - Code received from Shoonya browser login redirect
+   * @param {string} appKey   - Client Id from Shoonya API Key page
+   * @param {string} secretKey - Secret Code from Shoonya API Key page
+   */
+  self.gen_access_token = function (code, appKey, secretKey) {
+    // checksum = SHA256(appKey + secretKey + code)  — no separators
+    let checksum = sha256(appKey + secretKey + code).toString();
+
+    let params = {
+      "code": code,
+      "checksum": checksum
+    };
+
+    console.log(`[Shoonya] GenAcsTok: code=${code}, checksum=${checksum}`);
+
+    let token_data = post_login_request("gen_access_token", params);
+
+    token_data
+      .then(response => {
+        if (response.stat === 'Ok') {
+          // Map access_token into susertoken for compatibility with rest of app
+          self.setSessionDetails({
+            susertoken: response.access_token,
+            uid: appKey,          // Client Id used as uid identifier
+            actid: appKey
+          });
+        }
+      }).catch(function (err) {
+        console.error('[Shoonya] GenAcsTok error:', err);
+      });
+
+    return token_data;
   };
 
 

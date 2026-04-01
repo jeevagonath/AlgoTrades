@@ -1,5 +1,6 @@
 module.exports.API = {
   "endpoint": "https://api.shoonya.com/NorenWClientTP",
+  "loginEndpoint": "https://api.shoonya.com/NorenWClientAPI",
   "websocket": "wss://api.shoonya.com/NorenWSTP/",
   "eodhost": "https://shoonya.finvasia.com/chartApi/getdata/",
   "debug": false,
