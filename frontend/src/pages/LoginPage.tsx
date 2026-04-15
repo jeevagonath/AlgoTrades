@@ -6,7 +6,7 @@ interface LoginPageProps {
     onLogin: (data: any) => void;
 }
 
-const SHOONYA_LOGIN_URL = 'https://api.shoonya.com/';
+const SHOONYA_LOGIN_URL = 'https://trade.shoonya.com/OAuthlogin/inverstor-entry-level/login';
 
 const LoginPage = ({ onLogin }: LoginPageProps) => {
     const [loading, setLoading] = useState(false);
@@ -50,7 +50,8 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
         localStorage.setItem('shoonya_app_key', formData.app_key);
         localStorage.setItem('shoonya_secret_key', formData.secret_key);
         // Open Shoonya login page
-        window.open(`${SHOONYA_LOGIN_URL}?appid=${encodeURIComponent(formData.app_key)}`, '_blank');
+        const baseAppKey = formData.app_key.endsWith('_U') ? formData.app_key.slice(0, -2) : formData.app_key;
+        window.open(`${SHOONYA_LOGIN_URL}?api_key=${encodeURIComponent(baseAppKey)}_U&route_to=${encodeURIComponent(baseAppKey)}`, '_blank');
         setStep(2);
     };
 

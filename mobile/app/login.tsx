@@ -94,7 +94,8 @@ export default function LoginScreen() {
         await AsyncStorage.setItem('shoonya_app_key', formData.app_key);
         await AsyncStorage.setItem('shoonya_secret_key', formData.secret_key);
         
-        Linking.openURL(`https://api.shoonya.com/?appid=${encodeURIComponent(formData.app_key)}`);
+        const baseAppKey = formData.app_key.endsWith('_U') ? formData.app_key.slice(0, -2) : formData.app_key;
+        Linking.openURL(`https://trade.shoonya.com/OAuthlogin/inverstor-entry-level/login?api_key=${encodeURIComponent(baseAppKey)}_U&route_to=${encodeURIComponent(baseAppKey)}`);
         setStep(2);
     };
 
