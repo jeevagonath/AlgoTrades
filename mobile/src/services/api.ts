@@ -16,6 +16,10 @@ export const authApi = {
         const response = await apiClient.post('/auth/login', credentials);
         return response.data;
     },
+    exchangeToken: async (code: string, app_key: string, secret_key: string) => {
+        const response = await apiClient.post('/auth/exchange-token', { code, app_key, secret_key });
+        return response.data;
+    },
     getSession: async () => {
         const response = await apiClient.get('/auth/session');
         return response.data;
@@ -34,6 +38,10 @@ export const authApi = {
     },
     getMargins: async () => {
         const response = await apiClient.get('/auth/margins');
+        return response.data;
+    },
+    getServerIp: async () => {
+        const response = await apiClient.get('/auth/server-ip');
         return response.data;
     },
 };

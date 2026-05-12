@@ -1,0 +1,4019 @@
+
+### PAGE 1 ###
+
+ 
+ 
+ 
+ 
+ 
+TABLE OF CONTETS 
+ 
+CHANGE LOG 05 
+Login and User Details 07 
+GenAcsTok 08 
+Logout 10 
+User Details  10 
+Client Details  13 
+Watch Lists 16 
+Get WatchList Names 16 
+Get WatchList 17 
+Search Scrips 20 
+Add Scrip to Watch List 23 
+ReorderMWScrips 24 
+Delete Scrip to Watch List 25 
+Get SecurityInfo 26 
+Get Quotes 29 
+Rename WatchList Names 35 
+Order and Trades 36 
+Place Order 36 
+Modify Order 40 
+Cancel Order 43 
+Order Margin 45 
+Basket Margin 48 
+Order Book 50 
+Single Order History 55 
+Single Order Status 60 
+Trade Book 63 
+Positions Book 68 
+Interop Positions Book 72 
+Product Conversion 78 
+     GetBasketOptSeq 89 
+Holdings and Limits 83 
+Holdings 83 
+Limits 86 
+Get Sub Limits 94 
+Get Max Payout Amount: 100 
+Annexure 101 
+Report Type: 101 
+Status Type: 102 
+Internal Status Type: 103 
+ 
+ 
+ 
+ 
+ 3 
+
+
+### PAGE 2 ###
+
+ 
+ 
+ 
+ 
+CHANGE LOG 
+ 
+Date  Change 
+   
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 5 
+
+
+### PAGE 3 ###
+
+ 
+ 
+ 
+Login and User Details 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+1. Redirect the user to the login page.  
+2. After successful log in, get the Code from the redirect URL.  
+3. POST the code and checksum (SHA-256 of Client_id + secret code + code) to call the /GenAcsTok api 
+request. 
+4. Get the access_token in response.  
+5. Include the access_token in the Authorization header when making each individual API call. 
+(Postman) 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 7 
+
+
+### PAGE 4 ###
+
+ 
+ 
+ 
+GenAcsTok 
+ 
+Request to be POSTed to uri :  /NorenWClientAPI/GenAcsTok 
+ 
+Request Details : 
+Parameter Name  Possible value  Description 
+jData*    Should send json object with fields in below list 
+ 
+Json Fields  Possible value  Description 
+code*    code will get from successful login url 
+checksum*    It is a SHA-256 hash created from the combination of the Client id, 
+secret key, and code without any spaces. 
+             Example: 
+If your client id is ABC, secret code is 123, and code is 
+x1y2z3, Combine them as: ABC123x1y2z3
+ Then generate the SHA-256 hash of that string. 
+ 
+ 
+Example:  
+curl --location 'http://apitest.kambala.co.in/NorenWClientAPI/GenAcsTok' \ 
+--d 'jData={\"code\":\"c61de38b-7c0c-46e4-8abe-
+acb1f6a15089\",\"checksum\":\"e5ff9e0357cfa219885495ace4390b38280a39790ad434ea713afd27e6ec93
+c5\"}' 
+ 
+Response Details : 
+Response data will be in json format with below fields. 
+ 
+ 
+ 8 
+
+
+### PAGE 5 ###
+
+ 
+ 
+ 
+Json Fields  Possible value  Description 
+stat  Ok or Not_Ok  Login Success Or failure status 
+susertoken    It will be present only on login success.  
+lastaccesstime    It will be present only on login success. 
+exarr    Json array of strings with enabled exchange names 
+uname    User name 
+prarr    Json array of Product Obj with enabled products, as defined below. 
+actid    Account id 
+email    Email Id 
+brkname    Broker id 
+uid    UserId 
+brnchid    Region 
+cname    Company Name 
+emsg    This will be present only if Login fails. 
+(Redirect to force change password if message is “Invalid 
+Input : Password Expired” or “Invalid Input : 
+Change Password”) 
+dmsg    Display message, (will be present only in case of success). 
+access_type    Access Type 
+lastpwdtime    It will be represent last password updated time. 
+values    Json array of non empty Market watchlists name.  
+mws    Json array of Market Watchlist scripts. 
+USERID    User ID 
+access_token    Access Token 
+expires_in    Access Token Expire date. 
+refresh_token    Refresh token 
+scope    Scope 
+ 
+ 
+ 9 
+
+
+### PAGE 6 ###
+
+ 
+ 
+ 
+Sample Success Response : 
+{ 
+    "request_time": "20:18:47 19-05-2020", 
+    "stat": "Ok", 
+    "access_token": "ea97cd3fbb203ad9eb5ea51d296f7a5db18af504814a6b90209ea21aa76e867c", 
+    "expires_in": "1756979040", 
+    "refresh_token": "b3144ec3fb5610c07411d2544b0012a64d1a40d9f14f31de26c1d00d52143b79",  
+    "lastaccesstime": "1589899727" 
+} 
+ 
+Sample Failure Response : 
+{ 
+    "stat": "Not_Ok", 
+    "emsg": "Invalid Input : INVALID_VERIFIER", 
+    "uid": "TEST" 
+} 
+ 
+This Postman screenshot demonstrates how to include the access token in the request header under 
+the Authorization field. 
+ 
+} 
+ 
+Logout 
+Request to be POSTed to uri :  /NorenWClientTP/Logout 
+ 
+Request Details : 
+Parameter Name  Possible value  Description 
+jData*    Should send json object with fields in below list 
+ 
+ 
+ 
+ 10 
+
+
+### PAGE 7 ###
+
+ 
+ 
+ 
+Json Fields  Possible value  Description 
+uid*    User Id of the login user 
+ 
+ 
+Response Details : 
+Response data will be in json format with below fields. 
+Json Fields  Possible value  Description 
+stat  Ok or Not_Ok  Logout Success Or failure status 
+request_time    It will be present only on successful logout. 
+emsg    This will be present only if Logout fails. 
+ 
+Sample Success Response : 
+{ 
+   "stat":"Ok", 
+   "request_time":"10:43:41 28-05-2020" 
+} 
+ 
+Sample Failure Response : 
+{ 
+   "stat":"Not_Ok", 
+   "emsg":"Server Timeout :  " 
+} 
+ 
+User Details  
+Request to be POSTed to uri :  /NorenWClientAPI/UserDetails 
+ 
+Request Details : 
+Parameter Name  Possible value  Description 
+jData*    Should send json object with fields in below list 
+ 
+Json Fields  Possible value  Description 
+uid*    Logged in User Id 
+ 
+ 
+Response Details : 
+ 
+Response data will be in json format with below fields. 
+ 
+ 
+ 
+ 11 
+
+
+### PAGE 8 ###
+
+ 
+ 
+ 
+Json Fields  Possible value  Description 
+stat  Ok or Not_Ok  User details success or failure indication. 
+exarr    Json array of strings with enabled exchange names 
+orarr     Json array of strings with enabled price types for user 
+prarr    Json array of Product Obj with enabled products, as defined below. 
+brkname    Broker id 
+brnchid    Branch id 
+email     
+actid    Account Id 
+uid    User Id 
+m_num    Mobile Number 
+uprev    Always it will be an INVESTOR, other types of user not allowed to 
+login using this API. 
+access_type    Access Type 
+request_time    It will be present only in a successful response. 
+emsg    This will be present only in case of errors. 
+ 
+Product Obj format 
+Json Fields  Possible value  Description 
+prd    Product name 
+s_prdt_ali    Product display name 
+exch    Json array of strings with enabled, allowed exchange names 
+ 
+Sample Success Response: 
+{ 
+    "request_time": "20:20:04 19-05-2020", 
+    "prarr": [ 
+       { “prd”:"C", 
+         “s_prdt_ali” : “Delivery”, 
+“exch” :  [“NSE”, “BSE”]  
+                    }, 
+                   { “prd”:"I", 
+ 
+ 
+ 12 
+
+
+### PAGE 9 ###
+
+ 
+ 
+ 
+         “s_prdt_ali” : “Intraday”, 
+“exch” :  [“NSE”, “BSE”, “NFO”]  
+                    }, 
+,                   { “prd”:"H", 
+         “s_prdt_ali” : “High Leverage”, 
+“exch” :  [“NSE”, “BSE”, “NFO”]  
+                    }, 
+                   { “prd”:"B", 
+         “s_prdt_ali” : “Bracket Order”, 
+“exch” :  [“NSE”, “BSE”, “NFO”]  
+                    } 
+    ], 
+    "exarr": [ 
+        "NSE", 
+        "NFO" 
+    ], 
+    "orarr": [ 
+        "LMT", 
+        "SL-LMT", 
+        "DS", 
+        "2L", 
+        "3L", 
+        "4L" 
+    ], 
+    "brkname": "VIDYA", 
+    "brnchid": "VIDDU", 
+    "email": "gururaj@gmail.com", 
+    "actid": "GURURAJ", 
+    "uprev": "INVESTOR", 
+    "stat": "Ok" 
+} 
+ 
+Sample Failure Response: 
+{ 
+    "stat": "Not_Ok", 
+    "emsg": "Session Expired : Invalid Session Key" 
+} 
+ 
+Client Details  
+Request to be POSTed to uri :  /NorenWClientAPI/ClientDetails 
+ 
+Request Details : 
+ 
+ 
+ 13 
+
+
+### PAGE 10 ###
+
+ 
+ 
+ 
+Parameter Name  Possible value  Description 
+jData*    Should send json object with fields in below list 
+ 
+Json Fields  Possible value  Description 
+uid*    Logged in User Id 
+actid*    Login users account ID 
+ 
+ 
+Response Details : 
+ 
+Response data will be in json format with below fields. 
+ 
+Json Fields  Possible value  Description 
+stat    User details success or failure indication. 
+actid    Account ID 
+creatdte    Creation date 
+creattme    Creation time 
+m_num    Mobile Number 
+email    Email ID 
+pan    PAN 
+dob    Date of birth in DDMMYYYY format 
+act_sts    Account Status 
+addr    Address 
+addroffice    Office address 
+addrcity    City 
+addrstate    State 
+ 
+ 
+ 
+ 14 
+
+
+### PAGE 11 ###
+
+ 
+ 
+ 
+Json Fields  Possible value  Description 
+addr    Address 
+addroffice    Office address 
+addrcity    City 
+bankdetails    Array Object, details given below. 
+dp_acct_num    Array Object, details given below. 
+exarr  ["CDS","NSE","NF
+O","MCX","BSE","
+NCX","BSTAR","B
+CD"] 
+Json array of strings with enabled exchange names 
+mandate_id_list    Mandate Id List [ Array Object, details given below.] 
+partic_id_list    Partic Id List [Array Object, details given below.] 
+eqt_asba  True or False   
+der_asba  True or False   
+fx_asba  True or False   
+com_asba  True or False   
+request_time    It will be present only in a successful response. 
+emsg    This will be present only in case of errors. 
+ 
+bankdetails Obj format 
+Json Fields  Possible value  Description 
+bankn    Bank name 
+acctnum    Account number 
+ 
+dp_acct_num Obj format 
+Json Fields  Possible value  Description 
+dpnum    Dp account number 
+ 
+mandate_id_list Obj format 
+ 
+ 
+ 15 
+
+
+### PAGE 12 ###
+
+ 
+ 
+ 
+Json Fields  Possible value  Description 
+mandate_id    Mandate Id 
+ 
+Json Fields  Possible value  Description 
+partic_id    Partic Id 
+ 
+ 
+Watch Lists 
+Get WatchList Names 
+Request to be POSTed to uri :  /NorenWClientAPI/MWList 
+ 
+Request Details : 
+Parameter Name  Possible value  Description 
+jData*    Should send json object with fields in below list 
+ 
+Json Fields  Possible value  Description 
+uid*    Logged in User Id 
+ 
+Response Details : 
+ 
+Response data will be in json format with below fields. 
+ 
+Json Fields  Possible value  Description 
+stat  Ok or Not_Ok  MWList success or failure indication. 
+values    Watch List names as a json array of strings. 
+request_time    It will be present only in a successful response. 
+emsg    This will be present only in case of errors or No WatchLists are set 
+yet. 
+ 
+Sample Success Response : 
+{ 
+    "request_time": "12:34:52 21-05-2020", 
+    "values": [ 
+ 
+ 
+ 16 
+
+
+### PAGE 13 ###
+
+ 
+ 
+ 
+        "default", 
+        "WL" 
+    ], 
+    "stat": "Ok" 
+} 
+Sample Failure Response : 
+ 
+{ 
+    "stat": "Not_Ok", 
+    "emsg": "Session Expired : Invalid Session Key" 
+} 
+Get WatchList 
+Request to be POSTed to uri :  /NorenWClientAPI/MarketWatch 
+ 
+Request Details : 
+Parameter Name  Possible value  Description 
+jData*    Should send json object with fields in below list 
+ 
+Json Fields  Possible value  Description 
+uid*    Logged in User Id 
+wlname*    Name of the Watchlist, for which scrip list is required. 
+ 
+Response Details : 
+ 
+Response data will be in json format with below fields. 
+ 
+Json Fields  Possible value  Description 
+stat  Ok or Not_Ok  Market watch success or failure indication. 
+values    Array of json objects. (object fields given in below table) 
+request_time    It will be present only in a successful response. 
+emsg    This will be present only in case of errors.  
+That is : 1) Invalid Input : Invalid WatchList Name 
+              2) Session Expired 
+ 
+ 
+ 
+ 
+ 17 
+
+
+### PAGE 14 ###
+
+ 
+ 
+ 
+Json Fields of 
+object in values 
+Array 
+Possible value  Description 
+exch  NSE, BSE, NFO ...  Exchange  
+tsym    Trading symbol of the scrip (contract) 
+token    Token of the scrip (contract) 
+nontrd    Non tradable instruments 
+weekly    Weekly Option, ‘W1’, ‘W2’, ‘W3’, ‘W4’ th week 
+pp    Price precision 
+ti    Tick size 
+ls    Lot size 
+dname    Broker specific contract display name, present only if applicable. 
+oi    Open Interest [ # ] 
+ltt    Last Trading Time[ # ] 
+ltq    Last Trade Quantity [ # ] 
+totbuyqty    Total Buy Quantity [ # ] 
+totsellqty    Total Sell Quantity[ # ] 
+wk52_h    Week52 High Price [ # ] 
+wk52_l    Week52 Low Price [ # ] 
+lp    LTP [ # ] 
+frzqty    Freeze Quantity [ # ] 
+uniq_key    Scrip Uniq Key [ # ] 
+sp1    ASK Price 1[ # ] 
+bq1    BID Quantity 1 [ # ] 
+h    Day High Price [ # ] 
+l    Day Low Price [ # ] 
+ 
+ 
+ 18 
+
+
+### PAGE 15 ###
+
+ 
+ 
+ 
+sq1    ASK Quantity 1[ # ] 
+c    Close Price [ # ] 
+bp1    BID Price 1 [ # ] 
+v    Volume [ # ] 
+o    Open Price [ # ] 
+change    LTP -  Previous Close Price[ # ] 
+pc    LTP Percentage Change [ # ] 
+cname    Company Name 
+seg    Segment 
+optt    option type 
+instname    instrument name 
+ 
+ [#]  - By Default disabled and Enabled on request basis. 
+ 
+Sample Success Response : 
+{ 
+  "request_time": "11:11:06 08-07-2025", 
+  "values": [ 
+    { 
+      "exch": "NSE", 
+      "token": "26009", 
+      "tsym": "Nifty Bank", 
+      "nontrd": "1", 
+      "pp": "2", 
+      "ls": "1", 
+      "ti": "0.05", 
+      "instname": "UNDIND", 
+      "cname": "BANKNIFTY", 
+      "seg": "EQT" 
+    }, 
+    { 
+      "exch": "NSE", 
+      "token": "1465", 
+      "tsym": "ACCURACY-EQ", 
+      "pp": "2", 
+      "ls": "1", 
+      "ti": "0.01", 
+ 
+ 
+ 19 
+
+
+### PAGE 16 ###
+
+ 
+ 
+ 
+      "instname": "EQ", 
+      "cname": "ACCURACY SHIPPING LIMITED", 
+      "seg": "EQT" 
+    } 
+  ], 
+  "stat": "Ok" 
+} 
+Sample Failure Response : 
+{ 
+   "stat":"Not_Ok", 
+   "emsg":"Invalid Input : Missing uid or wlname." 
+} 
+ 
+Search Scrips 
+Request to be POSTed to uri :  /NorenWClientAPI/SearchScrip 
+ 
+Request Details : 
+Parameter Name  Possible value  Description 
+jData*    Should send json object with fields in below list 
+ 
+Json Fields  Possible value  Description 
+uid*    Logged in User Id 
+stext*    Search Text 
+exch    Exchange (Select from ‘exarr’ Array provided in User Details 
+response) 
+ 
+Response Details : 
+ 
+Response data will be in json format with below fields. 
+ 
+Json Fields  Possible value  Description 
+stat  Ok or Not_Ok  Market watch success or failure indication. 
+values    Array of json objects. (object fields given in below table) 
+emsg    This will be present only in case of errors.  
+That is : 1) Invalid Input 
+              2) Session Expired 
+ 
+ 
+ 
+ 
+ 20 
+
+
+### PAGE 17 ###
+
+ 
+ 
+ 
+Json Fields of 
+object in values 
+Array 
+Possible value  Description 
+exch  NSE, BSE, NFO ...  Exchange  
+tsym    Trading symbol of the scrip (contract) 
+token    Token of the scrip (contract) 
+pp    Price precision 
+ti    Tick size 
+ls    Lot size 
+weekly    Weekly Option, ‘W1’, ‘W2’, ‘W3’, ‘W4’ th week 
+nontrd    Non tradable instruments 
+dname     display name 
+cname    company name 
+optt    option type 
+instname    instrument name 
+symname    symbol name 
+seg    segment 
+exd    expiry date 
+ 
+Sample Success Response : 
+ 
+{ 
+    "stat": "Ok", 
+    "values": [ 
+        { 
+            "exch": "NSE", 
+            "token": "18069", 
+            "tsym": "REL100NAV-EQ" 
+        }, 
+        { 
+            "exch": "NSE", 
+            "token": "24225", 
+            "tsym": "RELAXO-EQ" 
+        }, 
+ 
+ 
+ 21 
+
+
+### PAGE 18 ###
+
+ 
+ 
+ 
+        { 
+            "exch": "NSE", 
+            "token": "4327", 
+            "tsym": "RELAXOFOOT-EQ" 
+        }, 
+        { 
+            "exch": "NSE", 
+            "token": "18068", 
+            "tsym": "RELBANKNAV-EQ" 
+        }, 
+        { 
+            "exch": "NSE", 
+            "token": "2882", 
+            "tsym": "RELCAPITAL-EQ" 
+        }, 
+        { 
+            "exch": "NSE", 
+            "token": "18070", 
+            "tsym": "RELCONSNAV-EQ" 
+        }, 
+        { 
+            "exch": "NSE", 
+            "token": "18071", 
+            "tsym": "RELDIVNAV-EQ" 
+        }, 
+        { 
+            "exch": "NSE", 
+            "token": "18072", 
+            "tsym": "RELGOLDNAV-EQ" 
+        }, 
+        { 
+            "exch": "NSE", 
+            "token": "2885", 
+            "tsym": "RELIANCE-EQ" 
+        }, 
+        { 
+            "exch": "NSE", 
+            "token": "15068", 
+            "tsym": "RELIGARE-EQ" 
+        }, 
+        { 
+            "exch": "NSE", 
+            "token": "553", 
+            "tsym": "RELINFRA-EQ" 
+        }, 
+ 
+ 
+ 22 
+
+
+### PAGE 19 ###
+
+ 
+ 
+ 
+        { 
+            "exch": "NSE", 
+            "token": "18074", 
+            "tsym": "RELNV20NAV-EQ" 
+        } 
+    ] 
+} 
+ 
+Sample Failure Response : 
+{ 
+   "stat":"Not_Ok", 
+   "emsg":"No Data :  " 
+} 
+Add Scrip to Watch List 
+ 
+Request to be POSTed to uri :  /NorenWClientAPI/AddMultiScripsToMW 
+ 
+Request Details : 
+Parameter Name  Possible value  Description 
+jData*    Should send json object with fields in below list 
+ 
+Json Fields  Possible value  Description 
+uid*    Logged in User Id 
+wlname*    Name of the Watchlist, for which scrip list is required. 
+scrips*    List of scrips, example format NSE|22#BSE|506734 
+ 
+ 
+Response Details : 
+ 
+Response data will be in json format with below fields. 
+ 
+Json Fields  Possible value  Description 
+stat  Ok or Not_Ok  Watch list update success or failure indication. 
+request_time    It will be present only in a successful response. 
+emsg    This will be present only in case of errors.  
+That is : 1) Invalid Input 
+              2) Session Expired 
+ 
+ 
+ 
+ 23 
+
+
+### PAGE 20 ###
+
+ 
+ 
+ 
+Sample Success Response : 
+{ 
+    "request_time": "13:50:40 21-05-2020", 
+    "stat": "Ok" 
+} 
+Sample Failure Response : 
+{ 
+   "stat":"Not_Ok", 
+   "emsg":"Session Expired : Invalid Session Key" 
+} 
+ 
+ReorderMWScrips 
+ 
+Request to be POSTed to uri :  /NorenWClientAPI/ReorderMWScrips 
+ 
+Request Details : 
+Parameter Name  Possible value  Description 
+jData*    Should send json object with fields in below list 
+ 
+Json Fields  Possible value  Description 
+uid*    Logged in User Id 
+wlname*    Name of the Watchlist, for which scrip list is required. 
+scrips*    List of scrips, example format NSE|22#BSE|506734 
+ 
+ 
+Response Details : 
+ 
+Response data will be in json format with below fields. 
+ 
+Json Fields  Possible value  Description 
+stat  Ok or Not_Ok  Watch list update success or failure indication. 
+request_time    It will be present only in a successful response. 
+emsg    This will be present only in case of errors.  
+That is : 1) Invalid Input 
+              2) Session Expired 
+ 
+Sample Success Response : 
+{ 
+    "request_time": "13:50:40 21-05-2023", 
+ 
+ 
+ 24 
+
+
+### PAGE 21 ###
+
+ 
+ 
+ 
+    "stat": "Ok" 
+} 
+Sample Failure Response : 
+{ 
+   "stat":"Not_Ok", 
+   "emsg":"Session Expired : Invalid Session Key" 
+} 
+ 
+Delete Scrip to Watch List 
+ 
+Request to be POSTed to uri :  /NorenWClientAPI/DeleteMultiMWScrips 
+ 
+Request Details : 
+Parameter Name  Possible value  Description 
+jData*    Should send json object with fields in below list 
+ 
+Json Fields  Possible value  Description 
+uid*    Logged in User Id 
+wlname*    Name of the Watchlist, for which scrip list is required. 
+scrips*    List of scrips, example format NSE|22#BSE|506734 
+ 
+ 
+Response Details : 
+ 
+Response data will be in json format with below fields. 
+ 
+Json Fields  Possible value  Description 
+stat  Ok or Not_Ok  Watch list update success or failure indication. 
+request_time    It will be present only in a successful response. 
+emsg    This will be present only in case of errors.  
+That is : 1) Invalid Input 
+              2) Session Expired 
+ 
+Sample Success Response : 
+{ 
+    "request_time": "13:50:40 21-05-2020", 
+    "stat": "Ok" 
+} 
+Sample Failure Response : 
+{ 
+ 
+ 
+ 25 
+
+
+### PAGE 22 ###
+
+ 
+ 
+ 
+   "stat":"Not_Ok", 
+   "emsg":"Invalid Input : Missing uid or wlname or scrips." 
+} 
+Get SecurityInfo 
+Request to be POSTed to uri :  /NorenWClientAPI/GetSecurityInfo 
+ 
+Request Details : 
+Parameter Name  Possible value  Description 
+jData*    Should send json object with fields in below list 
+ 
+ 
+Json Fields  Possible value  Description 
+uid*    Logged in User Id 
+exch    Exchange  
+token    Contract Token 
+ 
+Example:  
+jData={"uid":"{{USER_ID}}", "exch":"NSE", "token":"22"} 
+ 
+Response Details : 
+ 
+Response data will have below fields. 
+ 
+ 
+ 
+ 26 
+
+
+### PAGE 23 ###
+
+ 
+ 
+ 
+Json Fields  Possible value  Description 
+request_time    It will be present only in a successful response. 
+stat  Ok or Not_Ok  Market watch success or failure indication. 
+exch  NSE, BSE, NFO ...  Exchange  
+tsym    Trading Symbol 
+cname    Company Name 
+symnam    Symbol Name 
+seg    Segment 
+exd    Expiry Date 
+instname    Intrument Name 
+strprc    Strike Price  
+optt    Option Type 
+isin    ISIN 
+und_exch    Underlying Exch seg 
+und_tk    Underlying Token 
+ti     Tick Size  
+ls    Lot Size  
+pp    Price precision 
+mult    Multiplier 
+gp_nd    gn/gd * pn/pd (text format) 
+prcunt    Price Units  
+prcqqty    Price Quote Qty 
+trdunt    Trade Units  
+delunt    Delivery Units 
+frzqty    Freeze Qty 
+ 
+ 
+ 27 
+
+
+### PAGE 24 ###
+
+ 
+ 
+ 
+gsmind    scripupdate   Gsm Ind 
+elmbmrg    Elm Buy Margin 
+elmsmrg    Elm Sell Margin 
+addbmrg    Additional Long Margin 
+addsmrg    Additional Short Margin 
+splbmrg    Special Long Margin  
+splsmrg    Special Short Margin 
+delmrg    Delivery Margin  
+tenmrg    Tender Margin 
+tenstrd    Tender Start Date 
+tenendd    Tender End Eate 
+exestrd    Exercise Start Date 
+exeendd    Exercise End Date  
+mkt_t    Market type 
+issue_d    Issue date 
+listing_d    Listing date 
+last_trd_d    last trading date 
+elmmrg    Elm Margin  
+varmrg    Var Margin  
+expmrg    Exposure Margin 
+token    Contract Token  
+prcftr_d    ((GN / GD) * (PN/PD)) (actual value for calculations) 
+weekly    Weekly Option, ‘W1’, ‘W2’, ‘W3’, ‘W4’ th week 
+nontrd    Non tradable instruments 
+dname    Broker specific contract display name, present only if applicable. 
+ 
+ 
+ 28 
+
+
+### PAGE 25 ###
+
+ 
+ 
+ 
+uc    Upper circuit limitlc 
+lc    Lower circuit limit 
+ord_msg    Order Message 
+exptime    Expiry Time 
+ 
+Sample Success Response : 
+{ 
+      "request_time": "17:43:38 31-10-2020", 
+       "stat": "Ok", 
+   "exch": "NSE", 
+   "tsym": "ACC-EQ", 
+   "cname": "ACC LIMITED", 
+   "symname": "ACC", 
+   "seg": "EQT", 
+   "instname": "EQ", 
+   "isin": "INE012A01025", 
+   "pp": "2", 
+   "ls": "1", 
+   "ti": "0.05", 
+   "mult": "1", 
+   "prcftr_d": "(1 / 1 ) * (1 / 1)", 
+   "trdunt": "ACC.BO", 
+   "delunt": "ACC", 
+   "token": "22", 
+   "varmrg": "40.00" 
+} 
+ 
+Sample Failure Response : 
+{ 
+    "stat":"Not_Ok", 
+    "request_time":"10:50:54 10-12-2020", 
+    "emsg":"Error Occurred : 5 \"no data\"" 
+} 
+ 
+Get Quotes 
+Request to be POSTed to uri :  /NorenWClientAPI/GetQuotes 
+ 
+Request Details : 
+Parameter Name  Possible value  Description 
+jData*    Should send json object with fields in below list 
+ 
+ 
+ 
+ 29 
+
+
+### PAGE 26 ###
+
+ 
+ 
+ 
+ 
+Json Fields  Possible value  Description 
+uid*    Logged in User Id 
+exch    Exchange  
+token    Contract Token 
+ 
+Example:  
+jData={"uid":"{{USER_ID}}", "exch":"NSE", "token":"22"} 
+ 
+ 
+ 
+Response Details : 
+ 
+Response data will be in json format with below fields. 
+ 
+ 
+ 
+ 30 
+
+
+### PAGE 27 ###
+
+ 
+ 
+ 
+Json Fields  Possible value  Description 
+stat  Ok or Not_Ok  Watch list update success or failure indication. 
+request_time    It will be present only in a successful response. 
+exch  NSE, BSE, NFO ...  Exchange  
+tsym    Trading Symbol 
+pp    Price precision 
+ls    Lot Size  
+ti    Tick Size  
+mult    Multiplier 
+sptprc    Spot Price [ # ] 
+lut    Feed Time 
+lp    LTP 
+uc    Upper circuit limitlc 
+lc    Lower circuit limit 
+wk52_h    Week52 High Price [ # ] 
+wk52_l    Week52 Low Price [ # ] 
+oi    Open Interest 
+toi    Total Open Interest 
+strprc    Strike Price 
+cname    Company Name 
+symname    Symbol Name 
+seg    Segment 
+exd    Expiry date 
+instname    Instrument Name 
+optt    Option Type 
+ 
+ 
+ 31 
+
+
+### PAGE 28 ###
+
+ 
+ 
+ 
+isin    ISIN 
+prcftr_d    Price factor 
+((GN / GD) * (PN/PD)) 
+token    Token 
+nav    nav 
+o    Open Price 
+c    Close Price 
+h    Day High Price 
+l    Day Low Price 
+v    Volume 
+ap    Average trade price or VWAP for day 
+ltq    Last trade quantity 
+ltt    Last trade time 
+ltd  dd-mm-yy  Last Trade Date 
+tbq    Trade Buy Quantity 
+tsq    Trade Sell Quantity 
+bp1    Best Buy Price 1 
+sp1    Best Sell Price 1 
+bp2    Best Buy Price 2 
+sp2    Best Sell Price 2 
+bp3    Best Buy Price 3 
+sp3    Best Sell Price 3 
+bp4    Best Buy Price 4 
+sp4    Best Sell Price 4 
+bp5    Best Buy Price 5 
+ 
+ 
+ 32 
+
+
+### PAGE 29 ###
+
+ 
+ 
+ 
+sp5    Best Sell Price 5 
+bq1    Best Buy Quantity 1 
+sq1    Best Sell Quantity 1 
+bq2    Best Buy Quantity 2 
+sq2    Best Sell Quantity 2 
+bq3    Best Buy Quantity 3 
+sq3    Best Sell Quantity 3 
+bq4    Best Buy Quantity 4 
+sq4    Best Sell Quantity 4 
+bq5    Best Buy Quantity 5 
+sq5    Best Sell Quantity 5 
+bo1    Best Buy Orders 1 
+so1    Best Sell Orders 1 
+bo2    Best Buy Orders 2 
+so2    Best Sell Orders 2 
+bo3    Best Buy Orders 3 
+so3    Best Sell Orders 3 
+bo4    Best Buy Orders 4 
+so4    Best Sell Orders 4 
+bo5    Best Buy Orders 5 
+so5    Best Sell Orders 5 
+und_exch    Underlying Exch seg 
+und_tk    Underlying Token 
+ord_msg    Order Message 
+scrip_base_prc    Scrip Base Price 
+ 
+ 
+ 33 
+
+
+### PAGE 30 ###
+
+ 
+ 
+ 
+issuecap    issue capital 
+e_date    end date 
+cutof_all    Cut off All 
+ 
+ [#]  - By Default disabled and Enabled on request basis. 
+ 
+Sample Success Response : 
+{ 
+  "request_time":"12:05:21 18-05-2021", 
+"stat":"Ok" 
+,"exch":"NSE", 
+"tsym":"ACC-EQ", 
+"cname":"ACC LIMITED", 
+"symname":"ACC", 
+"seg":"EQT", 
+"instname":"EQ", 
+"isin":"INE012A01025", 
+"pp":"2", 
+"ls":"1", 
+"ti":"0.05", 
+"mult":"1", 
+"uc":"2093.95", 
+"lc":"1713.25", 
+"prcftr_d":"(1 / 1 ) * (1 / 1)", 
+"token":"22", 
+"lp":"0.00", 
+"h":"0.00", 
+"l":"0.00", 
+"v":"0", 
+"ltq":"0", 
+"ltt":"05:30:00", 
+"bp1":"2000.00", 
+"sp1":"0.00", 
+"bp2":"0.00", 
+"sp2":"0.00", 
+"bp3":"0.00", 
+"sp3":"0.00", 
+"bp4":"0.00", 
+"sp4":"0.00", 
+"bp5":"0.00", 
+"sp5":"0.00", 
+"bq1":"2", 
+"sq1":"0", 
+ 
+ 
+ 34 
+
+
+### PAGE 31 ###
+
+ 
+ 
+ 
+"bq2":"0", 
+"sq2":"0", 
+"bq3":"0", 
+"sq3":"0", 
+"bq4":"0", 
+"sq4":"0", 
+"bq5":"0", 
+"sq5":"0", 
+"bo1":"2", 
+"so1":"0", 
+"bo2":"0", 
+"so2":"0", 
+"bo3":"0", 
+"so3":"0", 
+"bo4":"0", 
+"so4":"0", 
+"bo5":"0", 
+"So5":"0" 
+} 
+ 
+Sample Failure Response : 
+{ 
+    "stat":"Not_Ok", 
+    "request_time":"10:50:54 10-12-2020", 
+    "emsg":"Error Occurred : 5 \"no data\"" 
+} 
+ 
+Rename WatchList Names 
+ 
+Request to be POSTed to uri :  /NorenWClientAPI/RenameMW 
+ 
+Request Details : 
+Parameter Name  Possible value  Description 
+jData*    Should send json object with fields in below list 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 35 
+
+
+### PAGE 32 ###
+
+ 
+ 
+ 
+Json Fields  Possible value  Description 
+uid*    Logged in User Id 
+wlname*    Name of the existing Watchlist 
+newwlname*    New name for the Watchlist . 
+ 
+ 
+Response Details : 
+ 
+Response data will be in json format with below fields. 
+ 
+Json Fields  Possible value  Description 
+stat  Ok or Not_Ok  Watch list update success or failure indication. 
+request_time    It will state the response's date and time of arrival. 
+emsg    This will be present only in case of errors.  
+That is : 1) Invalid Input 
+              2) Session Expired 
+ 
+Sample Success Response : 
+{ 
+ "request_time": "17:30:49 24-06-2024", 
+ "stat": "Ok" 
+} 
+ 
+Sample Failure Response : 
+{ 
+ "request_time": "17:30:17 24-06-2024", 
+ "emsg": "Invalid Input : Watchlist name mentioned in newwlname already exists", 
+ "stat": "Not_Ok" 
+} 
+ 
+ 
+Order and Trades 
+Place Order 
+Request to be POSTed to uri :  /NorenWClientAPI/PlaceOrder 
+ 
+Request Details : 
+ 
+ 
+ 36 
+
+
+### PAGE 33 ###
+
+ 
+ 
+ 
+Parameter Name  Possible value  Description 
+jData*    Should send json object with fields in below list 
+ 
+ 
+ 
+ 37 
+
+
+### PAGE 34 ###
+
+ 
+ 
+ 
+Json Fields  Possible value  Description 
+uid*    Logged in User Id 
+actid*    Login users account ID 
+exch*  NSE  / NFO / BSE / 
+MCX/CDS/NCX/BFO
+/BCD 
+Exchange (Select from ‘exarr’ Array provided in User Details 
+response) 
+tsym*    Unique id of contract on which order to be placed. (use url encoding 
+to avoid special char error for symbols like M&M) 
+qty*    Order Quantity  
+prc*    Order Price 
+trgprc    Only to be sent in case of SL-LMT order. 
+dscqty    Disclosed quantity (Max 10% for NSE, and 50% for MCX) 
+prd*  C / M //I/F/S/P 
+(C-Delivery ,  
+M-Margin , 
+I-Intraday, 
+F-MTF, 
+S-Special, 
+P-Special2 
+) 
+Product name (Select from ‘prarr’ Array provided in User Details 
+response, and if same is allowed for selected, exchange. Show 
+product display name, for user to select, and send corresponding 
+prd in API call) 
+trantype*  B / S  B -> BUY, S -> SELL 
+prctyp*  LMT / SL-LMT / DS 
+/ 2L / 3L 
+ 
+ 
+ 
+ret*  DAY / EOS / IOC   Retention type (Show options as per allowed exchanges)  
+remarks    Any tag by user to mark order. 
+ordersource  MOB / WEB / TT   Used to generate exchange info fields. 
+[Optional field else it will take login access type] 
+bpprc    Book Profit Price applicable only if product is selected as B (Bracket 
+order )  
+blprc    Book loss Price applicable only if product is selected as H and B 
+(High Leverage and Bracket order )  
+trailprc    Trailing Price applicable only if product is selected as H and B (High 
+Leverage and Bracket order )  
+ 
+ 
+ 38 
+
+
+### PAGE 35 ###
+
+ 
+ 
+ 
+ext_remarks    External remarks 
+cl_ord_id    Cli Order Id 
+channel    Channel 
+usr_agent    User Agent 
+app_inst_id    App Install Id 
+amo  Yes   The message "Invalid AMO" will be displayed if the "amo" field is not 
+sent with a "Yes" value. If amo is not required, do not send this field. 
+tsym2    Trading symbol of second leg, mandatory for price type 2L and 3L 
+(use url encoding to avoid special char error for symbols like M&M) 
+trantype2    Transaction type of second leg, mandatory for price type 2L and 3L 
+qty2    Quantity for second leg, mandatory for price type 2L and 3L 
+prc2    Price for second leg, mandatory for price type 2L and 3L 
+tsym3    Trading symbol of third leg, mandatory for price type 3L (use url 
+encoding to avoid special char error for symbols like M&M) 
+trantype3    Transaction type of third leg, mandatory for price type 3L 
+qty3    Quantity for third leg, mandatory for price type 3L 
+prc3    Price for third leg, mandatory for price type 3L 
+instname    Instrument Name 
+ordersource    Order Source 
+channel    channel 
+("for more details ref: NSE/COMP/53164, NSE/INVG/64567, 
+NSE/COMP/54007") 
+usr_agent    client user agent 
+("for more details ref: NSE/COMP/53164, NSE/INVG/64567, 
+NSE/COMP/54007") 
+app_inst_id    client APP installed ID 
+("for more details ref: NSE/COMP/53164, NSE/INVG/64567, 
+NSE/COMP/54007") 
+ipaddr    client IP address  
+("for more details ref: NSE/COMP/53164, NSE/INVG/64567, 
+NSE/COMP/54007") 
+cau_msg    cautionary msg 
+ 
+ 
+ 39 
+
+
+### PAGE 36 ###
+
+ 
+ 
+ 
+algo_id    algo id 
+ 
+ 
+Example:  
+curl https://apitest.kambala.co.in/NorenWClientAPI/PlaceOrder \ 
+    -d "jData={\"uid\":\"VIDYA\", \"actid\":\"CLIENT1\", \"exch\":\"NSE\", \"tsym\":\"ACC-EQ\", 
+\"qty\":\"50\", \"price\":\"1400\", \"prd\":\"H\", \"trantype\":\"B\", \"prctyp\":\"LMT\", \"ret\":\"DAY\"}“  
+ 
+Response Details : 
+ 
+Response data will be in json format with below fields. 
+ 
+Json Fields  Possible value  Description 
+stat  Ok or Not_Ok  Place order success or failure indication. 
+request_time    Response received time. 
+norenordno    It will be present only on successful Order placement to OMS. 
+emsg    This will be present only if Order placement fails 
+ 
+Sample Success Response: 
+{ 
+    "request_time": "10:48:03 20-05-2020", 
+    "stat": "Ok", 
+    "norenordno": "20052000000017" 
+} 
+ 
+Sample Error Response : 
+{ 
+    "stat": "Not_Ok", 
+    "request_time": "20:40:01 19-05-2020", 
+    "emsg": "Error Occurred : 2 \"invalid input\"" 
+} 
+ 
+Modify Order 
+Request to be POSTed to uri :  /NorenWClientAPI/ModifyOrder 
+ 
+Request Details : 
+Parameter Name  Possible value  Description 
+jData*    Should send json object with fields in below list 
+ 
+ 
+ 
+ 
+ 
+ 
+ 40 
+
+
+### PAGE 37 ###
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 41 
+
+
+### PAGE 38 ###
+
+ 
+ 
+ 
+Json Fields  Possible value  Description 
+exch*    Exchange 
+norenordno*    Noren order number, which needs to be modified 
+prctyp*  LMT /  SL-LMT  This can be modified. 
+prc*    Modified / New price (if prctyp = 'MKT/ SL-MKT' then the price will 
+be '0') 
+qty*    Modified / New Quantity / old quantity if not modified 
+ 
+Quantity to Fill / Order Qty - This is the total qty to be filled for the 
+order. Its Open Qty/Pending Qty plus Filled Shares (cumulative for 
+the order) for the order. 
+* Please do not send only the pending qty in this field 
+tsym*    Unque id of contract on which order was placed. Can’t be modified, 
+must be the same as that of original order. (use url encoding to 
+avoid special char error for symbols like M&M) 
+ret  DAY / IOC / EOS  New Retention type of the order  
+mkt_protection    Market order protection percentage. Applicable only for MKT orders 
+in BSE/BFO/BCS and MCX segments.  
+trgprc    New trigger price in case of SL-MKT or SL-LMT 
+dscqty    Disclosed quantity (Max 10% for NSE, and 50% for MCX) 
+ext_remarks    External remarks 
+cl_ord_id    Cli Order Id 
+channel    Channel 
+usr_agent    User Agent 
+app_inst_id    App Install Id 
+uid*    User id of the logged in user. 
+bpprc    Book Profit Price applicable only if product is selected as B (Bracket 
+order )  
+blprc    Book loss Price applicable only if product is selected as H and B 
+(High Leverage and Bracket order )  
+trailprc    Trailing Price applicable only if product is selected as H and B (High 
+Leverage and Bracket order )  
+ 
+ 
+ 42 
+
+
+### PAGE 39 ###
+
+ 
+ 
+ 
+ipaddr    global Ip of internet access 
+ 
+ordersource  MOB / WEB / TT   Used to generate exchange info fields. 
+[Optional field else it will take login access type] 
+ 
+Response Details : 
+ 
+Response data will be in json format with below fields. 
+ 
+Json Fields  Possible value  Description 
+stat  Ok or Not_Ok  Modify order success or failure indication. 
+result    Noren Order number of the order modified. 
+request_time    Response received time. 
+emsg    This will be present only if Order modification fails 
+ 
+Sample Success Response : 
+{ 
+     "request_time":"14:14:08 26-05-2020", 
+     "stat":"Ok", 
+     "result":"20052600000103" 
+} 
+ 
+Sample Failure Response : 
+{ 
+   "request_time":"16:03:29 28-05-2020", 
+   "stat":"Not_Ok", 
+   "emsg":"Rejected : ORA:Order not found" 
+} 
+Cancel Order 
+Request to be POSTed to uri :  /NorenWClientAPI/CancelOrder 
+ 
+Request Details : 
+Parameter Name  Possible value  Description 
+jData*    Should send json object with fields in below list 
+ 
+ 
+ 
+ 43 
+
+
+### PAGE 40 ###
+
+ 
+ 
+ 
+Json Fields  Possible value  Description 
+norenordno*    Noren order number, which needs to be modified 
+uid*    User id of the logged in user. 
+ext_remarks    External remarks 
+cl_ord_id    Cli Order Id 
+channel    Channel 
+usr_agent    User Agent 
+app_inst_id    App Install Id 
+ordersource    Order Source 
+ipaddr    global Ip of internet access 
+ 
+Response Details : 
+ 
+Response data will be in json format with below fields. 
+ 
+Json Fields  Possible value  Description 
+stat  Ok or Not_Ok  Cancel order success or failure indication. 
+result    Noren Order number of the canceled order. 
+request_time    Response received time. 
+emsg    This will be present only if Order cancelation fails 
+ 
+Sample Success Response : 
+{ 
+   "request_time":"14:14:10 26-05-2020", 
+   "stat":"Ok", 
+   "result":"20052600000103" 
+} 
+ 
+Sample Failure Response : 
+{ 
+   "request_time":"16:01:48 28-05-2020", 
+   "stat":"Not_Ok", 
+   "emsg":"Rejected : ORA:Order not found to Cancel" 
+} 
+ 
+ 
+ 44 
+
+
+### PAGE 41 ###
+
+ 
+ 
+ 
+ 
+Order Margin 
+Request to be POSTed to uri :  /NorenWClientAPI/GetOrderMargin 
+ 
+Request Details : 
+Parameter Name  Possible value  Description 
+jData*    Should send json object with fields in below list 
+ 
+ 
+ 
+ 45 
+
+
+### PAGE 42 ###
+
+ 
+ 
+ 
+  
+  
+  
+￼ 44 ￼  
+  
+  
+  
+￼ 44 ￼  
+Json Fields 
+Possible value  Description 
+uid*    Logged in User Id 
+actid*    Login users account ID 
+exch*  NSE  / NFO / BSE / 
+MCX 
+Exchange (Select from ‘exarr’ Array provided in User Details 
+response) 
+tsym*    Unique id of contract on which order to be placed. (use url encoding 
+to avoid special char error for symbols like M&M) 
+qty*    Order Quantity  
+prc*    Order Price 
+trgprc    Only to be sent in case of SL-LMT  order. 
+prd*  C / M / H  Product name (Select from ‘prarr’ Array provided in User Details 
+response, and if same is allowed for selected, exchange. Show 
+product display name, for user to select, and send corresponding 
+prd in API call) 
+trantype*  B / S  B -> BUY, S -> SELL 
+prctyp*  LMT / SL-LMT   
+ 
+ 
+blprc    Book loss Price applicable only if product is selected as H and B 
+(High Leverage and Bracket order )  
+rorgqty    Optional field. Application only for modify order, open order 
+quantity 
+fillshares    Optional field. Application only for modify order, quantity already 
+filled. 
+rorgprc    Optional field. Application only for modify order,  open order price 
+orgtrgprc    Optional field. Application only for modify order,  open order trigger 
+price 
+norenordno    Optional field. Application only for H or B order modification 
+ 
+ 
+ 46 
+
+
+### PAGE 43 ###
+
+ 
+ 
+ 
+snonum    Optional field. Application only for H or B order modification 
+rms_exch    Optional field. 
+rms_seg    Optional filed 
+rms_prd    Optional filed 
+ 
+ 
+Response Details : 
+ 
+Response data will be in json format with below fields. 
+ 
+Json Fields  Possible value  Description 
+stat  Ok or Not_Ok  Place order success or failure indication. 
+request_time    Response received time. 
+remarks    This field will be available only on success. 
+cash    Total credits available for order 
+marginused    Meaning changes with remarks as explained below. 
+ordermargin    Margin required for this order. 
+marginusedprev    Margin used excluding this order. 
+emsg    This will be present only if Order placement fails 
+ 
+Possible Response Cases for Order margin: 
+“remarks”:”Order Success” => Order will go through 
+    “cash” -> field will have total cash available with the user. 
+    “marginused” -> field will have Margin used if the user places order. 
+“remarks”:”Insufficient Balance” => Order will get rejected. 
+    “cash” -> field will have total cash available for this type of order. 
+   “marginused” -> field will have Additional margin required for this order to pass through. (Show caption 
+as Shortfall margin) 
+“remarks”:”Order Success : Eligible Sell:<total qty available>” => Order will go through 
+“remarks”:”Eligible Sell: <total qty available>” => Order will get rejected. 
+“remarks”:”No Holdings uploaded” => Order will get rejected, no holding for this symbol 
+“remarks”:”Invalid scrip” or "RED is under Reconciliation" => Order will get rejected. 
+“remarks”:”Squareoff Order” => Order will go through 
+ 
+ 
+ 47 
+
+
+### PAGE 44 ###
+
+ 
+ 
+ 
+ 
+ 
+Basket Margin 
+Request to be POSTed to uri :  /NorenWClientAPI/GetBasketMargin 
+ 
+Request Details : 
+Parameter Name  Possible value  Description 
+jData*    Should send json object with fields in below list 
+ 
+ 
+ 
+ 
+ 48 
+
+
+### PAGE 45 ###
+
+ 
+ 
+ 
+Json Fields  Possible value  Description 
+uid*    Logged in User Id 
+actid*    Login users account ID 
+exch*  NSE  / NFO / BSE / 
+MCX 
+Exchange (Select from ‘exarr’ Array provided in User Details 
+response) 
+tsym*    Unique id of contract on which order to be placed. (use url encoding 
+to avoid special char error for symbols like M&M) 
+qty*    Order Quantity  
+prc*    Order Price 
+trgprc    Only to be sent in case of SL / SL-M order. 
+prd*  C / M / H  Product name (Select from ‘prarr’ Array provided in User Details 
+response, and if same is allowed for selected, exchange. Show 
+product display name, for user to select, and send corresponding 
+prd in API call) 
+trantype*  B / S  B -> BUY, S -> SELL 
+prctyp*  LMT /  SL-LMT   
+ 
+ 
+blprc    Book loss Price applicable only if product is selected as H and B 
+(High Leverage and Bracket order )  
+rorgqty    Optional field. Application only for modify order, open order 
+quantity 
+fillshares    Optional field. Application only for modify order, quantity already 
+filled. 
+rorgprc    Optional field. Application only for modify order,  open order price 
+orgtrgprc    Optional field. Application only for modify order,  open order trigger 
+price 
+norenordno    Optional field. Application only for H or B order modification 
+snonum    Optional field. Application only for H or B order modification 
+basketlists    Optional field. Array of json objects. (object fields given in below 
+table) 
+ 
+ 
+NOTE :  "Out of basketlists, the parameter provided will be considered  as the first order." 
+ 
+ 
+ 49 
+
+
+### PAGE 46 ###
+
+ 
+ 
+ 
+ 
+Json Fields of 
+object in values 
+Array 
+Possible value  Description 
+exch*  NSE  / NFO / BSE / MCX  Exchange (Select from ‘exarr’ Array provided in User Details 
+response) 
+tsym*    Unique id of contract on which order to be placed. (use url 
+encoding to avoid special char error for symbols like M&M) 
+qty*    Order Quantity 
+prc*    Order Price 
+trgprc    Only to be sent in case of SL / SL-M order. 
+prd*  C / M / H  Product name (Select from ‘prarr’ Array provided in User 
+Details response, and if same is allowed for selected, 
+exchange. Show product display name, for user to select, and 
+send corresponding prd in API call) 
+trantype*  B / S  B -> BUY, S -> SELL 
+prctyp*  LMT / SL-LMT   
+ 
+Response Details : 
+ 
+Response data will be in json format with below fields. 
+ 
+Json Fields  Possible value  Description 
+stat  Ok or Not_Ok  Place order success or failure indication. 
+request_time    Response received time. 
+remarks    This field will contain rejection reason. 
+marginused    Total margin used. 
+marginusedtrade    Margin used after trade. 
+emsg    This will be present only if Order placement fails 
+ 
+ 
+ 
+calculation : The /Limits API must be called first in order to calculate the post-trade margin and basket 
+margin. Here, the marginused in the Limits API response will be [marginused(Limits)]. 
+ 
+1.not ticked - include existing margin 
+           post trade margin = marginusedtrade(GetBasketMargin) - marginused(Limits) 
+           basket margin     = marginused(GetBasketMargin) - marginused(Limits) 
+ 
+ 
+ 50 
+
+
+### PAGE 47 ###
+
+ 
+ 
+ 
+ 
+2.ticked - include existing margin 
+          post trade margin = marginusedtrade(GetBasketMargin)  
+           basket margin = marginused(GetBasketMargin)  
+ 
+Order Book 
+Request to be POSTed to uri :  /NorenWClientAPI/OrderBook 
+Request Details : 
+Parameter Name  Possible value  Description 
+jData*    Should send json object with fields in below list 
+ 
+Json Fields  Possible value  Description 
+uid*    Logged in User Id 
+prd  H / M / ...  Product name 
+ 
+Example:  
+curl https://apitest.kambala.co.in/NorenWClientAPI/OrderBook \ 
+    -d "jData={\"uid\":\"VIDYA\"}“ \ 
+ 
+Response Details : 
+ 
+Response data will be in json Array of objects with below fields in case of success. 
+ 
+ 
+ 
+ 51 
+
+
+### PAGE 48 ###
+
+ 
+ 
+ 
+Json Fields  Possible value  Description 
+stat  Ok or Not_Ok  Order book success or failure indication. 
+uid    Logged in User Id 
+actid    Login users account ID 
+exch    Exchange Segment 
+tsym    Trading symbol / contract on which order is placed. 
+norenordno    Noren Order Number 
+prc    Order Price 
+qty    Order Quantity 
+prd    Display product alias name, using prarr returned in user details. 
+s_prdt_ali    Product display name 
+status    Order status 
+trantype  B / S  Transaction type of the order 
+prctyp  LMT  / SL-LMT  Price type 
+fillshares    Total Traded Quantity of this order (will not be present if no trades 
+for this order) 
+avgprc    Average trade price of total traded quantity (will not be present if 
+no trades for this order)  
+rejreason    If order is rejected, reason in text form 
+exchordid    Exchange Order Number 
+cancelqty    Canceled quantity for order which is in status cancelled. 
+remarks    Any message Entered during order entry. 
+dscqty    Order disclosed quantity. 
+trgprc    Order trigger price 
+ret  DAY / IOC / EOS  Order validity 
+bpprc    Book Profit Price applicable only if product is selected as B (Bracket 
+order )  
+ 
+ 
+ 52 
+
+
+### PAGE 49 ###
+
+ 
+ 
+ 
+blprc    Book loss Price applicable only if product is selected as H and B 
+(High Leverage and Bracket order )  
+trailprc    Trailing Price applicable only if product is selected as H and B (High 
+Leverage and Bracket order )  
+amo    Yes / No 
+pp    Price precision 
+ti    Tick size 
+ls    Lot size 
+token    Contract Token 
+norentm    Noren time stamp 
+ordenttm    Order entry time 
+exch_tm    Exchange update time 
+Format: dd-mm-YYYY hh:MM:SS 
+snoordt    0 for profit leg and 1 for stoploss leg 
+snonum    This field will be present for product H and B; and only if it is 
+profit/sl order. 
+sno_fillid    SNO fill id 
+prcftr    Contract price factor (GN*PN)/(GD*PD), (used for order value 
+calculation) 
+mult    Contract price multiplier, (used for order value calculation) 
+dname    Broker specific contract display name, present only if applicable. 
+cname    Company Name 
+rqty    To be used in get margin from modify window. 
+rprc    To be used in get margin from modify window. 
+rtrgprc    To be used in get margin from modify window, for H/B products 
+only 
+rblprc    To be used in get margin from modify window, for H/B products 
+only 
+rorgqty    To be used in get margin from modify window. 
+rorgprc    To be used in get margin from modify window. 
+ 
+ 
+ 53 
+
+
+### PAGE 50 ###
+
+ 
+ 
+ 
+orgtrgprc    To be used in get margin from modify window, for H/B products 
+only 
+orgblprc    To be used in get margin from modify window, for H/B products 
+only 
+algo_name    Algo Name 
+add_ord_id    The "added_ord_id" response in the order book for the ICEBURG 
+order is "AQU_ID," and for the GTT order, it is "GTT Order id". 
+C    CUST_FIRM_C 
+brnchid    Region id 
+instname    Instrument Name 
+ordersource    Order Source 
+st_intrn     
+rejby    If an order is rejected, it will indicate from where it got rejected. 
+src_uid    Source User Id 
+ 
+Response data will be in json format with below fields in case of failure: 
+ 
+Json Fields  Possible value  Description 
+stat  Not_Ok  Order book failure indication. 
+request_time    Response received time. 
+emsg    Error message 
+ 
+Sample Success Output : 
+Success response : 
+[ 
+      { 
+“stat” : “Ok”, 
+“exch” : “NSE” , 
+“tsym” : “ACC-EQ” , 
+“norenordno” : “20062500000001223”, 
+               “prc” : “127230”, 
+               “qty” : “100”, 
+               “prd” : “C”, 
+“status”: “Open”, 
+               “trantype” : “B”, 
+ “prctyp” : ”LMT”, 
+               “fillshares” : “0”, 
+               “avgprc” : “0”, 
+“exchordid” : “250620000000343421”, 
+ 
+ 
+ 54 
+
+
+### PAGE 51 ###
+
+ 
+ 
+ 
+ “uid” : “VIDYA”,  
+ “actid” : “CLIENT1”, 
+ “ret” : “DAY”, 
+ “amo” : “Yes” 
+     }, 
+    { 
+“stat” : “Ok”, 
+“exch” : “NSE” , 
+“tsym” : “ABB-EQ” , 
+“norenordno” : “20062500000002543”, 
+               “prc” : “127830”, 
+            “qty” : “50”, 
+               “prd” : “C”, 
+“status”: “REJECT”, 
+              “trantype” : “B”, 
+“prctyp” : ”LMT”, 
+             “fillshares” : “0”, 
+             “avgprc” : “0”, 
+              “rejreason” : “Insufficient funds” 
+“uid” : “VIDYA”,  
+“actid” : “CLIENT1”, 
+“ret” : “DAY”, 
+“amo” : “No” 
+    } 
+] 
+ 
+Sample Failure Response : 
+{ 
+   "stat":"Not_Ok", 
+   "emsg":"Session Expired : Invalid Session Key" 
+} 
+Single Order History 
+Request to be POSTed to uri :  /NorenWClientAPI/SingleOrdHist 
+Request Details : 
+Parameter Name  Possible value  Description 
+jData*    Should send json object with fields in below list 
+ 
+Json Fields  Possible value  Description 
+uid*    Logged in User Id 
+norenordno*    Noren Order Number 
+ 
+● Example:  
+curl https://apitest.kambala.co.in/NorenWClientAPI/SingleOrdHist \ 
+    -d "jData={\"uid\":\"VIDYA\", \"norenordno\":\"20121300065716\" }“ \ 
+ 
+Response Details : 
+ 
+Response data will be in json Array of objects with below fields in case of success. 
+ 
+ 
+ 
+ 55 
+
+
+### PAGE 52 ###
+
+ 
+ 
+ 
+Json Fields  Possible value  Description 
+stat  Ok or Not_Ok  Order book success or failure indication. 
+exch    Exchange Segment 
+tsym    Trading symbol / contract on which order is placed. 
+norenordno    Noren Order Number 
+prc    Order Price 
+qty    Order Quantity 
+prd    Display product alias name, using prarr returned in user details. 
+s_prdt_ali    Product display name 
+status    Order status 
+rpt    Report Type (fill/complete etc) 
+trantype  B / S  Transaction type of the order 
+prctyp  LMT  Price type 
+fillshares    Total Traded Quantity of this order 
+avgprc    Average trade price of total traded quantity  
+rejreason    If order is rejected, reason in text form 
+exchordid    Exchange Order Number 
+cancelqty    Canceled quantity for order which is in status cancelled. 
+remarks    Any message Entered during order entry. 
+dscqty    Order disclosed quantity. 
+trgprc    Order trigger price 
+ret  DAY / IOC / EOS  Order validity 
+uid     
+actid     
+bpprc    Book Profit Price applicable only if product is selected as B (Bracket 
+order )  
+ 
+ 
+ 56 
+
+
+### PAGE 53 ###
+
+ 
+ 
+ 
+blprc    Book loss Price applicable only if product is selected as H and B 
+(High Leverage and Bracket order )  
+trailprc    Trailing Price applicable only if product is selected as H and B (High 
+Leverage and Bracket order )  
+amo    Yes / No 
+pp    Price precision 
+ti    Tick size 
+ls    Lot size 
+token    Contract Token 
+norentm     
+ordenttm     
+exch_tm    Format: dd-mm-YYYY hh:MM:SS 
+ 
+Response data will be in json format with below fields in case of failure: 
+ 
+Json Fields  Possible value  Description 
+stat  Not_Ok  Order book failure indication. 
+request_time    Response received time. 
+emsg    Error message 
+ 
+Sample Success Output : 
+ 
+[ 
+   { 
+       "stat": "Ok", 
+       "norenordno": "20121300065716", 
+       "uid": "DEMO1", 
+       "actid": "DEMO1", 
+       "exch": "NSE", 
+       "tsym": "ACCELYA-EQ", 
+       "qty": "180", 
+       "trantype": "B", 
+       "prctyp": "LMT", 
+       "ret": "DAY", 
+ 
+ 
+ 57 
+
+
+### PAGE 54 ###
+
+ 
+ 
+ 
+       "token": "7053", 
+       "pp": "2", 
+       "ls": "1", 
+       "ti": "0.05", 
+       "prc": "800.00", 
+       "avgprc": "800.00", 
+       "dscqty": "0", 
+       "prd": "M", 
+       "status": "COMPLETE", 
+       "rpt": "Fill", 
+       "ﬁllshares": "180", 
+       "norentm": "19:59:32 13-12-2020", 
+       "exch_tm": "01-01-1980 00:00:00", 
+       "remarks": "WC TEST Order", 
+       "exchordid": "6858" 
+   }, 
+   { 
+       "stat": "Ok", 
+       "norenordno": "20121300065716", 
+       "uid": "DEMO1", 
+       "actid": "DEMO1", 
+       "exch": "NSE", 
+       "tsym": "ACCELYA-EQ", 
+       "qty": "180", 
+       "trantype": "B", 
+       "prctyp": "LMT", 
+       "ret": "DAY", 
+       "token": "7053", 
+       "pp": "2", 
+       "ls": "1", 
+       "ti": "0.05", 
+       "prc": "800.00", 
+       "dscqty": "0", 
+       "prd": "M", 
+       "status": "OPEN", 
+       "rpt": "New", 
+       "norentm": "19:59:32 13-12-2020", 
+       "exch_tm": "01-01-1980 00:00:00", 
+       "remarks": "WC TEST Order", 
+ 
+ 
+ 58 
+
+
+### PAGE 55 ###
+
+ 
+ 
+ 
+       "exchordid": "6858" 
+   }, 
+   { 
+       "stat": "Ok", 
+       "norenordno": "20121300065716", 
+       "uid": "DEMO1", 
+       "actid": "DEMO1", 
+       "exch": "NSE", 
+       "tsym": "ACCELYA-EQ", 
+       "qty": "180", 
+       "trantype": "B", 
+       "prctyp": "LMT", 
+       "ret": "DAY", 
+       "token": "7053", 
+       "pp": "2", 
+       "ls": "1", 
+       "ti": "0.05", 
+       "prc": "800.00", 
+       "dscqty": "0", 
+       "prd": "M", 
+       "status": "PENDING", 
+       "rpt": "PendingNew", 
+       "norentm": "19:59:32 13-12-2020", 
+       "remarks": "WC TEST Order" 
+   }, 
+   { 
+       "stat": "Ok", 
+       "norenordno": "20121300065716", 
+       "uid": "DEMO1", 
+       "actid": "DEMO1", 
+       "exch": "NSE", 
+       "tsym": "ACCELYA-EQ", 
+       "qty": "180", 
+       "trantype": "B", 
+       "prctyp": "LMT", 
+       "ret": "DAY", 
+       "token": "7053", 
+       "pp": "2", 
+       "ls": "1", 
+ 
+ 
+ 59 
+
+
+### PAGE 56 ###
+
+ 
+ 
+ 
+       "ti": "0.05", 
+       "prc": "800.00", 
+       "prd": "M", 
+       "status": "PENDING", 
+       "rpt": "NewAck", 
+       "norentm": "19:59:32 13-12-2020", 
+       "remarks": "WC TEST Order" 
+   } 
+] 
+ 
+Single Order Status 
+Request to be POSTed to uri :  /NorenWClientAPI/SingleOrdStatus 
+Request Details : 
+Parameter Name  Possible value  Description 
+jData*    Should send json object with fields in below list 
+ 
+Json Fields  Possible value  Description 
+uid*    Logged in User Id 
+norenordno*    Noren Order Number 
+actid*    Account id for which order was placed 
+exch*    Exchange on which order was placed. 
+ 
+● Example:  
+curl https://apitest.kambala.co.in/NorenWClientAPI/SingleOrdStatus \ 
+    -d "jData={\"uid\":\"VIDYA\"}“ \ 
+ 
+Response Details : 
+ 
+Response data will be in json Array of objects with below fields in case of success (but only 1 object will be 
+there in json array, unlike single order history, this is kept to help easy migration from single order history to 
+single order status, where user is only interested in the status). 
+ 
+ 
+ 
+ 60 
+
+
+### PAGE 57 ###
+
+ 
+ 
+ 
+Json Fields  Possible value  Description 
+stat  Ok or Not_Ok  Order book success or failure indication. 
+exch    Exchange Segment 
+tsym    Trading symbol / contract on which order is placed. 
+norenordno    Noren Order Number 
+prc    Order Price 
+qty    Order Quantity 
+prd    Display product alias name, using prarr returned in user details. 
+s_prdt_ali    Product display name 
+status    Order status 
+rpt    Report Type (fill/complete etc) 
+trantype  B / S  Transaction type of the order 
+prctyp  LMT   Price type 
+fillshares    Total Traded Quantity of this order 
+avgprc    Average trade price of total traded quantity  
+rejreason    If order is rejected, reason in text form 
+exchordid    Exchange Order Number 
+cancelqty    Canceled quantity for order which is in status cancelled. 
+remarks    Any message Entered during order entry. 
+dscqty    Order disclosed quantity. 
+trgprc    Order trigger price 
+ret  DAY / IOC / EOS  Order validity 
+uid     
+actid     
+bpprc    Book Profit Price applicable only if product is selected as B (Bracket 
+order )  
+ 
+ 
+ 61 
+
+
+### PAGE 58 ###
+
+ 
+ 
+ 
+blprc    Book loss Price applicable only if product is selected as H and B 
+(High Leverage and Bracket order )  
+trailprc    Trailing Price applicable only if product is selected as H and B (High 
+Leverage and Bracket order )  
+amo    Yes / No 
+pp    Price precision 
+ti    Tick size 
+ls    Lot size 
+token    Contract Token 
+norentm    Noren time stamp 
+ordenttm     
+exch_tm    Format: dd-mm-YYYY hh:MM:SS 
+ 
+Response data will be in json format with below fields in case of failure: 
+ 
+Json Fields  Possible value  Description 
+stat  Not_Ok  Order book failure indication. 
+request_time    Response received time. 
+emsg    Error message 
+ 
+Sample success response: 
+[ 
+   { 
+       "stat": "Ok", 
+       "norenordno": "23072300000001", 
+       "kidid": "1", 
+       "uid": "TESTINV", 
+       "src_uid": "", 
+       "actid": "TESTINV", 
+       "exch": "NSE", 
+       "tsym": "ACC-EQ", 
+       "qty": "250", 
+ 
+ 
+ 62 
+
+
+### PAGE 59 ###
+
+ 
+ 
+ 
+       "trantype": "S", 
+       "prctyp": "LMT", 
+       "ret": "DAY", 
+       rejby": "RED", 
+       "pan": "AAAAA1234A", 
+       "ordersource": "WEB", 
+       "token": "22", 
+       "pp": "2", 
+       "ls": "1", 
+       "ti": "0.05", 
+       "prc": "2400.00", 
+       "dscqty": "0", 
+       "s_prdt_ali": "Regular", 
+       "prd": "M", 
+       "status": "REJECTED", 
+       "st_intrn": "REJECTED", 
+       "rpt": "Rejected", 
+       "ordenttm": "1690107153", 
+       "norentm": "15:42:33 23-07-2023", 
+       "remarks": "WC TEST Order", 
+       "rejreason": "RED:RULE:{Check circuit limit including square off order}Current:INR 2,400.00 LowerCircuit:INR 
+1,590.05 UpperCircuit:INR 1,943.35:NSE.ACC-EQ for C-TESTINV [DEFAULT]", 
+       "introp_exch": "EQT" 
+   } 
+] 
+ 
+Trade Book 
+Request to be POSTed to uri :  /NorenWClientAPI/TradeBook 
+Request Details : 
+Parameter Name  Possible value  Description 
+jData*    Should send json object with fields in below list 
+ 
+Json Fields  Possible value  Description 
+uid*    Logged in User Id 
+actid*    Account Id of logged in user 
+ 
+ 
+ 
+ 63 
+
+
+### PAGE 60 ###
+
+ 
+ 
+ 
+Example:  
+curl https://apitest.kambala.co.in/NorenWClientAPI/TradeBook \ 
+    -d "jData={\"uid\":\"VIDYA\", \“actid\”:\”DEMO1\”}“ \ 
+ 
+Response Details : 
+ 
+Response data will be in json Array of objects with below fields in case of success. 
+ 
+ 
+ 
+ 64 
+
+
+### PAGE 61 ###
+
+ 
+ 
+ 
+Json Fields  Possible value  Description 
+stat  Ok or Not_Ok  Order book success or failure indication. 
+exch    Exchange Segment 
+tsym    Trading symbol / contract on which order is placed. 
+norenordno    Noren Order Number 
+qty    Order Quantity 
+prd    Display product alias name, using prarr returned in user details. 
+s_prdt_ali    Product display name 
+trantype  B / S  Transaction type of the order 
+prctyp  LMT   Price type 
+fillshares    Total Traded Quantity of this order 
+avgprc    Average trade price of total traded quantity  
+exchordid    Exchange Order Number 
+remarks    Any message Entered during order entry. 
+ret  DAY / IOC / EOS  Order validity 
+uid     
+actid     
+pp    Price precision 
+ti    Tick size 
+ls    Lot size 
+cstFrm    Custom Firm 
+fltm    Fill Time 
+flid    Fill ID 
+flqty    Fill Qty 
+flprc    Fill Price 
+ 
+ 
+ 65 
+
+
+### PAGE 62 ###
+
+ 
+ 
+ 
+ordersource    Order Source 
+token    Token 
+norentm    Noren time stamp 
+exch_tm    Exchange update time 
+Format: dd-mm-YYYY hh:MM:SS 
+snoordt    0 for profit leg and 1 for stoploss leg 
+snonum    This field will be present for product H and B; and only if it is 
+profit/sl order. 
+remarks    Any message Entered during order entry. 
+prc    Order Price 
+mult    Multiplier 
+ 
+Response data will be in json format with below fields in case of failure: 
+ 
+Json Fields  Possible value  Description 
+stat  Not_Ok  Order book failure indication. 
+request_time    Response received time. 
+emsg    Error message 
+ 
+Sample Success Output : 
+ 
+[ 
+   { 
+       "stat": "Ok", 
+       "norenordno": "20121300065715", 
+       "uid": "GURURAJ", 
+       "actid": "GURURAJ", 
+       "exch": "NSE", 
+       "prctyp": "LMT", 
+       "ret": "DAY", 
+       "prd": "M", 
+       "ﬂid": "102", 
+       "ﬂtm": "01-01-1980 00:00:00", 
+       "trantype": "S", 
+ 
+ 
+ 66 
+
+
+### PAGE 63 ###
+
+ 
+ 
+ 
+       "tsym": "ACCELYA-EQ", 
+       "qty": "180", 
+       "token": "7053", 
+       "ﬁllshares": "180", 
+       "ﬂqty": "180", 
+       "pp": "2", 
+       "ls": "1", 
+       "ti": "0.05", 
+       "prc": "800.00", 
+       "ﬂprc": "800.00", 
+       "norentm": "19:59:32 13-12-2020", 
+       "exch_tm": "01-01-1980 00:00:00", 
+       "remarks": "WC TEST Order", 
+       "exchordid": "6857" 
+   }, 
+   { 
+       "stat": "Ok", 
+       "norenordno": "20121300065716", 
+       "uid": "GURURAJ", 
+       "actid": "GURURAJ", 
+       "exch": "NSE", 
+       "prctyp": "LMT", 
+       "ret": "DAY", 
+       "prd": "M", 
+       "ﬂid": "101", 
+       "ﬂtm": "01-01-1980 00:00:00", 
+       "trantype": "B", 
+       "tsym": "ACCELYA-EQ", 
+       "qty": "180", 
+       "token": "7053", 
+       "ﬁllshares": "180", 
+       "ﬂqty": "180", 
+       "pp": "2", 
+       "ls": "1", 
+       "ti": "0.05", 
+       "prc": "800.00", 
+       "ﬂprc": "800.00", 
+       "norentm": "19:59:32 13-12-2020", 
+       "exch_tm": "01-01-1980 00:00:00", 
+ 
+ 
+ 67 
+
+
+### PAGE 64 ###
+
+ 
+ 
+ 
+       "remarks": "WC TEST Order", 
+       "exchordid": "6858" 
+   } 
+] 
+Positions Book 
+Request to be POSTed to uri :  /NorenWClientAPI/PositionBook 
+Request Details : 
+Parameter Name  Possible value  Description 
+jData*    Should send json object with fields in below list 
+ 
+Json Fields  Possible value  Description 
+uid*    Logged in User Id 
+actid*    Account id of the logged in user. 
+ 
+Example:  
+curl https://apitest.kambala.co.in/NorenWClientAPI/PositionBook \ 
+    -d "jData={\"uid\":\"VIDYA\", \”actid\”:\”ACCT_1\”}“ \ 
+ 
+Response Details : 
+ 
+Response data will be in json format with Array of Objects with below fields in case of success. 
+ 
+ 
+ 
+ 68 
+
+
+### PAGE 65 ###
+
+ 
+ 
+ 
+Json Fields  Possible value  Description 
+stat  Ok or Not_Ok  Position book success or failure indication. 
+exch    Exchange segment 
+tsym    Trading symbol / contract. 
+token    Contract token 
+uid    User Id 
+actid    Account Id 
+prd    Product name to be shown. 
+s_prdt_ali    Product display name 
+netqty    Net Position quantity 
+netavgprc    Net position average price 
+dayavgprc    Day average price 
+daybuyqty    Day Buy Quantity 
+daysellqty    Day Sell Quantity 
+daybuyavgprc    Day Buy average price 
+daysellavgprc    Day buy average price 
+daybuyamt    Day Buy Amount 
+daysellamt    Day Sell Amount 
+cfbuyqty    Carry Forward Buy Quantity 
+cforgavgprc    Original Avg Price 
+cfsellqty    Carry Forward Sell Quantity 
+cfbuyavgprc    Carry Forward Buy average price 
+cfsellavgprc    Carry Forward Buy average price 
+cfbuyamt    Carry Forward Buy Amount 
+cfsellamt    Carry Forward Sell Amount 
+ 
+ 
+ 69 
+
+
+### PAGE 66 ###
+
+ 
+ 
+ 
+totbuyamt    Total Buy Amount 
+totsellamt    Total Sell Amount 
+totbuyavgprc    Total Buy Avg Price 
+totsellavgprc    Total Sell Avg Price 
+lp    LTP 
+rpnl    RealizedPNL 
+urmtom    UnrealizedMTOM. 
+(Can be recalculated in LTP update : 
+ = netqty * (lp from web socket - netavgprc) * prcftr  
+ 
+bep    Break even price 
+openbuyqty    Open Buy Quantity 
+opensellqty    Open Sell Quantity 
+openbuyamt    Open Buy Amount 
+opensellamt    Open Sell Amount 
+openbuyavgprc    Open Buy Average Price 
+opensellavgprc    Open Sell Average Price 
+mult    Contract price multiplier, (used for order value calculation) 
+pp    Price precision 
+prcftr    gn*pn/(gd*pd).  
+ti    Tick size 
+ls    Lot size 
+instname    Instrument Name 
+upldprc    Upload price 
+netupldprc    Net Upload Price 
+request_time    This will be present only in a failure response. 
+dname    Broker specific contract display name, present only if applicable. 
+ 
+ 
+ 70 
+
+
+### PAGE 67 ###
+
+ 
+ 
+ 
+cname    Company Name. 
+ 
+Note: calculation of MTM and PnL 
+1.ActualUnrealizedMtoM= netqty(in weights) * prcftr * mult * (LTP - avgprc)  
+           For MTM, avgprc = netavgprc; 
+           For PnL,  avgprc = netupldprc; if netupldprc = 0 then   avgprc = netavgprc; 
+ 
+2.NetBuyQty = daybuyqty + cfbuyqty; 
+3.NetSellQty = daysellqty + cfsellqty; 
+ 
+4.ActualSellAvgPrice  
+        if (NetSellQty != 0) { 
+              ActualSellAvgPrice =  ((daysellamt / mult) +(upldprc * prcftr *  cfsellqty)) /NetSellQty; 
+                                        } else 
+              ActualSellAvgPrice =  0.0; 
+ 
+ 
+5.ActualBuyAvgPrice 
+        if (NetBuyQty != 0) { 
+            ActualBuyAvgPrice =  ((daybuyamt / mult) +(upldprc * prcftr * cfbuyqty)) /NetBuyQty; 
+                                       } else 
+            ActualBuyAvgPrice = 0.0; 
+ 
+[Don’t use  ActualSellAvgPrice and ActualBuyAvgPrice for  display purpose since it used for ActualBookedPNL 
+calculation  if required for display purpose  then use below formula 
+ActualSellAvgPrice =  ((daysellamt / mult) +(upldprc * prcftr *  cfsellqty)) /(NetSellQty*prcftr); 
+ActualBuyAvgPrice =  ((daybuyamt / mult) +(upldprc * prcftr * cfbuyqty)) /(NetBuyQty*prcftr);] 
+ 
+ 
+6.ActualBookedPNL  
+         if (netqty(in weights) > 0) { 
+               ActualBookedPNL = (ActualSellAvgPrice - ActualBuyAvgPrice) * NetSellQty * mult; 
+                                                 } else { 
+               ActualBookedPNL = (ActualSellAvgPrice - ActualBuyAvgPrice) * NetBuyQty * mult; 
+                                } 
+7.MTM =rpnl +  ActualUnrealizedMtoM 
+ 
+8.PnL=ActualBookedPNL + ActualUnrealizedMtoM 
+ 
+ 
+ 
+Response data will be in json format with below fields in case of failure: 
+ 
+Json Fields  Possible value  Description 
+stat  Not_Ok  Position book request failure indication. 
+request_time    Response received time. 
+emsg    Error message 
+ 
+ 
+ 
+ 71 
+
+
+### PAGE 68 ###
+
+ 
+ 
+ 
+ 
+Sample Success Response : 
+[ 
+     { 
+"stat":"Ok", 
+"uid":"POORNA", 
+"actid":"POORNA", 
+"exch":"NSE", 
+"tsym":"ACC-EQ", 
+"prarr":"C", 
+"pp":"2", 
+"ls":"1", 
+"ti":"5.00", 
+"mult":"1", 
+"prcftr":"1.000000", 
+"daybuyqty":"2", 
+"daysellqty":"2", 
+"daybuyamt":"2610.00", 
+"daybuyavgprc":"1305.00", 
+"daysellamt":"2610.00", 
+"daysellavgprc":"1305.00", 
+"cfbuyqty":"0", 
+"cfsellqty":"0", 
+"cfbuyamt":"0.00", 
+"cfbuyavgprc":"0.00", 
+"cfsellamt":"0.00", 
+"cfsellavgprc":"0.00", 
+"openbuyqty":"0", 
+"opensellqty":"23", 
+"openbuyamt":"0.00", 
+"openbuyavgprc":"0.00", 
+"opensellamt":"30015.00", 
+"opensellavgprc":"1305.00", 
+"netqty":"0", 
+"netavgprc":"0.00", 
+"lp":"0.00", 
+"urmtom":"0.00", 
+"rpnl":"0.00", 
+"cforgavgprc":"0.00" 
+ 
+    } 
+] 
+ 
+Sample Failure Response : 
+{ 
+    "stat":"Not_Ok", 
+    "request_time":"14:14:11 26-05-2020", 
+    "emsg":"Error Occurred : 5 \"no data\"" 
+} 
+ 
+Interop Positions Book 
+Request to be POSTed to uri :  /NorenWClientAPI/InteropPositionBook 
+Request Details : 
+ 
+ 
+ 72 
+
+
+### PAGE 69 ###
+
+ 
+ 
+ 
+Parameter Name  Possible value  Description 
+jData*    Should send json object with fields in below list 
+ 
+Json Fields  Possible value  Description 
+actid*    Account id of the logged in user. 
+ 
+Example:  
+curl https://apitest.kambala.co.in/NorenWClientAPI/InteropPositionBook \ 
+    -d "jData={ \”actid\”:\”ACCT_1\”}“ \ 
+ 
+Response Details : 
+ 
+Response data will be in json format with Array of Objects with below fields in case of success. 
+ 
+ 
+ 
+ 73 
+
+
+### PAGE 70 ###
+
+ 
+ 
+ 
+Json Fields  Possible value  Description 
+stat  Ok or Not_Ok  Position book success or failure indication. 
+exch    Exchange segment 
+tsym    Trading symbol / contract. 
+token    Contract token 
+uid    User Id 
+actid    Account Id 
+prd    Product name to be shown. 
+s_prdt_ali    Product display name 
+daybuyqty    Day Buy Quantity 
+daysellqty    Day Sell Quantity 
+daybuyamt    Day Buy Amount 
+daysellamt    Day Sell Amount 
+cfbuyqty    Carry Forward Buy Quantity 
+cfsellqty    Carry Forward Sell Quantity 
+cfbuyamt    Carry Forward Buy Amount 
+cfsellamt    Carry Forward Sell Amount 
+openbuyqty    Open Buy Quantity 
+opensellqty    Open Sell Quantity 
+openbuyamt    Open Buy Amount 
+opensellamt    Open Sell Amount 
+instname    Instrument Name 
+upload_prc    Upload Price 
+buyavgprc    Buy Average Price 
+ [ (daybuyamt + cfbuyamt) / (daybuyqty + cfbuyqty) ] 
+sellavgprc    Sell Average Price 
+ [ (daysellamt + cfsellamt) / (daysellqty + cfsellqty) ] 
+ 
+ 
+ 74 
+
+
+### PAGE 71 ###
+
+ 
+ 
+ 
+rpnl    Realized panel  
+netqty    Net Quantity  
+[ daybuyqty + cfbuyqty - daysellqty - cfsellqty ] 
+totbuyamt    Total Buy Amount 
+totsellamt    Total Sell Amount 
+totbuyavgprc    Total Buy Avg Price 
+totsellavgprc    Total Sell Avg Price 
+openbuyavgprc    Open Buy Average Price 
+opensellavgprc    Open Sell Average Price 
+cfbuyavgprc    Carry Forward Buy average price 
+cfsellavgprc    Carry Forward Buy average price 
+child_orders    Array Object ,Details given below 
+netavgprc    Net Average Price 
+mult    Multiplier 
+urmtom    Unrealized mtom 
+prcftr    Price Factor 
+ 
+child_orders Obj format 
+ 
+ 
+ 75 
+
+
+### PAGE 72 ###
+
+ 
+ 
+ 
+Json Fields  Possible value  Description 
+exch    Exchange segment 
+token    Contract token 
+daybuyqty    Day Buy Quantity 
+daysellqty    Day Sell Quantity 
+daybuyamt    Day Buy Amount 
+daysellamt    Day Sell Amount 
+cfbuyqty    CF Buy Quantity 
+cfsellqty    CF Sell Quantity 
+cfbuyamt    CF Buy Amount 
+cfsellamt    CF Sell Amount 
+openbuyqty    Open Buy Quantity 
+opensellqty    Open Sell Quantity 
+openbuyamt    Open Buy Amount 
+opensellamt    Open Sell Amount 
+upload_prc    Upload Price 
+totbuyamt    Total Buy Amount 
+totsellamt    Total Sell Amount 
+totbuyavgprc    Total Buy Avg Price 
+totsellavgprc    Total Sell Avg Price 
+openbuyavgprc    Open Buy Average Price 
+opensellavgprc    Open Sell Average Price 
+cfbuyavgprc    Carry Forward Buy average price 
+cfsellavgprc    Carry Forward Buy average price 
+netupldprc    Net Upload Price 
+ 
+ 
+ 
+ 76 
+
+
+### PAGE 73 ###
+
+ 
+ 
+ 
+Response data will be in json format with below fields in case of failure: 
+ 
+Json Fields  Possible value  Description 
+stat  Not_Ok  Interop Position book request failure indication. 
+request_time    Response received time. 
+emsg    Error message 
+ 
+ 
+ 
+Sample Success Response : 
+[ 
+      {   
+"stat":"Ok", 
+"actid":"TESTINV1", 
+"exch":"EQT", 
+"token":"PRAKASH", 
+"prd":"I", 
+"openbuyqty":"00", 
+"opensellqty":"09", 
+"openbuyamt":"00", 
+"opensellamt":"54000", 
+"daybuyqty":"01", 
+"daysellqty":"01", 
+"daybuyamt":"6000", 
+"daysellamt":"6000", 
+"cfbuyqty":"00", 
+"cfsellqty":"00", 
+"cfbuyamt":"00", 
+"cfsellamt":"6000", 
+ 
+"child_orders": 
+[ 
+        {  
+ "exch":"NSE", 
+  "token":"2708", 
+"openbuyqty":"00", 
+"opensellqty":"09", 
+"openbuyamt":"00", 
+"opensellamt":"54000", 
+"daybuyqty":"00", 
+"daysellqty":"01", 
+"daybuyamt":"00", 
+"daysellamt":"6000", 
+"cfbuyqty":"00", 
+"cfsellqty":"00", 
+"cfbuyamt":"00", 
+"cfsellamt":"00", 
+"upload_prc":"00" 
+       }, 
+ 
+ 
+ 77 
+
+
+### PAGE 74 ###
+
+ 
+ 
+ 
+       { 
+"exch":"BSE", 
+"token":"506022", 
+"openbuyqty":"00", 
+"opensellqty":"00", 
+"openbuyamt":"00", 
+"opensellamt":"00", 
+"daybuyqty":"01", 
+"daysellqty":"00", 
+"daybuyamt":"6000", 
+"daysellamt":"00", 
+"cfbuyqty":"00", 
+"cfsellqty":"00", 
+"cfbuyamt":"00", 
+"cfsellamt":"00", 
+"upload_prc":"00" 
+      } 
+                              ] 
+                } 
+] 
+ 
+Sample Failure Response : 
+{ 
+    "stat":"Not_Ok", 
+    "request_time":"14:14:11 26-05-2020", 
+    "emsg":"Error Occurred : 5 \"no data\"" 
+} 
+ 
+Product Conversion 
+Request to be POSTed to uri :  /NorenWClientAPI/ProductConversion 
+ 
+Request Details : 
+Parameter Name  Possible value  Description 
+jData*    Should send json object with fields in below list 
+ 
+ 
+ 
+ 78 
+
+
+### PAGE 75 ###
+
+ 
+ 
+ 
+Json Fields  Possible value  Description 
+exch*    Exchange 
+tsym*    Unique id of contract on which order was placed. Can’t be modified, 
+must be the same as that of original order. (use url encoding to 
+avoid special char error for symbols like M&M) 
+qty*    Quantity to be converted. 
+uid*    User id of the logged in user. 
+actid*    Account id 
+prd*    Product to which the user wants to convert position.  
+prevprd*    Original product of the position. 
+trantype*    Transaction type 
+postype*  Day / CF  Converting Day or Carry forward position 
+ordersource  MOB   For Logging 
+ 
+Response Details : 
+ 
+Response data will be in json format with below fields. 
+ 
+Json Fields  Possible value  Description 
+stat  Ok or Not_Ok  Position conversion success or failure indication. 
+emsg    This will be present only if Position conversion fails. 
+ 
+Sample Success Response : 
+{ 
+   "request_time":"10:52:12 02-06-2020", 
+   "stat":"Ok" 
+} 
+ 
+Sample Failure Response : 
+{ 
+   "stat":"Not_Ok", 
+   "emsg":"Invalid Input :  Invalid Position Type" 
+} 
+ 
+ 
+ 79 
+
+
+### PAGE 76 ###
+
+ 
+ 
+ 
+ 
+GetBasketOptSeq 
+Request to be POSTed to uri :  /NorenWClient/GetBasketOptSeq 
+Request Details : 
+Parameter Name  Possible value  Description 
+jData*    Should send json object with fields in below list 
+ 
+Json Fields  Possible value  Description 
+uid*    Use id of log in user. 
+actid*    Account id of logged in user. 
+exch*    Account id  
+trantype*  B / S  B -> BUY, S -> SELL 
+prd*  M/I/C/F/H/B  Product Name 
+tsym*    Trading Symbol 
+qty*    Order Quantity  
+prc*    Order Price 
+prctyp*  LMT /  SL-LMT / DS 
+/ 2L / 3L   
+basketlists    Optional field. Array of json objects. (object fields given in below 
+table) 
+NOTE :  "Out of basketlists, the parameter provided will be considered  as the first order." 
+ 
+ 
+ 
+ 80 
+
+
+### PAGE 77 ###
+
+ 
+ 
+ 
+Json Fields of 
+object in values 
+Array 
+Possible value  Description 
+exch*  NSE  / NFO / BSE / MCX  Exchange (Select from ‘exarr’ Array provided in User Details 
+response) 
+tsym*    Unique id of contract on which order to be placed. (use url 
+encoding to avoid special char error for symbols like M&M) 
+qty*    Order Quantity 
+prc*    Order Price 
+prd*  C / M / H  Product name (Select from ‘prarr’ Array provided in User 
+Details response, and if same is allowed for selected, 
+exchange. Show product display name, for user to select, and 
+send corresponding prd in API call) 
+trantype*  B / S  B -> BUY, S -> SELL 
+prctyp*  LMT / SL-LMT   
+Example:  
+curl https://apitest.kambala.co.in/NorenWClientAPI/GetBasketOptSeq \ 
+      -d "jData={\"uid\":\"VIDYA\", \"actid\":\"CLIENT1\", \"exch\":\"NSE\", \"trantype\":\"S\", 
+\"prctyp\":\"LMT\", \"prd\":\"M\", \"tsym\":\"FINNIFTY27FEB25C13500\", \"qty\":\"25\", 
+\"prc\":\"0\",\"basketlists\":\"[\"{\"exch\":\"NFO\",\"trantype\":\"B\",\"prctyp\":\"LMT\",\"prd\":\"M\",\
+"qty\":\"25\",\"prc\":\"0\",\"tsym\":\"FINNIFTY27FEB25C13500\"}\",{\"exch\":\"NFO\",\"trantype\":\"B\
+",\"prctyp\":\"LMT\",\"prd\":\"M\",\"qty\":\"25\",\"prc\":\"0\",\"tsym\":\"FINNIFTY27FEB25C13500\"}\"
+}“ \ 
+\Response Details : 
+ 
+Response data will be in json format with below fields. 
+ 
+ 
+ 
+ 81 
+
+
+### PAGE 78 ###
+
+ 
+ 
+ 
+Json Fields  Possible value  Description 
+stat  Ok or Not_Ok  Place order success or failure indication. 
+request_time    Response received time. 
+remarks    This field will contain rejection reasons. 
+marginused    Total margin used. 
+marginusedtrade    Margin used after trade. 
+marginusedprev    Margin used excluding this order. 
+msg_str    msg_sequence of Leg entered in Basket. 
+bkt_mar_list    Basket margin list, array of objects as defined below, 
+emsg    This will be present only if Order placement fails 
+ 
+ 
+ 
+bkt_mar_list object: 
+Json Fields of 
+object in values 
+Array 
+Possible value  Description 
+bkt_mar    Basket margine for each order  
+ 
+ 
+ 
+Sample Success Response : 
+ 
+{ 
+    "request_time": "10:34:42 20-02-2025", 
+    "stat": "Ok", 
+    "marginused": "31152740.27", 
+    "marginusedtrade": "6234185.41", 
+    "marginusedprev": "0.00", 
+    "msg_str": [ 
+        "1", 
+        "0", 
+        "2" 
+    ], 
+    "bkt_mar_list": [ 
+        { 
+            "bkt_mar": "24965945.14" 
+        }, 
+        { 
+            "bkt_mar": "24965945.14" 
+        }, 
+ 
+ 
+ 82 
+
+
+### PAGE 79 ###
+
+ 
+ 
+ 
+        { 
+            "bkt_mar": "31152740.27" 
+        } 
+    ] 
+} 
+ 
+Sample Failure Response : 
+ 
+{ 
+    "stat": "Not_Ok", 
+    "emsg": "Session Expired : Invalid Session Key" 
+} 
+ 
+ 
+ 
+Holdings and Limits 
+Holdings 
+Request to be POSTed to uri :  /NorenWClientAPI/Holdings 
+Request Details : 
+Parameter Name  Possible value  Description 
+jData*    Should send json object with fields in below list 
+ 
+Json Fields  Possible value  Description 
+uid*    Logged in User Id 
+actid*    Account id of the logged in user. 
+prd*    Product name 
+ 
+Response Details : 
+Response data will be in json format with the below fields in case of Success: 
+ 
+ 
+ 
+ 83 
+
+
+### PAGE 80 ###
+
+ 
+ 
+ 
+Json Fields  Possible value  Description 
+stat  Ok or Not_Ok  Holding request success or failure indication. 
+exch_tsym    Array of objects exch_tsym objects as defined below. 
+holdqty    Holding quantity 
+dpqty    DP Holding quantity 
+npoadqty    Non Poa display quantity 
+colqty    Collateral quantity 
+benqty    Beneficiary quantity 
+unplgdqty    Unpledged quantity 
+brkcolqty    Broker Collateral 
+btstqty    BTST quantity 
+btstcolqty    BTST Collateral quantity 
+usedqty    Holding used today 
+upldprc    Average price uploaded along with holdings 
+hair_cut    Hair Cut 
+prd    Product 
+s_prdt_ali    Product display name 
+trdqty    Trade Quantity 
+sell_amt    Sell Amount 
+npoadt1qty    nonpoa display t1 qty 
+brk_hair_cut    Broker HairCut 
+epi_done_qty    EPI done Quantity 
+combrkcollqty    Com Broker Collateral Quantiry 
+eqtbrkcollqty    Eqt Broker Collateral Quantity 
+derbrkcollqty    Derivative Broker Collateral Quantity 
+fxbrkcollqty    Fx Broker Collateral Quantity 
+ 
+ 
+ 84 
+
+
+### PAGE 81 ###
+
+ 
+ 
+ 
+Notes: 
+Valuation : btstqty + holdqty + brkcolqty + unplgdqty + benqty + Max(npoadqty, dpqty) - usedqty 
+Salable: btstqty + holdqty + unplgdqty + benqty + dpqty - usedqty 
+ 
+ 
+Exch_tsym object: 
+Json Fields of 
+object in values 
+Array 
+Possible value  Description 
+exch  NSE, BSE, NFO ...  Exchange  
+tsym    Trading symbol of the scrip (contract) 
+token    Token of the scrip (contract) 
+pp    Price precision 
+ti    Tick size 
+ls    Lot size 
+lp    LTP [#] 
+cname    Company Name 
+dname    Display Name 
+ 
+Response data will be in json format with below fields in case of failure: 
+ 
+Json Fields  Possible value  Description 
+stat  Not_Ok  Position book request failure indication. 
+request_time    Response received time. 
+emsg    Error message 
+ 
+[#]  - By Default disabled and Enabled on request basis. 
+ 
+Sample Success Response : 
+[  
+      { 
+            "stat":"Ok",  
+            "exch_tsym":[ 
+                                      { 
+                                            "exch":"NSE", 
+                                            "token":"13", 
+           "tsym":"ABB-EQ" 
+   } 
+         ], 
+            "holdqty":"2000000", 
+ 
+ 
+ 85 
+
+
+### PAGE 82 ###
+
+ 
+ 
+ 
+            "colqty":"200", 
+            "btstqty":"0", 
+            "btstcolqty":"0", 
+            "usedqty":"0", 
+            "upldprc" : "1800.00" 
+      }, 
+      { 
+"stat":"Ok", 
+"exch_tsym":[ 
+   { 
+          "exch":"NSE", 
+          "token":"22", 
+          "tsym":"ACC-EQ" 
+   } 
+         ], 
+"holdqty":"2000000", 
+"colqty":"200", 
+"btstqty":"0", 
+"btstcolqty":"0", 
+"usedqty":"0", 
+               "upldprc" : "1400.00" 
+        } 
+] 
+ 
+Sample Failure Response : 
+{ 
+   "stat":"Not_Ok", 
+   "emsg":"Invalid Input : Missing uid or actid or prd." 
+} 
+Limits 
+Request to be POSTed to uri :  /NorenWClientAPI/Limits 
+Request Details : 
+Parameter Name  Possible value  Description 
+jData*    Should send json object with fields in below list 
+ 
+Json Fields  Possible value  Description 
+uid*    Logged in User Id 
+actid*    Account id of the logged in user. 
+prd    Product name 
+s_prdt_ali    Product display name 
+seg  EQT/DER/FX/COM  Segment 
+exch    Exchange 
+ 
+Response Details : 
+ 
+ 
+ 86 
+
+
+### PAGE 83 ###
+
+ 
+ 
+ 
+Response data will be in json format with below fields. 
+ 
+ 
+ 
+ 87 
+
+
+### PAGE 84 ###
+
+ 
+ 
+ 
+Json Fields  Possible value  Description 
+stat  Ok or Not_Ok  Limits request success or failure indication. 
+actid    Account id 
+prd    Product name 
+seg  EQT/DER/FX/C
+OM 
+Segment 
+exch    Exchange 
+-------------------------Cash Primary Fields------------------------------- 
+cash    Cash Margin available 
+payin    Total Amount transferred using Payins today  
+payout    Total amount requested for withdrawal today 
+remarks_amt    Remarks amount 
+remarks_text    Remarks Text 
+cac_daycash    CAC Day Cash 
+-------------------------Cash Additional Fields------------------------------- 
+brkcollamt    Prevalued Collateral Amount 
+unclearedcash    Uncleared Cash (Payin through cheques) 
+daycash    Additional leverage amount / Amount added to handle system 
+errors - by broker.  
+-------------------------Margin Utilized---------------------------------- 
+marginused    Total margin / fund used today 
+mtomcurper    Mtom current percentage 
+-------------------------Margin Used components--------------------- 
+cbu    CAC Buy used 
+csc    CAC Sell Credits 
+rpnl    Current realized PNL 
+unmtom    Current unrealized mtom 
+ 
+ 
+ 88 
+
+
+### PAGE 85 ###
+
+ 
+ 
+ 
+marprt    Covered Product margins 
+span    Span used 
+expo    Exposure margin 
+premium    Premium used 
+varelm    Var Elm Margin 
+grexpo    Gross Exposure 
+greexpo_d    Gross Exposure derivative 
+scripbskmar    Scrip basket margin 
+addscripbskmrg    Additional scrip basket margin 
+brokerage    Brokerage amount 
+collateral    Collateral calculated based on uploaded holdings 
+cash_coll    Cash Collateral 
+grcoll    Valuation of uploaded holding pre haircut 
+-------------------------Additional Risk Limits--------------------------- 
+turnoverlmt     
+pendordvallmt     
+-------------------------Additional Risk Indicators--------------------------- 
+turnover    Turnover 
+pendordval    Pending Order value 
+-------------------------Margin used detailed breakup fields------------------------- 
+rzpnl_e_i    Current realized PNL (Equity Intraday) 
+rzpnl_e_m    Current realized PNL (Equity Margin) 
+rzpnl_e_c    Current realized PNL (Equity Cash n Carry) 
+rzpnl_d_i    Current realized PNL (Derivative Intraday) 
+rzpnl_d_m    Current realized PNL (Derivative Margin) 
+ 
+ 
+ 89 
+
+
+### PAGE 86 ###
+
+ 
+ 
+ 
+rzpnl_f_i    Current realized PNL (FX Intraday) 
+rzpnl_f_m    Current realized PNL (FX Margin) 
+rzpnl_c_i    Current realized PNL (Commodity Intraday) 
+rzpnl_c_m    Current realized PNL (Commodity Margin) 
+uzpnl_e_i    Current unrealized MTOM (Equity Intraday) 
+uzpnl_e_m    Current unrealized MTOM (Equity Margin) 
+uzpnl_e_c    Current unrealized MTOM (Equity Cash n Carry) 
+uzpnl_d_i    Current unrealized MTOM (Derivative Intraday) 
+uzpnl_d_m    Current unrealized MTOM (Derivative Margin) 
+uzpnl_f_i    Current unrealized MTOM (FX Intraday) 
+uzpnl_f_m    Current unrealized MTOM (FX Margin) 
+uzpnl_c_i    Current unrealized MTOM (Commodity Intraday) 
+uzpnl_c_m    Current unrealized MTOM (Commodity Margin) 
+span_d_i    Span Margin (Derivative Intraday) 
+span_d_m    Span Margin (Derivative Margin) 
+span_f_i    Span Margin (FX Intraday) 
+span_f_m    Span Margin (FX Margin) 
+span_c_i    Span Margin (Commodity Intraday) 
+span_c_m    Span Margin (Commodity Margin) 
+expo_d_i    Exposure Margin (Derivative Intraday) 
+expo_d_m    Exposure Margin (Derivative Margin) 
+expo_f_i    Exposure Margin (FX Intraday) 
+expo_f_m    Exposure Margin (FX Margin) 
+expo_c_i    Exposure Margin (Commodity Intraday) 
+expo_c_m    Exposure Margin (Commodity Margin) 
+ 
+ 
+ 90 
+
+
+### PAGE 87 ###
+
+ 
+ 
+ 
+premium_d_i    Option premium (Derivative Intraday) 
+premium_d_m    Option premium (Derivative Margin) 
+premium_f_i    Option premium (FX Intraday) 
+premium_f_m    Option premium (FX Margin) 
+premium_c_i    Option premium (Commodity Intraday) 
+premium_c_m    Option premium (Commodity Margin) 
+varelm_e_i    Var Elm (Equity Intraday) 
+varelm_e_m    Var Elm (Equity Margin) 
+varelm_e_c    Var Elm (Equity Cash n Carry) 
+marprt_e_h    Covered Product margins (Equity High leverage) 
+marprt_e_b    Covered Product margins (Equity Bracket Order) 
+marprt_d_h    Covered Product margins (Derivative High leverage) 
+marprt_d_b    Covered Product margins (Derivative Bracket Order) 
+marprt_f_h    Covered Product margins (FX High leverage) 
+marprt_f_b    Covered Product margins (FX Bracket Order) 
+marprt_c_h    Covered Product margins (Commodity High leverage) 
+marprt_c_b    Covered Product margins (Commodity Bracket Order) 
+scripbskmar_e_i    Scrip basket margin (Equity Intraday) 
+scripbskmar_e_m    Scrip basket margin (Equity Margin) 
+scripbskmar_e_c    Scrip basket margin (Equity Cash n Carry) 
+addscripbskmrg_d_i    Additional scrip basket margin (Derivative Intraday) 
+addscripbskmrg_d_
+m 
+  Additional scrip basket margin (Derivative Margin) 
+addscripbskmrg_f_i    Additional scrip basket margin (FX Intraday) 
+addscripbskmrg_f_
+m 
+  Additional scrip basket margin (FX Margin) 
+addscripbskmrg_c_i    Additional scrip basket margin (Commodity Intraday) 
+ 
+ 
+ 91 
+
+
+### PAGE 88 ###
+
+ 
+ 
+ 
+addscripbskmrg_c_
+m 
+  Additional scrip basket margin (Commodity Margin) 
+brkage_e_i    Brokerage (Equity Intraday) 
+brkage_e_m    Brokerage (Equity Margin) 
+brkage_e_c    Brokerage (Equity CAC) 
+brkage_e_h    Brokerage (Equity High Leverage) 
+brkage_e_b    Brokerage (Equity Bracket Order) 
+brkage_d_i    Brokerage (Derivative Intraday) 
+brkage_d_m    Brokerage (Derivative Margin) 
+brkage_d_h    Brokerage (Derivative High Leverage) 
+brkage_d_b    Brokerage (Derivative Bracket Order) 
+brkage_f_i    Brokerage (FX Intraday) 
+brkage_f_m    Brokerage (FX Margin) 
+brkage_f_h    Brokerage (FX High Leverage) 
+brkage_f_b    Brokerage (FX Bracket Order) 
+brkage_c_i    Brokerage (Commodity Intraday) 
+brkage_c_m    Brokerage (Commodity Margin) 
+brkage_c_h    Brokerage (Commodity High Leverage) 
+brkage_c_b    Brokerage (Commodity Bracket Order) 
+peak_mar    Peak margin used by the client 
+mr_eqt_u    MR equity used 
+mr_der_u    MR derivatives used 
+mr_fx_u    MR fx used 
+mr_com_u    MR commodity used 
+mr_sell    MR sell credit 
+mr_t1sell    MR t1 sell credit 
+ 
+ 
+ 92 
+
+
+### PAGE 89 ###
+
+ 
+ 
+ 
+mr_eqt_a    MR equity allocated 
+mr_der_a    MR derivatives allocated 
+mr_fx_a    MR fx allocated 
+mr_com_a    MR commodity allocated 
+request_time    This will be present only in a successful response. 
+emsg    This will be present only in a failure response. 
+prfname    profile name 
+aux_daycash    aux daylong cash 
+aux_brkcollamt    aux broker collateral 
+aux_unclearedcash    aux uncleared cash 
+blk_amt    block amt 
+ 
+Sample Success Response : 
+{ 
+    "request_time":"18:07:31 29-05-2020", 
+"stat":"Ok", 
+"cash":"1500000000000000.00", 
+"payin":"0.00", 
+"payout":"0.00", 
+"brkcollamt":"0.00", 
+"unclearedcash":"0.00", 
+"daycash":"0.00", 
+"turnoverlmt":"50000000000000.00", 
+"pendordvallmt":"2000000000000000.00", 
+"turnover":"3915000.00", 
+"pendordval":"2871000.00", 
+"marginused":"3945540.00", 
+"mtomcurper":"0.00", 
+"urmtom":"30540.00", 
+"grexpo":"3915000.00", 
+"uzpnl_e_i":"15270.00", 
+"uzpnl_e_m":"61080.00", 
+"uzpnl_e_c":"-45810.00" 
+} 
+ 
+Sample Failure Response : 
+{ 
+   "stat":"Not_Ok", 
+   "emsg":"Server Timeout :  " 
+} 
+ 
+Calculation : 
+1.Available Margin=total -marginused; 
+where total = cash +payin+payout+daycash+unclearedcash+brkcollamt+collateral+aux_brkcollamt; 
+ 
+ 
+ 
+ 93 
+
+
+### PAGE 90 ###
+
+ 
+ 
+ 
+2.Total Credits=cash +payin+payout+daycash+unclearedcash+brkcollamt+collateral+aux_brkcollamt; 
+ 
+3.Utilization =  marginused; 
+ 
+ 
+Get Sub Limits 
+Request to be POSTed to uri :  /NorenWClientAPI/GetSubLimits 
+Request Details : 
+Parameter Name  Possible value  Description 
+jData*    Should send json object with fields in below list 
+ 
+Json Fields  Possible value  Description 
+uid*    Logged in User Id 
+actid    Account id of the logged in user. 
+ 
+Response Details : 
+Response data will be in json Array of objects with below fields in case of success. 
+ 
+ 
+ 
+ 94 
+
+
+### PAGE 91 ###
+
+ 
+ 
+ 
+Json Fields  Possible value  Description 
+stat  Ok or Not_Ok  Limits request success or failure indication. 
+actid    Account id 
+prd    Product name 
+s_prdt_ali    Product display name 
+seg  EQT/DER/FX/C
+OM 
+Segment 
+exch    Exchange 
+-------------------------Cash Primary Fields------------------------------- 
+cash    Cash Margin available 
+payin    Total Amount transferred using Payins today  
+payout    Total amount requested for withdrawal today 
+-------------------------Cash Additional Fields------------------------------- 
+brkcollamt    Prevalued Collateral Amount 
+unclearedcash    Uncleared Cash (Payin through cheques) 
+daycash    Additional leverage amount / Amount added to handle system 
+errors - by broker.  
+-------------------------Margin Utilized---------------------------------- 
+marginused    Total margin / fund used today 
+mtomcurper    Mtom current percentage 
+-------------------------Margin Used components--------------------- 
+cbu    CAC Buy used 
+csc    CAC Sell Credits 
+rpnl    Current realized PNL 
+unmtom    Current unrealized mtom 
+marprt    Covered Product margins 
+span    Span used 
+ 
+ 
+ 95 
+
+
+### PAGE 92 ###
+
+ 
+ 
+ 
+expo    Exposure margin 
+premium    Premium used 
+varelm    Var Elm Margin 
+grexpo    Gross Exposure 
+greexpo_d    Gross Exposure derivative 
+scripbskmar    Scrip basket margin 
+addscripbskmrg    Additional scrip basket margin 
+brokerage    Brokerage amount 
+collateral    Collateral calculated based on uploaded holdings 
+grcoll    Valuation of uploaded holding pre haircut 
+-------------------------Margin used detailed breakup fields------------------------- 
+rzpnl_e_i    Current realized PNL (Equity Intraday) 
+rzpnl_e_m    Current realized PNL (Equity Margin) 
+rzpnl_e_c    Current realized PNL (Equity Cash n Carry) 
+rzpnl_d_i    Current realized PNL (Derivative Intraday) 
+rzpnl_d_m    Current realized PNL (Derivative Margin) 
+rzpnl_f_i    Current realized PNL (FX Intraday) 
+rzpnl_f_m    Current realized PNL (FX Margin) 
+rzpnl_c_i    Current realized PNL (Commodity Intraday) 
+rzpnl_c_m    Current realized PNL (Commodity Margin) 
+uzpnl_e_i    Current unrealized MTOM (Equity Intraday) 
+uzpnl_e_m    Current unrealized MTOM (Equity Margin) 
+uzpnl_e_c    Current unrealized MTOM (Equity Cash n Carry) 
+uzpnl_d_i    Current unrealized MTOM (Derivative Intraday) 
+uzpnl_d_m    Current unrealized MTOM (Derivative Margin) 
+ 
+ 
+ 96 
+
+
+### PAGE 93 ###
+
+ 
+ 
+ 
+uzpnl_f_i    Current unrealized MTOM (FX Intraday) 
+uzpnl_f_m    Current unrealized MTOM (FX Margin) 
+uzpnl_c_i    Current unrealized MTOM (Commodity Intraday) 
+uzpnl_c_m    Current unrealized MTOM (Commodity Margin) 
+span_d_i    Span Margin (Derivative Intraday) 
+span_d_m    Span Margin (Derivative Margin) 
+span_f_i    Span Margin (FX Intraday) 
+span_f_m    Span Margin (FX Margin) 
+span_c_i    Span Margin (Commodity Intraday) 
+span_c_m    Span Margin (Commodity Margin) 
+expo_d_i    Exposure Margin (Derivative Intraday) 
+expo_d_m    Exposure Margin (Derivative Margin) 
+expo_f_i    Exposure Margin (FX Intraday) 
+expo_f_m    Exposure Margin (FX Margin) 
+expo_c_i    Exposure Margin (Commodity Intraday) 
+expo_c_m    Exposure Margin (Commodity Margin) 
+premium_d_i    Option premium (Derivative Intraday) 
+premium_d_m    Option premium (Derivative Margin) 
+premium_f_i    Option premium (FX Intraday) 
+premium_f_m    Option premium (FX Margin) 
+premium_c_i    Option premium (Commodity Intraday) 
+premium_c_m    Option premium (Commodity Margin) 
+varelm_e_i    Var Elm (Equity Intraday) 
+varelm_e_m    Var Elm (Equity Margin) 
+varelm_e_c    Var Elm (Equity Cash n Carry) 
+ 
+ 
+ 97 
+
+
+### PAGE 94 ###
+
+ 
+ 
+ 
+marprt_e_h    Covered Product margins (Equity High leverage) 
+marprt_e_b    Covered Product margins (Equity Bracket Order) 
+marprt_d_h    Covered Product margins (Derivative High leverage) 
+marprt_d_b    Covered Product margins (Derivative Bracket Order) 
+marprt_f_h    Covered Product margins (FX High leverage) 
+marprt_f_b    Covered Product margins (FX Bracket Order) 
+marprt_c_h    Covered Product margins (Commodity High leverage) 
+marprt_c_b    Covered Product margins (Commodity Bracket Order) 
+scripbskmar_e_i    Scrip basket margin (Equity Intraday) 
+scripbskmar_e_m    Scrip basket margin (Equity Margin) 
+scripbskmar_e_c    Scrip basket margin (Equity Cash n Carry) 
+addscripbskmrg_d_i    Additional scrip basket margin (Derivative Intraday) 
+Addscripbskmrg 
+_d_m 
+  Additional scrip basket margin (Derivative Margin) 
+addscripbskmrg_f_i    Additional scrip basket margin (FX Intraday) 
+addscripbskmrg_f_
+m 
+  Additional scrip basket margin (FX Margin) 
+addscripbskmrg_c_i    Additional scrip basket margin (Commodity Intraday) 
+addscripbskmrg_c_
+m 
+  Additional scrip basket margin (Commodity Margin) 
+brkage_e_i    Brokerage (Equity Intraday) 
+brkage_e_m    Brokerage (Equity Margin) 
+brkage_e_c    Brokerage (Equity CAC) 
+brkage_e_h    Brokerage (Equity High Leverage) 
+brkage_e_b    Brokerage (Equity Bracket Order) 
+brkage_d_i    Brokerage (Derivative Intraday) 
+brkage_d_m    Brokerage (Derivative Margin) 
+ 
+ 
+ 98 
+
+
+### PAGE 95 ###
+
+ 
+ 
+ 
+brkage_d_h    Brokerage (Derivative High Leverage) 
+brkage_d_b    Brokerage (Derivative Bracket Order) 
+brkage_f_i    Brokerage (FX Intraday) 
+brkage_f_m    Brokerage (FX Margin) 
+brkage_f_h    Brokerage (FX High Leverage) 
+brkage_f_b    Brokerage (FX Bracket Order) 
+brkage_c_i    Brokerage (Commodity Intraday) 
+brkage_c_m    Brokerage (Commodity Margin) 
+brkage_c_h    Brokerage (Commodity High Leverage) 
+brkage_c_b    Brokerage (Commodity Bracket Order) 
+peak_mar    Peak margin used by the client 
+request_time    This will be present only in a successful response. 
+emsg    This will be present only in a failure response. 
+ 
+Sample Success Response : 
+[ 
+{ 
+"request_time":"17:03:37 04-07-2022", 
+"stat":"Ok", 
+"prfname":"KAMBALA", 
+"cash":"50000000.00", 
+"daycash":"0.00", 
+"blk_amt":"0.00", 
+"unclearedcash":"0.00", 
+"brkcollamt":"0.00", 
+"payin":"320.00", 
+"payout":"-24.00" 
+}, 
+{ 
+"request_time":"17:03:37 04-07-2022", 
+"stat":"Ok", 
+"prfname":"DEFAULT", 
+"cash":"213145.00", 
+"daycash":"0.00", 
+"blk_amt":"0.00", 
+"unclearedcash":"0.00", 
+"brkcollamt":"0.00", 
+"payin":"320.00", 
+"payout":"-24.00" 
+ 
+ 
+ 99 
+
+
+### PAGE 96 ###
+
+ 
+ 
+ 
+}, 
+{  
+"request_time":"17:03:37 04-07-2022", 
+"stat":"Ok", 
+"prfname":"DEFAULT", 
+"cash":"12345.00", 
+"daycash":"0.00", 
+"blk_amt":"0.00", 
+"unclearedcash":"0.00", 
+"brkcollamt":"0.00", 
+"payin":"320.00", 
+"payout":"-24.00" 
+} 
+] 
+ 
+Sample Failure Response : 
+{ 
+   "stat":"Not_Ok", 
+   "emsg":"Server Timeout :  " 
+} 
+Get Max Payout Amount: 
+Request to be POSTed to uri :  /NorenWClientAPI/GetMaxPayoutAmount 
+ 
+Request Details : 
+Parameter Name  Possible value  Description 
+jData*    Should send json object with fields in below list 
+ 
+ 
+Json Fields  Possible value  Description 
+uid*    User id of the logged in user. 
+actid*    Login users account ID 
+seg    EQT/FX/DER/COM can be sent if limits are managed at segregated 
+level 
+exch    NSE/BSE/NFO… can be sent if limits are managed at exchange level 
+prd    C/I/M/F/H/B can be sent if limits are set at product level 
+ 
+Response Details : 
+ 
+Response data will have below fields. 
+ 
+ 
+ 
+ 100 
+
+
+### PAGE 97 ###
+
+ 
+ 
+ 
+Json Fields  Possible value  Description 
+stat     success or failure indication. 
+request_time    This will be present only in a successful response. 
+actid    Account id  
+payout    Maximum payout amount 
+ 
+Sample Success Response : 
+{ 
+"request_time":"15:52:26 10-05-2021", 
+"stat":"Ok", 
+"actid":"C-GURURAJ", 
+"payout":"21200.20" 
+} 
+ 
+Sample Failure Response : 
+ { 
+"stat":"Not_Ok", 
+"emsg":"Session Expired : Invalid Session Key" 
+} 
+ 
+ 
+  
+ 
+ 
+Annexure 
+Report Type: 
+ 
+ 
+ 
+ 101 
+
+
+### PAGE 98 ###
+
+ 
+ 
+ 
+Possible Values 
+NewAck 
+ModAck 
+CanAck 
+PendingNew 
+PendingReplace 
+PendingCancel 
+New 
+Replaced 
+Canceled 
+Fill 
+Rejected 
+ReplaceRejected 
+CancelRejected 
+INVALID_REPORT_TYPE 
+ 
+Status Type: 
+ 
+Possible Values 
+PENDING 
+CANCELED 
+OPEN 
+REJECTED 
+COMPLETE 
+TRIGGER_PENDING 
+INVALID_STATUS_TYPE 
+ 
+ 
+ 
+ 102 
+
+
+### PAGE 99 ###
+
+ 
+ 
+ 
+Internal Status Type: 
+ 
+Possible Values 
+COMPLETE 
+REJECTED 
+CANCELED 
+MODIFY PENDING 
+CANCEL PENDING 
+ORDER PENDING 
+OPEN 
+ORDER ACK 
+MODIFY ACK 
+CANCEL ACK 
+TRIGGER_PENDING 
+AMO OPEN 
+AMO MODIFIED 
+AMO CANCELED 
+ 
+ 
+Retention Type : 
+ 
+Exchange   Possible Values 
+NSE  DAY ,IOC 
+BSE  EOS,DAY, IOC 
+NFO  DAY,IOC 
+CDS  DAY, IOC 
+NCX  DAY, IOC 
+BFO  EOS, DAY, IOC 
+BCD  EOS, DAY, IOC 
+ 
+ 
+ 
+ 103 

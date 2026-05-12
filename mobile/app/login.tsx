@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Linking } from 'react-native';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Linking, Clipboard } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ShieldCheck, Key, Lock, ArrowRight, ExternalLink, Shield } from 'lucide-react-native';
+import { ShieldCheck, Key, Lock, ArrowRight, ExternalLink, Shield, Server, Copy, CheckCircle } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { authApi } from '@/src/services/api';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { useAuth } from '@/src/context/AuthContext';
 import { Theme } from '@/src/constants/Theme';
+
+// ✅ Corrected Shoonya OAuth login URL (updated April 2026)
+const SHOONYA_LOGIN_URL = 'https://trade.shoonya.com/NorenWClientAPI/login';
 
 interface InputFieldProps {
     label: string;
@@ -57,11 +60,32 @@ export default function LoginScreen() {
     const [error, setError] = useState<string | null>(null);
     const [focusedInput, setFocusedInput] = useState<string | null>(null);
     const [step, setStep] = useState<1 | 2>(1);
+    const [serverIp, setServerIp] = useState<string | null>(null);
+    const [ipLoading, setIpLoading] = useState(true);
+    const [ipCopied, setIpCopied] = useState(false);
     const [formData, setFormData] = useState({
         app_key: '',
         secret_key: '',
         code: ''
     });
+
+    // Fetch backend public IP on mount
+    useEffect(() => {
+        authApi.getServerIp()
+            .then((res: any) => {
+                if (res?.data?.ip) setServerIp(res.data.ip);
+                else setServerIp('Unable to detect');
+            })
+            .catch(() => setServerIp('Unable to detect'))
+            .finally(() => setIpLoading(false));
+    }, []);
+
+    const handleCopyIp = () => {
+        if (!serverIp) return;
+        Clipboard.setString(serverIp);
+        setIpCopied(true);
+        setTimeout(() => setIpCopied(false), 2000);
+    };
 
     useEffect(() => {
         const loadSavedFields = async () => {
@@ -95,7 +119,8 @@ export default function LoginScreen() {
         await AsyncStorage.setItem('shoonya_secret_key', formData.secret_key);
         
         const baseAppKey = formData.app_key.endsWith('_U') ? formData.app_key.slice(0, -2) : formData.app_key;
-        Linking.openURL(`https://trade.shoonya.com/OAuthlogin/inverstor-entry-level/login?api_key=${encodeURIComponent(baseAppKey)}_U&route_to=${encodeURIComponent(baseAppKey)}`);
+        // ✅ Fixed: use correct Shoonya OAuth URL
+        Linking.openURL(`${SHOONYA_LOGIN_URL}?api_key=${encodeURIComponent(baseAppKey)}_U`);
         setStep(2);
     };
 
@@ -159,6 +184,37 @@ export default function LoginScreen() {
                     style={styles.keyboardView}
                 >
                     <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+                        {/* ── BACKEND IP BANNER ── */}
+                        <Animated.View entering={FadeInDown.duration(600).springify()} style={styles.ipBanner}>
+                            <View style={styles.ipBannerIcon}>
+                                <Server size={16} color={Theme.colors.warning || '#f59e0b'} />
+                            </View>
+                            <View style={styles.ipBannerContent}>
+                                <Text style={styles.ipBannerTitle}>WHITELIST THIS IP IN SHOONYA</Text>
+                                <Text style={styles.ipBannerDesc}>Add this backend server IP to your Shoonya API Key portal before logging in.</Text>
+                                <View style={styles.ipRow}>
+                                    <View style={styles.ipBox}>
+                                        {ipLoading ? (
+                                            <Text style={styles.ipText}>Detecting...</Text>
+                                        ) : (
+                                            <Text style={styles.ipText}>{serverIp || '—'}</Text>
+                                        )}
+                                    </View>
+                                    <TouchableOpacity
+                                        style={[styles.ipCopyBtn, (!serverIp || ipLoading) && styles.ipCopyBtnDisabled]}
+                                        onPress={handleCopyIp}
+                                        disabled={!serverIp || ipLoading}
+                                    >
+                                        {ipCopied
+                                            ? <CheckCircle size={14} color="#fff" />
+                                            : <Copy size={14} color="#fff" />
+                                        }
+                                        <Text style={styles.ipCopyText}>{ipCopied ? 'Copied' : 'Copy'}</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        </Animated.View>
+
                         <Animated.View entering={FadeInDown.duration(1000).springify()} style={styles.header}>
                             <View style={styles.logoContainer}>
                                 <LinearGradient
@@ -324,5 +380,19 @@ const styles = StyleSheet.create({
 
     footer: { alignItems: 'center', marginTop: 32 },
     footerBadge: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.03)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)', marginBottom: 8 },
-    footerText: { fontSize: 9, fontWeight: '800', color: Theme.colors.textDim, letterSpacing: 1 }
+    footerText: { fontSize: 9, fontWeight: '800', color: Theme.colors.textDim, letterSpacing: 1 },
+
+    // IP Banner styles
+    ipBanner: { flexDirection: 'row', backgroundColor: 'rgba(245, 158, 11, 0.08)', borderRadius: 20, borderWidth: 1, borderColor: 'rgba(245, 158, 11, 0.25)', padding: 14, marginTop: 12, gap: 10 },
+    ipBannerIcon: { width: 32, height: 32, borderRadius: 10, backgroundColor: 'rgba(245, 158, 11, 0.15)', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+    ipBannerContent: { flex: 1 },
+    ipBannerTitle: { fontSize: 9, fontWeight: '900', color: '#f59e0b', letterSpacing: 1, marginBottom: 4 },
+    ipBannerDesc: { fontSize: 11, color: 'rgba(245,158,11,0.7)', fontWeight: '500', lineHeight: 16, marginBottom: 10 },
+    ipRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    ipBox: { flex: 1, backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: 10, borderWidth: 1, borderColor: 'rgba(245,158,11,0.2)', paddingHorizontal: 12, paddingVertical: 8 },
+    ipText: { fontFamily: Platform.OS === 'ios' ? 'Courier New' : 'monospace', fontSize: 13, fontWeight: '900', color: '#f59e0b', letterSpacing: 1 },
+    ipCopyBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#f59e0b', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8 },
+    ipCopyBtnDisabled: { opacity: 0.4 },
+    ipCopyText: { color: '#fff', fontSize: 12, fontWeight: '900' },
 });
+

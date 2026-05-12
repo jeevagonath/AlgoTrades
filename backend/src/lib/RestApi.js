@@ -94,13 +94,17 @@ var NorenRestApi = function (params) {
 
 
   function post_request(route, params, usertoken = "") {
-    let url = endpoint + routes[route];
+    let url = loginEndpoint + routes[route];
     let payload = 'jData=' + JSON.stringify(params);
-    if (self.__susertoken)
-      payload = payload + `&jKey=${self.__susertoken}`;
+    let headers = {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    };
+    if (self.__susertoken) {
+      headers.Authorization = self.__susertoken;
+    }
 
     console.log(`[Shoonya] POST ${url} payload: ${payload}`);
-    return axios.post(url, payload);
+    return axios.post(url, payload, { headers });
   }
 
   // Uses the new login endpoint (NorenWClientAPI) — no session key appended
@@ -108,13 +112,17 @@ var NorenRestApi = function (params) {
     let url = loginEndpoint + routes[route];
     let payload = 'jData=' + JSON.stringify(params);
     console.log(`[Shoonya] LOGIN POST ${url} payload: ${payload}`);
-    return axios.post(url, payload);
+    return axios.post(url, payload, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    });
   }
 
   self.setSessionDetails = function (response) {
     console.log('[RestApi] setSessionDetails called with:', JSON.stringify(response, null, 2));
-    self.__susertoken = response.susertoken;
-    self.__username = response.uid || response.actid;
+    self.__susertoken = response.susertoken || response.access_token;
+    self.__username = response.uid || response.USERID || response.actid;
     self.__accountid = response.actid || response.uid;
     console.log(`[RestApi] Session Set: username=${self.__username}, accountid=${self.__accountid}`);
   };
@@ -200,9 +208,10 @@ var NorenRestApi = function (params) {
         if (response.stat === 'Ok') {
           // Map access_token into susertoken for compatibility with rest of app
           self.setSessionDetails({
+            ...response,
             susertoken: response.access_token,
-            uid: appKey,          // Client Id used as uid identifier
-            actid: appKey
+            uid: response.uid || response.USERID || appKey,
+            actid: response.actid || response.uid || response.USERID || appKey
           });
         }
       }).catch(function (err) {
@@ -556,19 +565,19 @@ var NorenRestApi = function (params) {
     return reply;
   };
 
-  self.get_user_details = function () {
+  self.get_user_details = function (uid) {
     let values = {};
-    values["uid"] = self.__username;
-    values["actid"] = self.__accountid;
+    values["uid"] = uid || self.__username;
+    if (self.__accountid) values["actid"] = self.__accountid;
 
     let reply = post_request("user_details", values, self.__susertoken);
     return reply;
   };
 
-  self.get_client_details = function () {
+  self.get_client_details = function (uid, actid) {
     let values = {};
-    values["uid"] = self.__username;
-    values["actid"] = self.__accountid;
+    values["uid"] = uid || self.__username;
+    values["actid"] = actid || self.__accountid;
 
     let reply = post_request("client_details", values, self.__susertoken);
     return reply;

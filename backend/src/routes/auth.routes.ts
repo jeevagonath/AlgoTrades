@@ -1,7 +1,38 @@
 import { FastifyInstance } from 'fastify';
 import { shoonya } from '../services/shoonya.service';
+import axios from 'axios';
+
+// Cache the public IP so we don't hit ipify on every request
+let cachedServerIp: string | null = null;
+
+async function fetchPublicIp(): Promise<string> {
+    if (cachedServerIp) return cachedServerIp;
+    try {
+        const res = await axios.get('https://api.ipify.org?format=json', { timeout: 5000 });
+        cachedServerIp = res.data.ip;
+        return cachedServerIp!;
+    } catch {
+        try {
+            // Fallback
+            const res2 = await axios.get('https://checkip.amazonaws.com/', { timeout: 5000 });
+            cachedServerIp = res2.data.trim();
+            return cachedServerIp!;
+        } catch {
+            return 'Unable to detect';
+        }
+    }
+}
 
 export async function authRoutes(app: FastifyInstance) {
+    /**
+     * Returns the public IP address of this backend server.
+     * Used on the login page so the user knows which IP to whitelist in Shoonya.
+     */
+    app.get('/server-ip', async (request, reply) => {
+        const ip = await fetchPublicIp();
+        return { status: 'success', data: { ip } };
+    });
+
     app.post('/login', async (request, reply) => {
         const credentials = request.body as any;
 

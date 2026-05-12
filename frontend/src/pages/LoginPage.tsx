@@ -1,17 +1,20 @@
 import { useState, useEffect } from 'react';
-import { Activity, Lock, Key, ShieldCheck, ArrowRight, ExternalLink, Copy, CheckCircle2 } from 'lucide-react';
+import { Activity, Lock, Key, ShieldCheck, ArrowRight, ExternalLink, Copy, CheckCircle2, Server, Wifi } from 'lucide-react';
 import { authApi } from '@/services/api.service';
 
 interface LoginPageProps {
     onLogin: (data: any) => void;
 }
 
-const SHOONYA_LOGIN_URL = 'https://trade.shoonya.com/OAuthlogin/inverstor-entry-level/login';
+// ✅ Corrected Shoonya OAuth login URL (updated April 2026)
+const SHOONYA_LOGIN_URL = 'https://trade.shoonya.com/NorenWClientAPI/login';
 
 const LoginPage = ({ onLogin }: LoginPageProps) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [codeCopied, setCodeCopied] = useState(false);
+    const [ipCopied, setIpCopied] = useState(false);
+    const [serverIp, setServerIp] = useState<string | null>(null);
+    const [ipLoading, setIpLoading] = useState(true);
     const [formData, setFormData] = useState({
         app_key: localStorage.getItem('shoonya_app_key') || '',
         secret_key: localStorage.getItem('shoonya_secret_key') || '',
@@ -21,23 +24,39 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
     // Step tracker: 1 = enter credentials, 2 = enter auth code
     const [step, setStep] = useState<1 | 2>(1);
 
+    // Fetch the backend's public IP on mount
+    useEffect(() => {
+        authApi.getServerIp()
+            .then((res: any) => {
+                if (res?.data?.ip) setServerIp(res.data.ip);
+            })
+            .catch(() => setServerIp('Unable to detect'))
+            .finally(() => setIpLoading(false));
+    }, []);
+
     // Auto-detect code from URL on redirect
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
         const urlCode = urlParams.get('code');
-        
+
         if (urlCode) {
             setFormData(prev => ({ ...prev, code: urlCode }));
             setStep(2);
-            
-            // Optionally clear the URL parameter so it doesn't stay there
-            const newUrl = window.location.pathname;
-            window.history.replaceState({}, document.title, newUrl);
+
+            // Clear the URL parameter so it doesn't linger
+            window.history.replaceState({}, document.title, window.location.pathname);
         }
     }, []);
 
     const handleChange = (e: any) => {
         setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    };
+
+    const handleCopyIp = async () => {
+        if (!serverIp) return;
+        await navigator.clipboard.writeText(serverIp);
+        setIpCopied(true);
+        setTimeout(() => setIpCopied(false), 2000);
     };
 
     const handleOpenShoonya = () => {
@@ -49,9 +68,9 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
         // Save keys persistently
         localStorage.setItem('shoonya_app_key', formData.app_key);
         localStorage.setItem('shoonya_secret_key', formData.secret_key);
-        // Open Shoonya login page
+        // Build correct OAuth URL — Shoonya expects CLIENT_ID_U as api_key param
         const baseAppKey = formData.app_key.endsWith('_U') ? formData.app_key.slice(0, -2) : formData.app_key;
-        window.open(`${SHOONYA_LOGIN_URL}?api_key=${encodeURIComponent(baseAppKey)}_U&route_to=${encodeURIComponent(baseAppKey)}`, '_blank');
+        window.open(`${SHOONYA_LOGIN_URL}?api_key=${encodeURIComponent(baseAppKey)}_U`, '_blank');
         setStep(2);
     };
 
@@ -87,19 +106,13 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
         }
     };
 
-    const handleCopyRedirectTip = async () => {
-        await navigator.clipboard.writeText('https://api.shoonya.com/');
-        setCodeCopied(true);
-        setTimeout(() => setCodeCopied(false), 2000);
-    };
-
     return (
         <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden transition-colors duration-500">
             {/* Ambient glow blobs */}
             <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/5 dark:bg-blue-500/10 rounded-full blur-[120px]" />
             <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-500/5 dark:bg-purple-500/10 rounded-full blur-[120px]" />
 
-            <div className="w-full max-w-md space-y-8 relative z-10">
+            <div className="w-full max-w-md space-y-6 relative z-10">
                 {/* Logo + Title */}
                 <div className="text-center space-y-3">
                     <div className="inline-flex items-center justify-center p-4 bg-card rounded-3xl border border-border shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none mb-2 overflow-hidden transition-colors">
@@ -110,6 +123,66 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
                             AlgoTrades
                         </h1>
                         <p className="text-slate-400 dark:text-slate-500 text-sm font-semibold uppercase tracking-widest transition-colors">Trading Intelligence</p>
+                    </div>
+                </div>
+
+                {/* ── SERVER IP BANNER ── */}
+                <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 rounded-2xl p-4">
+                    <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0 w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center mt-0.5">
+                            <Server className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-[10px] font-black text-amber-700 dark:text-amber-400 uppercase tracking-widest mb-1">
+                                Whitelist This IP in Shoonya
+                            </p>
+                            <p className="text-[11px] text-amber-600/80 dark:text-amber-500/80 font-medium leading-relaxed mb-2">
+                                Your backend server's public IP must be whitelisted in the{' '}
+                                <a
+                                    href="https://trade.shoonya.com"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="underline underline-offset-2 font-bold hover:text-amber-700 dark:hover:text-amber-300 transition-colors"
+                                >
+                                    Shoonya API Key portal
+                                </a>{' '}
+                                before authentication will work.
+                            </p>
+                            <div className="flex items-center gap-2">
+                                <div className="flex-1 bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-800/60 rounded-xl px-3 py-2 flex items-center gap-2 min-w-0">
+                                    <Wifi className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
+                                    {ipLoading ? (
+                                        <div className="flex items-center gap-1.5">
+                                            <div className="w-2 h-2 rounded-full bg-amber-400 animate-bounce [animation-delay:0ms]" />
+                                            <div className="w-2 h-2 rounded-full bg-amber-400 animate-bounce [animation-delay:150ms]" />
+                                            <div className="w-2 h-2 rounded-full bg-amber-400 animate-bounce [animation-delay:300ms]" />
+                                        </div>
+                                    ) : (
+                                        <span className="font-mono text-sm font-black text-amber-700 dark:text-amber-300 tracking-wider truncate">
+                                            {serverIp || '—'}
+                                        </span>
+                                    )}
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={handleCopyIp}
+                                    disabled={!serverIp || ipLoading}
+                                    className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs rounded-xl transition-all active:scale-95"
+                                >
+                                    {ipCopied ? (
+                                        <>
+                                            <CheckCircle2 className="w-3.5 h-3.5" />
+                                            Copied
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Copy className="w-3.5 h-3.5" />
+                                            Copy
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

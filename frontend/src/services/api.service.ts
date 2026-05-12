@@ -38,6 +38,10 @@ export const authApi = {
         const response = await apiClient.get('/auth/margins');
         return response.data;
     },
+    getServerIp: async () => {
+        const response = await apiClient.get('/auth/server-ip');
+        return response.data;
+    },
 };
 
 export const strategyApi = {

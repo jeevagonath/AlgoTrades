@@ -1,0 +1,115 @@
+
+### PAGE 1 ###
+
+Static IP Whitelisting Guide  |  Shoonya API  |  Confidential
+trade.shoonya.com
+Static IP Whitelisting Guide
+Shoonya API · Security Configuration
+Objective: Secure API access by allowing only specific static IP addresses, ensuring only authorised servers can
+connect to the Shoonya trading API.
+Audience: API Developers
+Difficulty: Beginner
+Time: ~5 minutes
+
+
+### PAGE 2 ###
+
+Static IP Whitelisting Guide  |  Shoonya API  |  Confidential
+trade.shoonya.com
+Contents
+Step 1
+Login to the Shoonya Portal
+Step 2
+Open Profile Settings
+Step 3
+Navigate to API Key Section
+Step 4
+Enter Your Static IP Address
+Step 5
+Save — Click Update
+!
+Before you begin: Ensure your server or workstation has a static (fixed) IP address. Dynamic IPs change on
+reconnect and will break API access. Contact your network provider if unsure.
+Step-by-Step Instructions
+
+
+### PAGE 3 ###
+
+Static IP Whitelisting Guide  |  Shoonya API  |  Confidential
+trade.shoonya.com
+ 1
+Login to the Shoonya Portal
+Open your browser and navigate to the Shoonya trading portal.
+URL: https://trade.shoonya.com
+Enter your registered User ID and Password. Complete any two-factor authentication if prompted. You will land on
+the main Dashboard.
+ Figure 1 – Shoonya Portal Dashboard after successful login
+
+
+### PAGE 4 ###
+
+Static IP Whitelisting Guide  |  Shoonya API  |  Confidential
+trade.shoonya.com
+ 2
+Open Profile Settings
+Click on your Profile (your Client Code) in the top-right corner of the portal to open the profile panel.
+ Figure 2 – Profile Settings panel showing the API KEY button
+
+
+### PAGE 5 ###
+
+Static IP Whitelisting Guide  |  Shoonya API  |  Confidential
+trade.shoonya.com
+ 3
+Navigate to API Key Section
+Click the API KEY button (orange, top-right of the profile panel). The Api Key Generation section will open,
+displaying:
+ Client Id — your unique API client identifier
+ Secret Code — masked by default; use the copy/eye icon to reveal
+ URL — the OAuth login URL
+ Primary IP Address — where you will enter your static IP
+ Backup IP Address — optional secondary server IP
+ Applicable for more than 10 orders per second — tick only if required
+i
+Your Client ID is your API identity. Keep the Secret Code confidential — treat it like a password. Never share it
+in public repositories or chat.
+
+
+### PAGE 6 ###
+
+Static IP Whitelisting Guide  |  Shoonya API  |  Confidential
+trade.shoonya.com
+ 4
+Enter Your Static IP Address
+In the Primary IP Address field, type your server's static IP address in standard IPv4 format.
+Example: 10.10.10.183
+Optionally fill the Backup IP Address field for a secondary/failover server.
+ Figure 3 – API Key Generation form with Primary IP Address field
+URL
+URL
+https://trade.shoonya.com/OAuthlogin
+!
+Important: Only API requests from whitelisted IP addresses will be accepted. All other IPs will receive an
+authentication error.
+
+
+### PAGE 7 ###
+
+Static IP Whitelisting Guide  |  Shoonya API  |  Confidential
+trade.shoonya.com
+ 5
+Save — Click Update
+After entering your IP address(es), click the Update button at the bottom of the form.
+A confirmation dialog will appear:
+✓
+Alert: API Key Updated This confirms your whitelisted IP has been saved. Click X Close to dismiss.
+Your API is now secured. Only requests originating from your specified IP address(es) will be authorised.
+Appendix: URLs & OAuth Reference
+OAuth Redirect URL Pattern
+REDIRECT URL PATTERN
+https://trade.shoonya.com/OAuthlogin/authorize/oauth?client_id=YOUR_CLIENT_ID
+EXAMPLE (replace YOUR_CLIENT_ID with your actual Client ID)
+https://trade.shoonya.com/OAuthlogin/authorize/oauth?client_id=TEST21_U
+i
+Need help? Contact Shoonya API support or visit the developer portal at trade.shoonya.com for the latest
+API documentation.
