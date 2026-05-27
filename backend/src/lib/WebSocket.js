@@ -40,7 +40,7 @@ let WebSocketClient = function (cred, params) {
                     let values = { "t": "c" };
                     values["uid"] = params.uid;
                     values["actid"] = params.actid;
-                    values["susertoken"] = params.apikey;
+                    values["usertoken"] = params.apikey;
                     values["source"] = "API";
                     console.log('[Shoonya WS] Sending connect request:', JSON.stringify(values));
                     ws.send(JSON.stringify(values));
