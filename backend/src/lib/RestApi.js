@@ -134,8 +134,8 @@ var NorenRestApi = function (params) {
   self.setSessionDetails = function (response) {
     console.log('[RestApi] setSessionDetails called with:', JSON.stringify(response, null, 2));
     self.__susertoken = response.susertoken || response.access_token;
-    self.__username = response.uid || response.USERID || response.actid;
-    self.__accountid = response.actid || response.uid;
+    self.__username = response.uid || response.USERID || response.actid || '';
+    self.__accountid = response.actid || response.uid || response.USERID || self.__username || '';
     console.log(`[RestApi] Session Set: username=${self.__username}, accountid=${self.__accountid}`);
   };
 

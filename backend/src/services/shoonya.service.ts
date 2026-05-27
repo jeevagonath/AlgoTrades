@@ -78,18 +78,21 @@ class ShoonyaService {
                 .then(async (res: any) => {
                     if (res.stat === 'Ok') {
                         // Map access_token → susertoken for full app compatibility
+                        const uid = res.uid || res.USERID || appKey;
+                        const actid = res.actid || res.uid || res.USERID || appKey;
                         const sessionData = {
                             ...res,
                             susertoken: res.access_token,
-                            uid: appKey,
-                            actid: appKey
+                            uid,
+                            actid
                         };
                         this.session = sessionData;
+                        this.api.setSessionDetails(sessionData);
                         // Persist session to Supabase
                         await db.saveSession({
-                            uid: appKey,
+                            uid,
                             susertoken: res.access_token,
-                            actid: appKey
+                            actid
                         });
                         resolve(sessionData);
                     } else {
