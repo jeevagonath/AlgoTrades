@@ -133,11 +133,16 @@ var NorenRestApi = function (params) {
     });
   }
 
+  function normalizeShoonyaId(id) {
+    if (typeof id !== 'string') return id;
+    return id.replace(/_U$/, '');
+  }
+
   self.setSessionDetails = function (response) {
     console.log('[RestApi] setSessionDetails called with:', JSON.stringify(response, null, 2));
     self.__susertoken = response.susertoken || response.access_token;
-    self.__username = response.uid || response.USERID || response.actid || '';
-    self.__accountid = response.actid || response.uid || response.USERID || self.__username || '';
+    self.__username = normalizeShoonyaId(response.uid || response.USERID || response.actid || '');
+    self.__accountid = normalizeShoonyaId(response.actid || response.uid || response.USERID || self.__username || '');
     console.log(`[RestApi] Session Set: username=${self.__username}, accountid=${self.__accountid}`);
   };
 

@@ -74,14 +74,15 @@ class ShoonyaService {
      */
     async loginWithCode(code: string, appKey: string, secretKey: string) {
         const normalizedAppKey = appKey.endsWith('_U') ? appKey.slice(0, -2) : appKey;
+        const normalizeId = (id: any) => typeof id === 'string' ? id.replace(/_U$/, '') : id;
 
         return new Promise((resolve, reject) => {
             this.api.gen_access_token(code, normalizedAppKey, secretKey)
                 .then(async (res: any) => {
                     if (res.stat === 'Ok') {
                         // Map access_token → susertoken for full app compatibility
-                        const uid = res.uid || res.USERID || normalizedAppKey;
-                        const actid = res.actid || res.uid || res.USERID || normalizedAppKey;
+                        const uid = normalizeId(res.uid || res.USERID || normalizedAppKey);
+                        const actid = normalizeId(res.actid || res.uid || res.USERID || normalizedAppKey);
                         const sessionData = {
                             ...res,
                             susertoken: res.access_token,
