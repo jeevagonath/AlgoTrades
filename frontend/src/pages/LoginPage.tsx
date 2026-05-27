@@ -134,10 +134,10 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
                         </div>
                         <div className="flex-1 min-w-0">
                             <p className="text-[10px] font-black text-amber-700 dark:text-amber-400 uppercase tracking-widest mb-1">
-                                Whitelist This IP in Shoonya
+                                Outbound IP
                             </p>
                             <p className="text-[11px] text-amber-600/80 dark:text-amber-500/80 font-medium leading-relaxed mb-2">
-                                Your backend server's public IP must be whitelisted in the{' '}
+                                Your backend server's outbound IP must be whitelisted in the{' '}
                                 <a
                                     href="https://trade.shoonya.com"
                                     target="_blank"
@@ -159,7 +159,7 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
                                         </div>
                                     ) : (
                                         <span className="font-mono text-sm font-black text-amber-700 dark:text-amber-300 tracking-wider truncate">
-                                            {serverIp || '—'}
+                                            Outbound IP: {serverIp || '—'}
                                         </span>
                                     )}
                                 </div>
