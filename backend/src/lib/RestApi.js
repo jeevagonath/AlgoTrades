@@ -96,13 +96,11 @@ var NorenRestApi = function (params) {
 
   function post_request(route, params, usertoken = "") {
     let url = loginEndpoint + routes[route];
-    const urlParams = new URLSearchParams();
-    urlParams.append('jData', JSON.stringify(params));
+    let payload = 'jData=' + JSON.stringify(params);
     if (self.__susertoken) {
-      urlParams.append('jKey', self.__susertoken);
+      payload += '&jKey=' + self.__susertoken;
     }
 
-    const payload = urlParams.toString();
     let headers = {
       'Content-Type': 'application/x-www-form-urlencoded'
     };
@@ -117,9 +115,7 @@ var NorenRestApi = function (params) {
   // Uses the new login endpoint (NorenWClientAPI) — no session key appended
   function post_login_request(route, params) {
     let url = loginEndpoint + routes[route];
-    const urlParams = new URLSearchParams();
-    urlParams.append('jData', JSON.stringify(params));
-    const payload = urlParams.toString();
+    let payload = 'jData=' + JSON.stringify(params);
     console.log(`[Shoonya] LOGIN POST ${url} body: ${payload}`);
     return axios.post(url, payload, {
       headers: {
@@ -130,9 +126,7 @@ var NorenRestApi = function (params) {
 
   function post_tp_request(route, params) {
     let url = tpEndpoint + routes[route];
-    const urlParams = new URLSearchParams();
-    urlParams.append('jData', JSON.stringify(params));
-    const payload = urlParams.toString();
+    let payload = 'jData=' + JSON.stringify(params);
     console.log(`[Shoonya] TP POST ${url} body: ${payload}`);
     return axios.post(url, payload, {
       headers: {
