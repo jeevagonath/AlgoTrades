@@ -117,7 +117,7 @@ var NorenRestApi = function (params) {
     let url = loginEndpoint + routes[route];
     let payload = 'jData=' + JSON.stringify(params);
     console.log(`[Shoonya] LOGIN POST ${url} body: ${payload}`);
-    return axios.post(url, payload;
+    return axios.post(url, payload);
   }
 
   function post_tp_request(route, params) {
