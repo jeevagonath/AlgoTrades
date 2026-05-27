@@ -23,7 +23,7 @@ let WebSocketClient = function (cred, params) {
      this.connect = function (params, callbacks) {
           return new Promise((resolve, reject) => {
                if (apikey === null || url === null) return "apikey or url is missing";
-               //console.log(url);
+               console.log(url);
 
                //callbacks to the app are set here
                this.set_callbacks(callbacks);
@@ -42,17 +42,17 @@ let WebSocketClient = function (cred, params) {
                     values["actid"] = params.actid;
                     values["susertoken"] = params.apikey;
                     values["source"] = "API";
-                    //console.log('[Shoonya WS] Sending connect request:', JSON.stringify(values));
+                    console.log('[Shoonya WS] Sending connect request:', JSON.stringify(values));
                     ws.send(JSON.stringify(values));
                     resolve()
 
                };
                ws.onmessage = function (evt) {
-                    //console.log('[Shoonya WS] RECEIVED:', evt.data);
+                    console.log('[Shoonya WS] RECEIVED:', evt.data);
                     var result = JSON.parse(evt.data);
 
                     if (result.t == 'ck') {
-                         //console.log('[Shoonya WS] Connect Acknowledgement:', result);
+                         console.log('[Shoonya WS] Connect Acknowledgement:', result);
                          trigger("open", [result]);
                     }
                     if (result.t == 'tk' || result.t == 'tf') {
@@ -67,13 +67,13 @@ let WebSocketClient = function (cred, params) {
 
                };
                ws.onerror = function (evt) {
-                    //console.log("error::", evt)
+                    console.log("error::", evt)
                     trigger("error", [JSON.stringify(evt.data)]);
                     self.connect();
                     reject(evt)
                };
                ws.onclose = function (evt) {
-                    //console.log("Socket closed")
+                    console.log("Socket closed")
                     trigger("close", [JSON.stringify(evt.data)]);
                };
           })
