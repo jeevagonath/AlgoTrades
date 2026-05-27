@@ -100,8 +100,10 @@ var NorenRestApi = function (params) {
     let headers = {
       'Content-Type': 'application/x-www-form-urlencoded'
     };
+
     if (self.__susertoken) {
       headers.Authorization = self.__susertoken;
+      payload += '&jKey=' + encodeURIComponent(self.__susertoken);
     }
 
     console.log(`[Shoonya] POST ${url} payload: ${payload}`);
