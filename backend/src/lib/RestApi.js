@@ -7,6 +7,7 @@ const path = require('path');
 
 let { API } = require("./config");
 const loginEndpoint = API.loginEndpoint || API.endpoint;
+const tpEndpoint = API.tpEndpoint || (API.endpoint.replace(/\/NorenWClientAPI$/, '/NorenWClientTP'));
 const WS = require("./WebSocket");
 
 const logFile = path.join(process.cwd(), 'shoonya_api.log');
@@ -119,6 +120,17 @@ var NorenRestApi = function (params) {
     });
   }
 
+  function post_tp_request(route, params) {
+    let url = tpEndpoint + routes[route];
+    let payload = 'jData=' + JSON.stringify(params);
+    console.log(`[Shoonya] TP POST ${url} payload: ${payload}`);
+    return axios.post(url, payload, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    });
+  }
+
   self.setSessionDetails = function (response) {
     console.log('[RestApi] setSessionDetails called with:', JSON.stringify(response, null, 2));
     self.__susertoken = response.susertoken || response.access_token;
@@ -221,6 +233,22 @@ var NorenRestApi = function (params) {
     return token_data;
   };
 
+  self.logout = function () {
+    let values = {
+      uid: self.__username || ''
+    };
+    let logout_request = post_tp_request('logout', values);
+    logout_request
+      .then(response => {
+        if (response.stat === 'Ok') {
+          console.log('[Shoonya] Logout successful');
+        }
+      })
+      .catch(err => {
+        console.error('[Shoonya] Logout error:', err);
+      });
+    return logout_request;
+  };
 
 
   /**
