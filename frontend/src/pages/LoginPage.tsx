@@ -6,8 +6,8 @@ interface LoginPageProps {
     onLogin: (data: any) => void;
 }
 
-// ✅ Corrected Shoonya OAuth login URL (updated April 2026)
-const SHOONYA_LOGIN_URL = 'https://trade.shoonya.com/NorenWClientAPI/login';
+// ✅ Corrected Shoonya OAuth login URL (updated May 2026)
+const SHOONYA_LOGIN_URL = 'https://trade.shoonya.com/OAuthlogin/investor-entry-level/login';
 
 const LoginPage = ({ onLogin }: LoginPageProps) => {
     const [loading, setLoading] = useState(false);
