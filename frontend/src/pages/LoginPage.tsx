@@ -88,9 +88,10 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
         localStorage.setItem('shoonya_secret_key', formData.secret_key);
 
         try {
+            const normalAppKey = formData.app_key.trim().replace(/_U$/i, '');
             const res = await authApi.exchangeToken(
                 formData.code.trim(),
-                formData.app_key.trim(),
+                normalAppKey,
                 formData.secret_key.trim()
             );
             if (res.status === 'success') {
