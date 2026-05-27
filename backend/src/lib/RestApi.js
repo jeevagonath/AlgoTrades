@@ -108,8 +108,8 @@ var NorenRestApi = function (params) {
       headers.Authorization = self.__susertoken;
     }
 
-    console.log(`[Shoonya] POST ${url} headers: ${JSON.stringify(headers)} body: ${payload} susertoken: ${self.__susertoken}`);
-    return axios.post(url, payload, { headers });
+    console.log(`[Shoonya] POST ${url} body: ${payload}`);
+    return axios.post(url, payload);
   }
 
   // Uses the new login endpoint (NorenWClientAPI) — no session key appended
@@ -117,22 +117,14 @@ var NorenRestApi = function (params) {
     let url = loginEndpoint + routes[route];
     let payload = 'jData=' + JSON.stringify(params);
     console.log(`[Shoonya] LOGIN POST ${url} body: ${payload}`);
-    return axios.post(url, payload, {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      }
-    });
+    return axios.post(url, payload;
   }
 
   function post_tp_request(route, params) {
     let url = tpEndpoint + routes[route];
     let payload = 'jData=' + JSON.stringify(params);
     console.log(`[Shoonya] TP POST ${url} body: ${payload}`);
-    return axios.post(url, payload, {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      }
-    });
+    return axios.post(url, payload);
   }
 
   function normalizeShoonyaId(id) {
