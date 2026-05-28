@@ -62,7 +62,9 @@ class NseService {
             await this.axiosInstance.get('/option-chain', {
                 headers: {
                     'Referer': this.baseUrl,
+                    'Origin': this.baseUrl,
                     'Sec-Fetch-Site': 'same-origin',
+                    'Sec-Fetch-Mode': 'navigate',
                 }
             });
 
@@ -117,11 +119,12 @@ class NseService {
                 {
                     headers: {
                         'Referer': `${this.baseUrl}/option-chain`,
+                        'Origin': this.baseUrl,
                         'X-Requested-With': 'XMLHttpRequest',
                         'Sec-Fetch-Site': 'same-origin',
                         'Sec-Fetch-Mode': 'cors',
                         'Sec-Fetch-Dest': 'empty',
-                        'Accept': '*/*'
+                        'Accept': 'application/json, text/javascript, */*; q=0.01'
                     }
                 }
             );
@@ -190,11 +193,12 @@ class NseService {
                 {
                     headers: {
                         'Referer': `${this.baseUrl}/option-chain`,
+                        'Origin': this.baseUrl,
                         'X-Requested-With': 'XMLHttpRequest',
                         'Sec-Fetch-Site': 'same-origin',
                         'Sec-Fetch-Mode': 'cors',
                         'Sec-Fetch-Dest': 'empty',
-                        'Accept': '*/*'
+                        'Accept': 'application/json, text/javascript, */*; q=0.01'
                     }
                 }
             );
