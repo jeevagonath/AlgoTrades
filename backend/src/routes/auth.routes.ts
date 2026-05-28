@@ -1,12 +1,11 @@
 import { FastifyInstance } from 'fastify';
 import { shoonya } from '../services/shoonya.service';
 import axios from 'axios';
-
-// Cache the public IP so we don't hit external services on every request
-let cachedServerIp: string | null = null;
+import { getCachedPublicIp } from '../lib/publicIp';
 
 async function fetchPublicIp(): Promise<string> {
-    if (cachedServerIp) return cachedServerIp;
+    const startupIp = getCachedPublicIp();
+    if (startupIp) return startupIp;
     // Allow operators to override the detected IP via environment (useful on hosts with restricted egress)
     const envIp = process.env.OUTBOUND_IP || process.env.PUBLIC_IP || process.env.SERVER_IP;
     if (envIp && envIp.length > 0) {

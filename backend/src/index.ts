@@ -12,6 +12,7 @@ import { proxyRoutes } from './routes/proxy.routes';
 import { strategyEngine } from './services/strategy.engine';
 import { socketService } from './services/socket.service';
 import { shoonya } from './services/shoonya.service';
+import { setCachedPublicIp } from './lib/publicIp';
 
 const app: FastifyInstance = fastify({ logger: true });
 
@@ -58,7 +59,10 @@ const start = async () => {
         // Log outbound IP for Shoonya IP whitelist configuration (visible in Render logs only)
         fetch('https://api.ipify.org?format=json')
             .then(r => r.json())
-            .then((d: any) => console.log(`[System] Outbound IP: ${d.ip}`))
+            .then((d: any) => {
+                console.log(`[System] Outbound IP: ${d.ip}`);
+                try { setCachedPublicIp(d.ip); } catch {}
+            })
             .catch(() => console.warn('[System] Could not determine outbound IP'));
 
         // Initialize Socket.io after server is listening
