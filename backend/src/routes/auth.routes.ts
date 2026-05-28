@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { shoonya } from '../services/shoonya.service';
 import axios from 'axios';
-import { getCachedPublicIp } from '../lib/publicIp';
+import { getCachedPublicIp, setCachedPublicIp } from '../lib/publicIp';
 
 async function fetchPublicIp(): Promise<string> {
     const startupIp = getCachedPublicIp();
@@ -9,8 +9,8 @@ async function fetchPublicIp(): Promise<string> {
     // Allow operators to override the detected IP via environment (useful on hosts with restricted egress)
     const envIp = process.env.OUTBOUND_IP || process.env.PUBLIC_IP || process.env.SERVER_IP;
     if (envIp && envIp.length > 0) {
-        cachedServerIp = envIp;
-        return cachedServerIp;
+        setCachedPublicIp(envIp);
+        return envIp;
     }
 
     const services = [
@@ -36,8 +36,8 @@ async function fetchPublicIp(): Promise<string> {
             }
 
             if (ip && ip.length > 0 && ip !== 'null') {
-                cachedServerIp = ip;
-                return cachedServerIp;
+                setCachedPublicIp(ip);
+                return ip;
             } else {
                 errors.push(`${svc.url} -> no-ip-returned`);
             }
