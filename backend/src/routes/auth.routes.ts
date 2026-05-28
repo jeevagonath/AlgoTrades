@@ -109,13 +109,13 @@ export async function authRoutes(app: FastifyInstance) {
     app.post('/exchange-token', async (request, reply) => {
         const { code, app_key, secret_key } = request.body as any;
 
-        // if (!code || !app_key || !secret_key) {
-        //     return reply.status(400).send({
-        //         status: 'error',
-        //         code: 'MISSING_PARAMS',
-        //         message: 'code, app_key, and secret_key are required'
-        //     });
-        // }
+        if (!code || !app_key || !secret_key) {
+            return reply.status(400).send({
+                status: 'error',
+                code: 'MISSING_PARAMS',
+                message: 'code, app_key, and secret_key are required'
+            });
+        }
 
         try {
             const res = await shoonya.loginWithCode(code, app_key, secret_key);
