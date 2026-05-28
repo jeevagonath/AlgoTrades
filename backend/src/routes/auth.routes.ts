@@ -7,6 +7,12 @@ let cachedServerIp: string | null = null;
 
 async function fetchPublicIp(): Promise<string> {
     if (cachedServerIp) return cachedServerIp;
+    // Allow operators to override the detected IP via environment (useful on hosts with restricted egress)
+    const envIp = process.env.OUTBOUND_IP || process.env.PUBLIC_IP || process.env.SERVER_IP;
+    if (envIp && envIp.length > 0) {
+        cachedServerIp = envIp;
+        return cachedServerIp;
+    }
 
     const services = [
         { url: 'https://api.ipify.org?format=json', type: 'json', path: 'ip' },
@@ -20,7 +26,7 @@ async function fetchPublicIp(): Promise<string> {
 
     for (const svc of services) {
         try {
-            const res = await axios.get(svc.url, { timeout: 5000 });
+            const res = await axios.get(svc.url, { timeout: 7000 });
             let ip: string | undefined;
 
             if (svc.type === 'json') {
@@ -33,9 +39,17 @@ async function fetchPublicIp(): Promise<string> {
             if (ip && ip.length > 0 && ip !== 'null') {
                 cachedServerIp = ip;
                 return cachedServerIp;
+            } else {
+                errors.push(`${svc.url} -> no-ip-returned`);
             }
         } catch (err: any) {
-            errors.push(`${svc.url} -> ${err?.message || 'error'}`);
+            const code = err?.code || err?.errno || 'n/a';
+            const status = err?.response?.status || 'n/a';
+            let respData = 'n/a';
+            try { respData = JSON.stringify(err?.response?.data); } catch (e) { respData = String(err?.response?.data); }
+            const message = err?.message || String(err) || 'error';
+            const details = `${svc.url} -> code:${code} status:${status} msg:${message} resp:${respData}`;
+            errors.push(details);
             // try next
         }
     }
