@@ -77,7 +77,8 @@ class ShoonyaService {
         const normalizeId = (id: any) => typeof id === 'string' ? id.replace(/_U$/, '') : id;
 
         return new Promise((resolve, reject) => {
-            this.api.gen_access_token(code, normalizedAppKey, secretKey)
+            // Pass the original appKey (may include _U) to the API wrapper so checksum matches the authorization request
+            this.api.gen_access_token(code, appKey, secretKey)
                 .then(async (res: any) => {
                     if (res.stat === 'Ok') {
                         // Map access_token → susertoken for full app compatibility
