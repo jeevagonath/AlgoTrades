@@ -104,11 +104,12 @@ var NorenRestApi = function (params) {
     let headers = {
       'Content-Type': 'application/x-www-form-urlencoded'
     };
-    if (includeAuthHeader && self.__susertoken) {
+    const addAuthHeader = includeAuthHeader === true;
+    if (addAuthHeader && self.__susertoken) {
       headers.Authorization = self.__susertoken;
     }
 
-    console.log(`[Shoonya] POST ${url} body: ${payload}`);
+    console.log(`[Shoonya] POST ${url} body: ${payload} authHeader=${addAuthHeader}`);
     return axios.post(url, payload, { headers });
   }
 
