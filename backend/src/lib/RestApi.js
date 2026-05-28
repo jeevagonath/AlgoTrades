@@ -94,7 +94,7 @@ var NorenRestApi = function (params) {
   });
 
 
-  function post_request(route, params, usertoken = "") {
+  function post_request(route, params, includeAuthHeader = false) {
     let url = loginEndpoint + routes[route];
     let payload = 'jData=' + JSON.stringify(params);
     if (self.__susertoken) {
@@ -104,7 +104,7 @@ var NorenRestApi = function (params) {
     let headers = {
       'Content-Type': 'application/x-www-form-urlencoded'
     };
-    if (self.__susertoken) {
+    if (includeAuthHeader && self.__susertoken) {
       headers.Authorization = self.__susertoken;
     }
 
