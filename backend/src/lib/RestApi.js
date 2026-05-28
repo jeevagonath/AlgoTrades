@@ -220,7 +220,11 @@ var NorenRestApi = function (params) {
       "checksum": checksum
     };
 
-    console.log(`[Shoonya] GenAcsTok: code=${code}, checksum=${checksum}`);
+    // Debug: log the appKey, code, and computed checksum so we can verify the verifier
+    // Note: secretKey is intentionally not logged to avoid leaking sensitive data.
+    try {
+      console.log(`[Shoonya] GenAcsTok: appKey=${appKey}, code=${code}, checksum=${checksum}`);
+    } catch (e) { /* ignore logging errors */ }
 
     let token_data = post_login_request("gen_access_token", params);
 
