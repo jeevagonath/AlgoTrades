@@ -2,25 +2,47 @@ import { FastifyInstance } from 'fastify';
 import { shoonya } from '../services/shoonya.service';
 import axios from 'axios';
 
-// Cache the public IP so we don't hit ipify on every request
+// Cache the public IP so we don't hit external services on every request
 let cachedServerIp: string | null = null;
 
 async function fetchPublicIp(): Promise<string> {
     if (cachedServerIp) return cachedServerIp;
-    try {
-        const res = await axios.get('https://api.ipify.org?format=json', { timeout: 5000 });
-        cachedServerIp = res.data.ip;
-        return cachedServerIp!;
-    } catch {
+
+    const services = [
+        { url: 'https://api.ipify.org?format=json', type: 'json', path: 'ip' },
+        { url: 'https://checkip.amazonaws.com/', type: 'text' },
+        { url: 'https://ifconfig.me/ip', type: 'text' },
+        { url: 'https://ipinfo.io/json', type: 'json', path: 'ip' },
+        { url: 'https://ip.seeip.org/jsonip?', type: 'json', path: 'ip' },
+    ];
+
+    const errors: string[] = [];
+
+    for (const svc of services) {
         try {
-            // Fallback
-            const res2 = await axios.get('https://checkip.amazonaws.com/', { timeout: 5000 });
-            cachedServerIp = res2.data.trim();
-            return cachedServerIp!;
-        } catch {
-            return 'Unable to detect';
+            const res = await axios.get(svc.url, { timeout: 5000 });
+            let ip: string | undefined;
+
+            if (svc.type === 'json') {
+                ip = svc.path ? res.data?.[svc.path] : undefined;
+                if (!ip && typeof res.data === 'string') ip = res.data; // some JSON endpoints return raw
+            } else {
+                ip = typeof res.data === 'string' ? res.data.trim() : undefined;
+            }
+
+            if (ip && ip.length > 0 && ip !== 'null') {
+                cachedServerIp = ip;
+                return cachedServerIp;
+            }
+        } catch (err: any) {
+            errors.push(`${svc.url} -> ${err?.message || 'error'}`);
+            // try next
         }
     }
+
+    // If we reach here nothing worked
+    console.warn('[System] fetchPublicIp failed for all services:', errors.join(' | '));
+    return 'Unable to detect';
 }
 
 export async function authRoutes(app: FastifyInstance) {
