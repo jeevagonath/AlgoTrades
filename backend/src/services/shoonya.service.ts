@@ -157,7 +157,7 @@ class ShoonyaService {
     }
 
     async getQuotes(exchange: string, token: string) {
-        //console.log(`[GetQuotes] REQUEST: exchange=${exchange}, token=${token}`);
+        console.log(`[GetQuotes] REQUEST: uid=${this.session?.uid || 'missing'}, exch=${exchange}, token=${token}, susertoken=${this.session?.susertoken ? 'present' : 'missing'}`);
         if (!this.session || !this.session.uid) {
             console.warn('[Shoonya] getQuotes skipped: session or uid missing');
             return Promise.resolve({ stat: 'Not_Ok', emsg: 'Session Missing' });
