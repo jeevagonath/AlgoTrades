@@ -120,6 +120,7 @@ var NorenRestApi = function (params) {
     return axios.post(url, payload, {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
+      }
       });
   }
 
