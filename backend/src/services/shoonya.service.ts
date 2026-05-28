@@ -77,8 +77,13 @@ class ShoonyaService {
         const normalizeId = (id: any) => typeof id === 'string' ? id.replace(/_U$/, '') : id;
 
         return new Promise((resolve, reject) => {
-            // Pass the original appKey (may include _U) to the API wrapper so checksum matches the authorization request
-            this.api.gen_access_token(code, appKey, secretKey)
+            // Ensure the appKey passed to Shoonya matches the key used during browser auth.
+            // The front-end opens the OAuth URL with `<baseAppKey>_U`. If the received appKey
+            // does not end with `_U`, append it so the checksum matches.
+            const apiAppKey = appKey.endsWith('_U') ? appKey : `${appKey}_U`;
+
+            // Pass the appKey with _U to the API wrapper so checksum matches the authorization request
+            this.api.gen_access_token(code, apiAppKey, secretKey)
                 .then(async (res: any) => {
                     if (res.stat === 'Ok') {
                         // Map access_token → susertoken for full app compatibility
