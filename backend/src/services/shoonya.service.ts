@@ -50,6 +50,7 @@ class ShoonyaService {
         return new Promise((resolve, reject) => {
             this.api.login(credentials)
                 .then(async (res: any) => {
+                    console.log('[Shoonya] login response:', JSON.stringify(res, null, 2));
                     if (res.stat === 'Ok') {
                         this.session = res;
                         // Save session to database for persistence
@@ -57,6 +58,11 @@ class ShoonyaService {
                             uid: credentials.userid,
                             susertoken: res.susertoken,
                             actid: res.actid
+                        });
+                        console.log('[Shoonya] login token used:', {
+                            susertoken: res.susertoken,
+                            access_token: res.access_token,
+                            usedToken: res.susertoken || res.access_token || null
                         });
                         resolve(res);
                     } else {
@@ -86,6 +92,7 @@ class ShoonyaService {
             // Pass the appKey with _U to the API wrapper so checksum matches the authorization request
             this.api.gen_access_token(code, apiAppKey, secretKey)
                 .then(async (res: any) => {
+                    console.log('[Shoonya] loginWithCode response:', JSON.stringify(res, null, 2));
                     if (res.stat === 'Ok') {
                         // Map access_token → susertoken for full app compatibility
                         const uid = normalizeId(res.uid || res.USERID || normalizedAppKey);
@@ -103,6 +110,11 @@ class ShoonyaService {
                             uid,
                             susertoken: res.access_token,
                             actid
+                        });
+                        console.log('[Shoonya] loginWithCode token used:', {
+                            susertoken: res.access_token,
+                            access_token: res.access_token,
+                            usedToken: res.access_token
                         });
                         resolve(sessionData);
                     } else {
