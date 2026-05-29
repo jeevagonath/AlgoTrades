@@ -630,8 +630,6 @@ var NorenRestApi = function (params) {
        * @param no params
        */
   self.start_websocket = function (callbacks) {
-
-
     let web_socket = new WS({ 'url': API.websocket, 'apikey': self.__susertoken });
 
     self.web_socket = web_socket;
@@ -641,12 +639,13 @@ var NorenRestApi = function (params) {
       'apikey': self.__susertoken,
     }
 
-    web_socket.connect(params, callbacks)
+    return web_socket.connect(params, callbacks)
       .then(() => {
         //console.log('ws is connected');
       })
       .catch((err) => {
         console.error('WebSocket connection failed:', err);
+        throw err;
       });
   };
 

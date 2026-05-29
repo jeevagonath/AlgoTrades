@@ -208,64 +208,82 @@ class ShoonyaService {
     }
 
     startWebSocket(onTick?: (tick: any) => void, onOrder?: (order: any) => void) {
-        if (onTick) this.tickListeners.push(onTick);
-        if (onOrder) this.orderListeners.push(onOrder);
-        if (this.wsStarted || this.wsConnecting) return;
+        return new Promise<void>((resolve, reject) => {
+            if (onTick) this.tickListeners.push(onTick);
+            if (onOrder) this.orderListeners.push(onOrder);
 
-        if (!this.isLoggedIn()) {
-            console.warn('[Shoonya] Cannot start WebSocket: Not logged in.');
-            return;
-        }
-
-        this.wsConnecting = true;
-        this.api.start_websocket({
-            socket_open: () => {
-                // Connection acknowledged by Shoonya (t == 'ck')
-                this.wsConnecting = false;
-                this.wsStarted = true;
-                this.isSocketConnected = true;
-
-                // Auto subscribe to Nifty spot
-                if (this.api.web_socket) {
-                    this.api.subscribe(['NSE|26000']);
-                }
-
-                // Flush pending subscriptions
-                if (this.pendingSubscriptions.length > 0) {
-                    console.log(`[Shoonya] Flushing ${this.pendingSubscriptions.length} pending subscriptions...`);
-                    this.api.subscribe(this.pendingSubscriptions);
-                    this.pendingSubscriptions = [];
-                }
-            },
-            socket_close: () => {
-                this.isSocketConnected = false;
-                this.wsStarted = false;
-                this.wsConnecting = false;
-                console.warn('[Shoonya] WebSocket closed');
-            },
-            socket_error: () => {
-                this.isSocketConnected = false;
-                this.wsStarted = false;
-                this.wsConnecting = false;
-                console.error('[Shoonya] WebSocket error');
-            },
-            quote: (tick: any) => {
-                // Log only important ticks to avoid flooding
-                if (tick.tk === '26000') {
-                    // console.log('[Shoonya] Nifty Spot Tick:', tick.lp);
-                }
-
-                this.tickListeners.forEach(cb => cb(tick));
-                // Also emit globally for UI convenience
-                socketService.emit('tick', tick);
-            },
-            order: (order: any) => {
-                //console.log('[Shoonya] Order Update:', order);
-                this.orderListeners.forEach(cb => cb(order));
+            if (this.wsStarted || this.wsConnecting) {
+                resolve();
+                return;
             }
-        }).catch((err: any) => {
-            this.wsConnecting = false;
-            console.error('[Shoonya] start_websocket failed:', err);
+
+            if (!this.isLoggedIn()) {
+                console.warn('[Shoonya] Cannot start WebSocket: Not logged in.');
+                reject(new Error('Not logged in'));
+                return;
+            }
+
+            this.wsConnecting = true;
+            const wsPromise = this.api.start_websocket({
+                socket_open: () => {
+                    // Connection acknowledged by Shoonya (t == 'ck')
+                    this.wsConnecting = false;
+                    this.wsStarted = true;
+                    this.isSocketConnected = true;
+
+                    // Auto subscribe to Nifty spot
+                    if (this.api.web_socket) {
+                        this.api.subscribe(['NSE|26000']);
+                    }
+
+                    // Flush pending subscriptions
+                    if (this.pendingSubscriptions.length > 0) {
+                        console.log(`[Shoonya] Flushing ${this.pendingSubscriptions.length} pending subscriptions...`);
+                        this.api.subscribe(this.pendingSubscriptions);
+                        this.pendingSubscriptions = [];
+                    }
+
+                    resolve();
+                },
+                socket_close: () => {
+                    this.isSocketConnected = false;
+                    this.wsStarted = false;
+                    this.wsConnecting = false;
+                    console.warn('[Shoonya] WebSocket closed');
+                },
+                socket_error: () => {
+                    this.isSocketConnected = false;
+                    this.wsStarted = false;
+                    this.wsConnecting = false;
+                    console.error('[Shoonya] WebSocket error');
+                },
+                quote: (tick: any) => {
+                    // Log only important ticks to avoid flooding
+                    if (tick.tk === '26000') {
+                        // console.log('[Shoonya] Nifty Spot Tick:', tick.lp);
+                    }
+
+                    this.tickListeners.forEach(cb => cb(tick));
+                    // Also emit globally for UI convenience
+                    socketService.emit('tick', tick);
+                },
+                order: (order: any) => {
+                    //console.log('[Shoonya] Order Update:', order);
+                    this.orderListeners.forEach(cb => cb(order));
+                }
+            });
+
+            // Handle if start_websocket returns a promise or not
+            if (wsPromise && typeof wsPromise.catch === 'function') {
+                wsPromise.catch((err: any) => {
+                    this.wsConnecting = false;
+                    console.error('[Shoonya] start_websocket failed:', err);
+                    reject(err);
+                });
+            } else {
+                // If no promise returned, assume connection will happen asynchronously via callbacks
+                console.log('[Shoonya] start_websocket called (returns undefined, relying on callbacks)');
+            }
         });
     }
 
