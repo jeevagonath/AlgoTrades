@@ -251,7 +251,7 @@ var NorenRestApi = function (params) {
     let values = {
       uid: self.__username || ''
     };
-    let logout_request = post_tp_request('logout', values);
+    let logout_request = post_request('logout', values);
     logout_request
       .then(response => {
         if (response.stat === 'Ok') {
