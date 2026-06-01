@@ -64,6 +64,12 @@ class ShoonyaService {
                             access_token: res.access_token,
                             usedToken: res.susertoken || res.access_token || null
                         });
+                        try {
+                            await this.startWebSocket();
+                        } catch (e) {
+                            // startWebSocket now resolves when not logged in and only rejects on real WS errors
+                            console.warn('[Shoonya] startWebSocket after login failed:', e);
+                        }
                         resolve(res);
                     } else {
                         reject(res);
@@ -111,6 +117,11 @@ class ShoonyaService {
                             susertoken: res.access_token,
                             actid
                         });
+                        try {
+                            await this.startWebSocket();
+                        } catch (e) {
+                            console.warn('[Shoonya] startWebSocket after loginWithCode failed:', e);
+                        }
                         console.log('[Shoonya] loginWithCode token used:', {
                             susertoken: res.access_token,
                             access_token: res.access_token,
