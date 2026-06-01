@@ -208,7 +208,7 @@ class ShoonyaService {
     }
 
     startWebSocket(onTick?: (tick: any) => void, onOrder?: (order: any) => void) {
-        return new Promise<void>((resolve, reject) => {
+        return new Promise<void>(async (resolve, reject) => {
             if (onTick) this.tickListeners.push(onTick);
             if (onOrder) this.orderListeners.push(onOrder);
 
@@ -217,10 +217,22 @@ class ShoonyaService {
                 return;
             }
 
+            // If not logged in, try to resume a session first. If still not logged in,
+            // don't reject the whole service startup — resolve and defer websocket
+            // connection until after a successful login.
             if (!this.isLoggedIn()) {
-                console.warn('[Shoonya] Cannot start WebSocket: Not logged in.');
-                reject(new Error('Not logged in'));
-                return;
+                try {
+                    await this.resumeSession();
+                } catch (e) {
+                    // ignore resume errors
+                }
+
+                if (!this.isLoggedIn()) {
+                    console.warn('[Shoonya] Cannot start WebSocket: Not logged in. Deferring until login.');
+                    // Leave wsConnecting false and return successfully so callers don't crash
+                    resolve();
+                    return;
+                }
             }
 
             this.wsConnecting = true;
