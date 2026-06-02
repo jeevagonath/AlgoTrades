@@ -51,10 +51,10 @@ const PORT = Number(process.env.PORT) || 3001;
 
 const start = async () => {
     try {
-        console.log(`[System] Starting server on port ${PORT}...`);
+        //console.log(`[System] Starting server on port ${PORT}...`);
 
         await app.listen({ port: PORT, host: '0.0.0.0' });
-        console.log(`[System] HTTP Server is listening at 0.0.0.0:${PORT}`);
+        //console.log(`[System] HTTP Server is listening at 0.0.0.0:${PORT}`);
 
         // Log outbound IP for Shoonya IP whitelist configuration (visible in Render logs only)
         fetch('https://api.ipify.org?format=json')
@@ -74,10 +74,10 @@ const start = async () => {
 
         // Initialize Socket Service synchronously
         socketService.init(io);
-        console.log('[System] SocketService initialized');
+        //console.log('[System] SocketService initialized');
 
         io.on('connection', (socket) => {
-            console.log('[System] Client connected via Socket.IO'); // Debug log
+            //console.log('[System] Client connected via Socket.IO'); // Debug log
 
             socket.on('subscribe', (tokens: string[]) => {
                 if (Array.isArray(tokens) && tokens.length > 0) {

@@ -109,7 +109,7 @@ var NorenRestApi = function (params) {
       headers.Authorization = self.__susertoken;
     }
 
-    console.log(`[Shoonya] POST ${url} body: ${payload} authHeader=${addAuthHeader}`);
+    //console.log(`[Shoonya] POST ${url} body: ${payload} authHeader=${addAuthHeader}`);
     return axios.post(url, payload, { headers });
   }
 
@@ -117,7 +117,7 @@ var NorenRestApi = function (params) {
   function post_login_request(route, params) {
     let url = loginEndpoint + routes[route];
     let payload = 'jData=' + JSON.stringify(params);
-    console.log(`[Shoonya] LOGIN POST ${url} body: ${payload}`);
+    //console.log(`[Shoonya] LOGIN POST ${url} body: ${payload}`);
     return axios.post(url, payload, {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
@@ -128,7 +128,7 @@ var NorenRestApi = function (params) {
   function post_tp_request(route, params) {
     let url = tpEndpoint + routes[route];
     let payload = 'jData=' + JSON.stringify(params);
-    console.log(`[Shoonya] TP POST ${url} body: ${payload}`);
+    //console.log(`[Shoonya] TP POST ${url} body: ${payload}`);
     return axios.post(url, payload, {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
@@ -142,11 +142,11 @@ var NorenRestApi = function (params) {
   }
 
   self.setSessionDetails = function (response) {
-    console.log('[RestApi] setSessionDetails called with:', JSON.stringify(response, null, 2));
+    //console.log('[RestApi] setSessionDetails called with:', JSON.stringify(response, null, 2));
     self.__susertoken = response.susertoken || response.access_token;
     self.__username = normalizeShoonyaId(response.uid || response.USERID || response.actid || '');
     self.__accountid = normalizeShoonyaId(response.actid || response.uid || response.USERID || self.__username || '');
-    console.log(`[RestApi] Session Set: username=${self.__username}, accountid=${self.__accountid}`);
+    //console.log(`[RestApi] Session Set: username=${self.__username}, accountid=${self.__accountid}`);
   };
 
   /**
@@ -224,7 +224,7 @@ var NorenRestApi = function (params) {
     // Debug: log the appKey, code, and computed checksum so we can verify the verifier
     // Note: secretKey is intentionally not logged to avoid leaking sensitive data.
     try {
-      console.log(`[Shoonya] GenAcsTok: appKey=${appKey}, code=${code}, checksum=${checksum}`);
+      //console.log(`[Shoonya] GenAcsTok: appKey=${appKey}, code=${code}, checksum=${checksum}`);
     } catch (e) { /* ignore logging errors */ }
 
     let token_data = post_login_request("gen_access_token", params);
@@ -324,7 +324,7 @@ var NorenRestApi = function (params) {
     values["uid"] = self.__username
     values["exch"] = exchange
     values["token"] = token
-    console.log(`[RestApi] get_quotes internal: uid=${self.__username}, exch=${exchange}, token=${token}`);
+    //console.log(`[RestApi] get_quotes internal: uid=${self.__username}, exch=${exchange}, token=${token}`);
 
     if (!self.__username) {
       console.error('[RestApi] get_quotes aborted: uid (username) is missing');

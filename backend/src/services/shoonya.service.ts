@@ -52,7 +52,7 @@ class ShoonyaService {
         return new Promise((resolve, reject) => {
             this.api.login(credentials)
                 .then(async (res: any) => {
-                    console.log('[Shoonya] login response:', JSON.stringify(res, null, 2));
+                    //console.log('[Shoonya] login response:', JSON.stringify(res, null, 2));
                     if (res.stat === 'Ok') {
                         this.session = res;
                         // Save session to database for persistence
@@ -100,7 +100,7 @@ class ShoonyaService {
             // Pass the appKey with _U to the API wrapper so checksum matches the authorization request
             this.api.gen_access_token(code, apiAppKey, secretKey)
                 .then(async (res: any) => {
-                    console.log('[Shoonya] loginWithCode response:', JSON.stringify(res, null, 2));
+                    //console.log('[Shoonya] loginWithCode response:', JSON.stringify(res, null, 2));
                     if (res.stat === 'Ok') {
                         // Map access_token → susertoken for full app compatibility
                         const uid = normalizeId(res.uid || res.USERID || normalizedAppKey);
@@ -113,22 +113,22 @@ class ShoonyaService {
                         };
 
                         // Call QuickAuth after GenAcsTok and log the full response for debugging.
-                        try {
-                            const quickAuthParams = {
-                                source: 'API',
-                                apkversion: 'js:1.0.0',
-                                uid,
-                                pwd: res.access_token,
-                                factor2: '',
-                                vc: 'FA22136_U',
-                                appkey: apiAppKey,
-                                imei: 'abc1234'
-                            };
-                            const quickAuthResponse = await this.api.quick_auth(quickAuthParams);
-                            console.log('[Shoonya] QuickAuth after GenAcsTok full response:', JSON.stringify(quickAuthResponse, null, 2));
-                        } catch (err) {
-                            console.error('[Shoonya] QuickAuth after GenAcsTok failed:', err);
-                        }
+                        // try {
+                        //     const quickAuthParams = {
+                        //         source: 'API',
+                        //         apkversion: 'js:1.0.0',
+                        //         uid,
+                        //         pwd: res.access_token,
+                        //         factor2: '',
+                        //         vc: 'FA22136_U',
+                        //         appkey: apiAppKey,
+                        //         imei: 'abc1234'
+                        //     };
+                        //     const quickAuthResponse = await this.api.quick_auth(quickAuthParams);
+                        //     console.log('[Shoonya] QuickAuth after GenAcsTok full response:', JSON.stringify(quickAuthResponse, null, 2));
+                        // } catch (err) {
+                        //     console.error('[Shoonya] QuickAuth after GenAcsTok failed:', err);
+                        // }
 
                         this.session = sessionData;
                         this.api.setSessionDetails(sessionData);
