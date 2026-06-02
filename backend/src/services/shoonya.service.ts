@@ -157,17 +157,32 @@ class ShoonyaService {
 
     async logout() {
         try {
-            // Shoonya API might have a logout, but if it's just local session clearing:
+            // Stop WebSocket first to prevent heartbeat logs after logout
+            this.stopWebSocket();
+            // Call API logout
             if (this.api.logout) {
                 await this.api.logout();
             }
             this.session = null;
             this.api.setSessionDetails({});
             await db.clearSession();
-            //console.log('[Shoonya] Logged out successfully and session cleared from DB.');
+            console.log('[Shoonya] Logged out successfully and session cleared from DB.');
         } catch (err) {
-            //console.error('[Shoonya] Logout failed:', err);
+            console.error('[Shoonya] Logout failed:', err);
             throw err;
+        }
+    }
+
+    private stopWebSocket() {
+        try {
+            if (this.api && this.api.stop_websocket) {
+                this.api.stop_websocket();
+            }
+            this.wsStarted = false;
+            this.isSocketConnected = false;
+            console.log('[Shoonya] WebSocket stopped.');
+        } catch (err) {
+            console.error('[Shoonya] stopWebSocket error:', err);
         }
     }
 

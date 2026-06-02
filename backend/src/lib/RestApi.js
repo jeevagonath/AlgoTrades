@@ -660,6 +660,17 @@ var NorenRestApi = function (params) {
     self.web_socket.send(JSON.stringify(values));
   }
 
+  self.stop_websocket = function () {
+    try {
+      if (self.web_socket) {
+        self.web_socket.close();
+        self.web_socket = null;
+      }
+    } catch (err) {
+      console.error('[Shoonya] stop_websocket error:', err);
+    }
+  };
+
 
 }
 
