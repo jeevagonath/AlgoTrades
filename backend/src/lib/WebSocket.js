@@ -59,7 +59,7 @@ let WebSocketClient = function (cred) {
                     let result;
                     try { result = JSON.parse(text); } catch (e) { console.error('[Shoonya WS] Invalid JSON', e); return; }
 
-                    if (result.t === 'ck') {
+                    if (result.t === 'ck' || result.t === 'ak') {
                          console.log('[Shoonya WS] Connect Acknowledgement:', result);
                          trigger('open', [result]);
                     }
