@@ -43,7 +43,7 @@ let WebSocketClient = function (cred) {
                     }, timeout);
 
                     //prepare the data
-                    let values = { t: 'c' };
+                    let values = { t: 'a' };
                     values.uid = params.uid;
                     values.actid = params.actid;
                     values.accesstoken = params.apikey || params.usertoken;
