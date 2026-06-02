@@ -10,6 +10,7 @@ class SocketService {
     private isConnected: boolean = false;
     private activeSubscriptions: Set<string> = new Set();
     private statusListeners: ((status: SocketStatus) => void)[] = [];
+    private dailyUnsubscribeTimer: number | null = null;
 
     constructor() {
         const url = import.meta.env.VITE_SOCKET_URL || 'https://algotradesservice.onrender.com/'
@@ -40,13 +41,48 @@ class SocketService {
             this.isConnected = false;
             this.notifyStatusListeners();
         });
+
+        this.setupDailyUnsubscribe();
     }
 
-    connect(url?: string) {
-        if (!this.socket.connected) {
-            console.log('[Socket] Connecting...');
-            this.socket.connect();
+    private clearDailyUnsubscribeTimer() {
+        if (this.dailyUnsubscribeTimer !== null) {
+            clearTimeout(this.dailyUnsubscribeTimer);
+            this.dailyUnsubscribeTimer = null;
         }
+    }
+
+    private unsubscribeAt4pm() {
+        if (this.activeSubscriptions.size === 0) return;
+        const tokens = Array.from(this.activeSubscriptions);
+        console.log('[Socket] Auto-unsubscribe at 4pm for tokens:', tokens);
+        this.socket.emit('unsubscribe', tokens);
+        this.activeSubscriptions.clear();
+        this.notifyStatusListeners();
+    }
+
+    private scheduleNextDailyUnsubscribe() {
+        if (typeof window === 'undefined') return;
+        const now = new Date();
+        const next4pm = new Date(now);
+        next4pm.setHours(16, 0, 0, 0);
+        if (next4pm <= now) {
+            next4pm.setDate(next4pm.getDate() + 1);
+        }
+        const delay = next4pm.getTime() - now.getTime();
+        this.dailyUnsubscribeTimer = window.setTimeout(() => {
+            this.unsubscribeAt4pm();
+            this.scheduleNextDailyUnsubscribe();
+        }, delay);
+    }
+
+    private setupDailyUnsubscribe() {
+        if (typeof window === 'undefined') return;
+        const now = new Date();
+        if (now.getHours() >= 16) {
+            this.unsubscribeAt4pm();
+        }
+        this.scheduleNextDailyUnsubscribe();
     }
 
     private notifyStatusListeners() {
@@ -92,9 +128,28 @@ class SocketService {
     }
 
     unsubscribe(tokens: string[]) {
+        if (!tokens || tokens.length === 0) return;
         tokens.forEach(t => this.activeSubscriptions.delete(t));
         this.socket.emit('unsubscribe', tokens);
         this.notifyStatusListeners();
+    }
+
+    unsubscribeAll() {
+        const tokens = Array.from(this.activeSubscriptions);
+        if (tokens.length === 0) return;
+        this.activeSubscriptions.clear();
+        this.socket.emit('unsubscribe', tokens);
+        this.notifyStatusListeners();
+    }
+
+    disconnect() {
+        this.unsubscribeAll();
+        if (this.socket.connected) {
+            this.socket.disconnect();
+        }
+        this.isConnected = false;
+        this.notifyStatusListeners();
+        this.clearDailyUnsubscribeTimer();
     }
 }
 

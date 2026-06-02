@@ -101,6 +101,7 @@ export const IndicesWidget = () => {
         socketService.on('tick', handlePriceUpdate);
         return () => {
             socketService.off('tick', handlePriceUpdate);
+            socketService.unsubscribe(['26000', '26017']);
         };
     }, []);
 

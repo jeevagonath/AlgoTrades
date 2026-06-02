@@ -612,7 +612,13 @@ const Dashboard = ({ onLogout, onShowApiDocs }: { onLogout: () => void, onShowAp
         return () => {
             unmountStatus();
             // Cleanup socket listeners if needed
+            socketService.off('price_update');
             socketService.off('system_log');
+            socketService.off('new_alert');
+            socketService.off('new_order');
+            socketService.off('positions_updated');
+            socketService.off('state_updated');
+            socketService.off('strategy_exit');
             socketService.off('strategy_state');
         };
     }, []);

@@ -4,6 +4,7 @@ import LoginPage from './pages/LoginPage'
 import APITester from './pages/APITester'
 import ApiDocs from './pages/ApiDocs'
 import { authApi } from './services/api.service'
+import { socketService } from './services/socket.service'
 import { Code } from 'lucide-react'
 
 function App() {
@@ -40,6 +41,7 @@ function App() {
     } catch (err) {
       console.error('Logout API failed:', err);
     } finally {
+      socketService.disconnect();
       localStorage.clear();
       sessionStorage.clear();
       setIsAuthenticated(false);
@@ -47,6 +49,17 @@ function App() {
       setShowApiDocs(false);
     }
   };
+
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      socketService.disconnect();
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
 
   if (loading) {
     return (
