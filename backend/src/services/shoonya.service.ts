@@ -159,6 +159,25 @@ class ShoonyaService {
 
     async logout() {
         try {
+            // ⚠️ Safety check: warn loudly if logout is called while a live strategy is running.
+            // Stopping the WebSocket kills the live price feed. The engine's monitorPnL cron will
+            // continue running with frozen (stale) LTPs, which prevents spurious exits but means
+            // P&L figures will be inaccurate until the user logs back in.
+            try {
+                const { db: dbSvc } = await import('./supabase.service');
+                const savedState: any = await dbSvc.getState();
+                if (savedState && (savedState.status === 'ACTIVE' || savedState.status === 'ENTRY_DONE')) {
+                    console.warn('');
+                    console.warn('╔══════════════════════════════════════════════════════════╗');
+                    console.warn('║  ⚠️  WARNING: LOGOUT CALLED WITH ACTIVE STRATEGY TRADE   ║');
+                    console.warn(`║  Strategy Status: ${savedState.status.padEnd(38)}║`);
+                    console.warn('║  WebSocket will stop → LTPs will FREEZE.                 ║');
+                    console.warn('║  Re-login immediately to restore live price feed.         ║');
+                    console.warn('╚══════════════════════════════════════════════════════════╝');
+                    console.warn('');
+                }
+            } catch (_) { /* Non-blocking — don't prevent logout */ }
+
             // Stop WebSocket and clear timers to prevent heartbeat logs after logout
             this.stopWebSocket();
             this.clearDailyStopTimer();

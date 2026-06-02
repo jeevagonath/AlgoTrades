@@ -225,7 +225,10 @@ class StrategyEngine {
                             // Past Entry time. Should be in the trade or rolling over.
                             // If we have positions, we check status.
                             const currentStatus = savedState?.status || 'IDLE';
-                            if (currentStatus !== 'ACTIVE') {
+                            // Treat ENTRY_DONE as ACTIVE — server may have crashed during the 5-second
+                            // transition between ENTRY_DONE and ACTIVE. Triggering rollover here would
+                            // incorrectly exit live positions and re-enter, causing a double trade.
+                            if (currentStatus !== 'ACTIVE' && currentStatus !== 'ENTRY_DONE') {
                                 this.addLog('⏰ [Recovery] Startup past entry time but not active. Triggering Rollover...');
                                 await this.executeRolloverSequence();
                             } else {
@@ -1318,6 +1321,10 @@ class StrategyEngine {
     private checkExits() {
         if (this.state.isPaused) return;
 
+        // Guard: if an exit is already in-flight, don't start another one.
+        // exitAllPositions() sets isExiting=true for its duration.
+        if (this.isExiting) return;
+
         const now = Date.now();
         // Profit Exit: > target for 10s
         if (this.state.targetPnl && this.state.pnl > this.state.targetPnl) {
@@ -1339,7 +1346,10 @@ class StrategyEngine {
 
         // Loss Exit: < stop loss for 10s
         if (this.state.stopLossPnl && this.state.pnl < -Math.abs(this.state.stopLossPnl)) {
-            if (!this.state.monitoring.lossTime) this.state.monitoring.lossTime = now;
+            if (!this.state.monitoring.lossTime) {
+                this.state.monitoring.lossTime = now;
+                this.addLog(`⚠️ Stop Loss Timer Started: Current PnL ₹${this.state.pnl.toFixed(2)} < SL ₹${-Math.abs(this.state.stopLossPnl)}`);
+            }
             else if (now - this.state.monitoring.lossTime >= 10000) {
                 this.exitAllPositions(`Loss Limit ₹${this.state.stopLossPnl} (10s confirmation)`);
             }
@@ -1876,18 +1886,11 @@ class StrategyEngine {
             // Recalculate PnL
             await this.calculatePnL();
 
-            // Check Limits
-            if (this.state.stopLossPnl && this.state.pnl <= -Math.abs(this.state.stopLossPnl)) {
-                this.addLog(`🛑 Stop Loss Triggered! PnL: ${this.state.pnl}`);
-                await this.exitAllPositions('Stop Loss Hit');
-                return;
-            }
-
-            if (this.state.targetPnl && this.state.pnl >= this.state.targetPnl) {
-                this.addLog(`🎉 Target Triggered! PnL: ${this.state.pnl}`);
-                await this.exitAllPositions('Target Hit');
-                return;
-            }
+            // Check Limits — delegate to checkExits() which enforces the shared 10-second
+            // confirmation timer. Previously this cron path called exitAllPositions() instantly
+            // (no timer), meaning a transient PnL spike during a single cron tick could close
+            // all positions without the WebSocket path's confirmation window.
+            this.checkExits();
 
             await this.syncToDb();
 

@@ -40,6 +40,15 @@ export async function strategyRoutes(app: FastifyInstance) {
 
     app.post('/test-selection', async (request, reply) => {
         try {
+            // Guard: block if a live trade is in progress — selectStrikes() calls syncPositions()
+            // which wipes and rewrites the DB positions table, corrupting live position tracking.
+            const currentState = strategyEngine.getState();
+            if (currentState.status === 'ACTIVE' || currentState.status === 'ENTRY_DONE') {
+                return reply.status(409).send({
+                    status: 'error',
+                    message: `Blocked: Cannot run test-selection while strategy is ${currentState.status}. This would overwrite live DB positions.`
+                });
+            }
             const { expiry } = request.body as { expiry: string };
             const strikes = await strategyEngine.selectStrikes(expiry);
             return { status: 'success', data: strikes };
@@ -50,6 +59,17 @@ export async function strategyRoutes(app: FastifyInstance) {
 
     app.post('/mock-expiry', async (request, reply) => {
         try {
+            // Guard: block if a live trade is in progress — setTestDate() calls initScheduler()
+            // which rebuilds all cron timers. If the mock date is treated as expiry day and
+            // current time is past entryTime, the new scheduler can immediately fire a rollover
+            // that exits live positions.
+            const currentState = strategyEngine.getState();
+            if (currentState.status === 'ACTIVE' || currentState.status === 'ENTRY_DONE') {
+                return reply.status(409).send({
+                    status: 'error',
+                    message: `Blocked: Cannot set mock expiry while strategy is ${currentState.status}. This would rebuild schedulers and may trigger an unwanted rollover.`
+                });
+            }
             const { date } = request.body as { date: string | null };
             await strategyEngine.setTestDate(date);
             return { status: 'success', message: `Mock date set to ${date || 'current'}` };
