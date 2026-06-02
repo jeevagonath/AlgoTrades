@@ -12,10 +12,12 @@ class ShoonyaService {
     private wsConnecting: boolean = false;
     private isSocketConnected: boolean = false;
     private pendingSubscriptions: string[] = [];
+    private dailyStopTimer: NodeJS.Timeout | null = null;
 
     constructor() {
         this.api = new Api({});
         this.resumeSession();
+        this.setupDaily4pmStop();
     }
 
     private async resumeSession() {
@@ -157,8 +159,9 @@ class ShoonyaService {
 
     async logout() {
         try {
-            // Stop WebSocket first to prevent heartbeat logs after logout
+            // Stop WebSocket and clear timers to prevent heartbeat logs after logout
             this.stopWebSocket();
+            this.clearDailyStopTimer();
             // Call API logout
             if (this.api.logout) {
                 await this.api.logout();
@@ -184,6 +187,43 @@ class ShoonyaService {
         } catch (err) {
             console.error('[Shoonya] stopWebSocket error:', err);
         }
+    }
+
+    private clearDailyStopTimer() {
+        if (this.dailyStopTimer) {
+            clearTimeout(this.dailyStopTimer);
+            this.dailyStopTimer = null;
+        }
+    }
+
+    private stopWebSocketAt4pm() {
+        if (this.wsStarted) {
+            console.log('[Shoonya] Auto-stopping WebSocket at 4pm');
+            this.stopWebSocket();
+        }
+    }
+
+    private scheduleNextDaily4pmStop() {
+        const now = new Date();
+        const next4pm = new Date(now);
+        next4pm.setHours(16, 0, 0, 0);
+        if (next4pm <= now) {
+            next4pm.setDate(next4pm.getDate() + 1);
+        }
+        const delay = next4pm.getTime() - now.getTime();
+        console.log(`[Shoonya] Next WebSocket stop scheduled at ${next4pm.toISOString()} (in ${Math.round(delay / 1000)}s)`);
+        this.dailyStopTimer = setTimeout(() => {
+            this.stopWebSocketAt4pm();
+            this.scheduleNextDaily4pmStop();
+        }, delay);
+    }
+
+    private setupDaily4pmStop() {
+        const now = new Date();
+        if (now.getHours() >= 16) {
+            this.stopWebSocketAt4pm();
+        }
+        this.scheduleNextDaily4pmStop();
     }
 
     async searchScrip(exchange: string, searchtext: string) {
