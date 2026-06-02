@@ -48,14 +48,14 @@ let WebSocketClient = function (cred) {
                     values.actid = params.actid;
                     values.accesstoken = params.apikey || params.usertoken;
                     values.source = 'API';
-                    console.log('[Shoonya WS] Sending connect request:', JSON.stringify(values));
+                    //console.log('[Shoonya WS] Sending connect request:', JSON.stringify(values));
                     try { ws.send(JSON.stringify(values)); } catch (e) { console.error('[Shoonya WS] send failed', e); }
                     resolve();
                });
 
                ws.on('message', function (data) {
                     const text = (typeof data === 'string') ? data : data.toString();
-                    console.log('[Shoonya WS] RECEIVED:', text);
+                    //console.log('[Shoonya WS] RECEIVED:', text);
                     let result;
                     try { result = JSON.parse(text); } catch (e) { console.error('[Shoonya WS] Invalid JSON', e); return; }
 
