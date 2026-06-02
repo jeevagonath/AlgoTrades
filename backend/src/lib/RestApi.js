@@ -247,6 +247,10 @@ var NorenRestApi = function (params) {
     return token_data;
   };
 
+  self.quick_auth = function (params) {
+    return post_login_request('authorize', params);
+  };
+
   self.logout = function () {
     let values = {
       uid: self.__username || ''

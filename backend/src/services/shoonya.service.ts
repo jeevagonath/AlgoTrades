@@ -109,6 +109,25 @@ class ShoonyaService {
                             uid,
                             actid
                         };
+
+                        // Call QuickAuth after GenAcsTok and log the full response for debugging.
+                        try {
+                            const quickAuthParams = {
+                                source: 'API',
+                                apkversion: 'js:1.0.0',
+                                uid,
+                                pwd: res.access_token,
+                                factor2: '',
+                                vc: 'FA22136_U',
+                                appkey: apiAppKey,
+                                imei: 'abc1234'
+                            };
+                            const quickAuthResponse = await this.api.quick_auth(quickAuthParams);
+                            console.log('[Shoonya] QuickAuth after GenAcsTok full response:', JSON.stringify(quickAuthResponse, null, 2));
+                        } catch (err) {
+                            console.error('[Shoonya] QuickAuth after GenAcsTok failed:', err);
+                        }
+
                         this.session = sessionData;
                         this.api.setSessionDetails(sessionData);
                         // Persist session to Supabase
