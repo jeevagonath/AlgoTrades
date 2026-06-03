@@ -90,9 +90,10 @@ const start = async () => {
             });
         });
 
-        // Resume any active strategy
+        // Resume any active strategy and wait for saved state to load
         console.log('[System] Resuming strategy engine...');
-        strategyEngine.resume();
+        await strategyEngine.resume();
+        console.log('[System] Strategy engine resumed.');
 
     } catch (err) {
         console.error('[System] FATAL: Failed to start server:', err);

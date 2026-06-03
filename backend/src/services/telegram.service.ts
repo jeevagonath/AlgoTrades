@@ -7,8 +7,8 @@ class TelegramService {
     private chatId: string = '';
 
     setCredentials(token: string, chatId: string) {
-        this.token = token;
-        this.chatId = chatId;
+        this.token = token ? String(token).trim() : '';
+        this.chatId = chatId ? String(chatId).trim() : '';
     }
 
     private parseAlert(message: string): { type: string, severity: string, title: string, icon: string } {
@@ -80,7 +80,7 @@ class TelegramService {
             console.log('[Telegram] Sending message to Telegram...');
             console.log('[Telegram] Message:', message);
             console.log('[Telegram] Credentials:', { token: !!this.token, chatId: !!this.chatId });
-            if (this.token && this.chatId) {
+            if (this.token.trim() && this.chatId.trim()) {
                 try {
                     const url = `https://api.telegram.org/bot${this.token}/sendMessage`;
                     await axios.post(url, {

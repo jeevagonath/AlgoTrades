@@ -153,9 +153,17 @@ class StrategyEngine {
                 this.state.peakProfit = savedState.peakProfit || 0;
                 this.state.peakLoss = savedState.peakLoss || 0;
 
-                if (savedState.telegramToken && savedState.telegramChatId) {
-                    this.state.telegramToken = savedState.telegramToken;
-                    this.state.telegramChatId = savedState.telegramChatId;
+                if (savedState.telegramToken !== undefined) {
+                    this.state.telegramToken = typeof savedState.telegramToken === 'string'
+                        ? savedState.telegramToken.trim()
+                        : String(savedState.telegramToken || '');
+                }
+                if (savedState.telegramChatId !== undefined) {
+                    this.state.telegramChatId = typeof savedState.telegramChatId === 'string'
+                        ? savedState.telegramChatId.trim()
+                        : String(savedState.telegramChatId || '');
+                }
+                if (this.state.telegramToken && this.state.telegramChatId) {
                     telegramService.setCredentials(this.state.telegramToken, this.state.telegramChatId);
                 }
 
@@ -545,12 +553,22 @@ class StrategyEngine {
         if (settings.reEntryCutoffTime) this.state.reEntryCutoffTime = settings.reEntryCutoffTime;
         if (settings.targetPnl !== undefined) this.state.targetPnl = settings.targetPnl;
         if (settings.stopLossPnl !== undefined) this.state.stopLossPnl = settings.stopLossPnl;
-        if (settings.telegramToken !== undefined) this.state.telegramToken = settings.telegramToken;
-        if (settings.telegramChatId !== undefined) this.state.telegramChatId = settings.telegramChatId;
+        if (settings.telegramToken !== undefined) {
+            this.state.telegramToken = typeof settings.telegramToken === 'string'
+                ? settings.telegramToken.trim()
+                : '';
+        }
+        if (settings.telegramChatId !== undefined) {
+            this.state.telegramChatId = typeof settings.telegramChatId === 'string'
+                ? settings.telegramChatId.trim()
+                : '';
+        }
         if (settings.isVirtual !== undefined) this.state.isVirtual = settings.isVirtual;
 
         if (this.state.telegramToken && this.state.telegramChatId) {
             telegramService.setCredentials(this.state.telegramToken, this.state.telegramChatId);
+        } else {
+            telegramService.setCredentials('', '');
         }
 
         await db.updateState(this.state, this.getUid());

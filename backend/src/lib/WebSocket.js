@@ -42,11 +42,10 @@ let WebSocketClient = function (cred) {
                          try { if (ws && ws.readyState === 1) ws.send(_hb_req); } catch (e) { }
                     }, timeout);
 
-                    //prepare the data
                     let values = { t: 'a' };
                     values.uid = params.uid;
                     values.actid = params.actid;
-                    values.accesstoken = params.apikey || params.usertoken;
+                   values.accesstoken = params.apikey || params.usertoken;
                     values.source = 'API';
                     //console.log('[Shoonya WS] Sending connect request:', JSON.stringify(values));
                     try { ws.send(JSON.stringify(values)); } catch (e) { console.error('[Shoonya WS] send failed', e); }

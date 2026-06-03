@@ -103,6 +103,8 @@ export async function strategyRoutes(app: FastifyInstance) {
     app.post('/settings', async (request, reply) => {
         try {
             const settings = request.body as any;
+            if (settings.telegramToken === false || settings.telegramToken === null) settings.telegramToken = '';
+            if (settings.telegramChatId === false || settings.telegramChatId === null) settings.telegramChatId = '';
             await strategyEngine.updateSettings(settings);
             return { status: 'success' };
         } catch (err: any) {

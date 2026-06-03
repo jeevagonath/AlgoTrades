@@ -28,8 +28,8 @@ export const db = {
         if (state.exitTime !== undefined) payload.exit_time = state.exitTime;
         if (state.targetPnl !== undefined) payload.target_pnl = state.targetPnl;
         if (state.stopLossPnl !== undefined) payload.stop_loss_pnl = state.stopLossPnl;
-        if (state.telegramToken !== undefined) payload.telegram_token = state.telegramToken;
-        if (state.telegramChatId !== undefined) payload.telegram_chat_id = state.telegramChatId;
+        if (state.telegramToken !== undefined) payload.telegram_token = state.telegramToken || '';
+        if (state.telegramChatId !== undefined) payload.telegram_chat_id = state.telegramChatId || '';
         if (state.nextAction !== undefined) payload.next_action = state.nextAction;
         if (state.engineActivity !== undefined) payload.engine_activity = state.engineActivity;
         if (state.reEntryCutoffTime !== undefined) payload.re_entry_cutoff_time = state.reEntryCutoffTime;
