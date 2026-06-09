@@ -73,10 +73,12 @@ export const PnlChart: React.FC<PnlChartProps> = ({ data, className }) => {
                                 color: '#f8fafc'
                             }}
                             itemStyle={{ color: '#94a3b8' }}
-                            formatter={(value: number | null | undefined) => {
+                            formatter={(value: any) => {
                                 const formatted = value == null
                                     ? '-'
-                                    : `₹${value.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+                                    : typeof value === 'number'
+                                    ? `₹${value.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`
+                                    : String(value);
                                 return [formatted, 'P&L'];
                             }}
                             labelStyle={{ color: '#94a3b8', marginBottom: '4px' }}
