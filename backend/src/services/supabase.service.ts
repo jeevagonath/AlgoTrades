@@ -666,14 +666,11 @@ export const db = {
             // Determine start of today's date in IST and convert to UTC ISO for querying Supabase
             const now = new Date();
             const istNow = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
-            const startOfDay = new Date(Date.UTC(
-                istNow.getFullYear(),
-                istNow.getMonth(),
-                istNow.getDate(),
-                0,
-                0,
-                0
-            )).toISOString();
+            const year = istNow.getFullYear();
+            const month = String(istNow.getMonth() + 1).padStart(2, '0');
+            const day = String(istNow.getDate()).padStart(2, '0');
+            const istMidnight = `${year}-${month}-${day}T00:00:00+05:30`;
+            const startOfDay = new Date(istMidnight).toISOString();
 
             let query = supabase
                 .from('pnl_snapshots')
