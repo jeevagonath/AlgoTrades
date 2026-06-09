@@ -361,6 +361,32 @@ const Dashboard = ({ onLogout, onShowApiDocs }: { onLogout: () => void, onShowAp
         netPnl: 0
     });
 
+    const intradayChartData = useMemo(() => {
+        const map = new Map<string, number>();
+        intradayPnl.forEach(point => {
+            map.set(point.time, point.pnl);
+        });
+
+        const result: { time: string; pnl: number | null }[] = [];
+        const start = { hour: 9, minute: 15 };
+        const end = { hour: 15, minute: 30 };
+        let currHour = start.hour;
+        let currMinute = start.minute;
+
+        while (currHour < end.hour || (currHour === end.hour && currMinute <= end.minute)) {
+            const time = `${String(currHour).padStart(2, '0')}:${String(currMinute).padStart(2, '0')}`;
+            result.push({ time, pnl: map.has(time) ? map.get(time)! : null });
+
+            currMinute += 1;
+            if (currMinute === 60) {
+                currMinute = 0;
+                currHour += 1;
+            }
+        }
+
+        return result;
+    }, [intradayPnl]);
+
     const [showSettings, setShowSettings] = useState(false);
     const [settings, setSettings] = useState({
         entryTime: '12:59',
@@ -1292,7 +1318,7 @@ const Dashboard = ({ onLogout, onShowApiDocs }: { onLogout: () => void, onShowAp
 
                 {/* Cumulative P&L Intraday Chart */}
                 <div className="w-full">
-                    <PnlChart data={intradayPnl} className="h-[300px] w-full" />
+                    <PnlChart data={intradayChartData} className="h-[300px] w-full" />
                 </div>
 
                 {/* Main Content Grid */}

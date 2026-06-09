@@ -694,17 +694,13 @@ export const db = {
                 pnl: d.pnl
             }));
 
-            // If there are no snapshots yet, return a single 09:00 point with pnl 0.
+            // If there are no snapshots yet for today, return a single 09:00 point with pnl 0.
             if (formattedData.length === 0) {
                 return [{ time: '09:00', pnl: 0 }];
             }
 
-            // If the first snapshot occurs after 09:00 IST, insert a baseline at 09:00
-            // using the first available PnL so the chart doesn't show a misleading jump to zero.
-            if (formattedData[0].time > '09:00') {
-                formattedData.unshift({ time: '09:00', pnl: formattedData[0].pnl || 0 });
-            }
-
+            // Do not inject a fake 09:00 point when the first snapshot is later in the day.
+            // This preserves the actual first trade time for the chart (e.g. 13:00).
             return formattedData;
         } catch (err) {
             console.error('Failed to load intraday PnL:', err);

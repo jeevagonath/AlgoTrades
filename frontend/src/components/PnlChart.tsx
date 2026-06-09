@@ -3,7 +3,7 @@ import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YA
 
 interface PnlData {
     time: string;
-    pnl: number;
+    pnl: number | null;
 }
 
 interface PnlChartProps {
@@ -12,9 +12,12 @@ interface PnlChartProps {
 }
 
 export const PnlChart: React.FC<PnlChartProps> = ({ data, className }) => {
-    // Determine min and max for Y-axis domain padding
-    const minPnl = Math.min(...data.map(d => d.pnl), 0);
-    const maxPnl = Math.max(...data.map(d => d.pnl), 0);
+    const values = data
+        .map(d => d.pnl)
+        .filter((value): value is number => typeof value === 'number');
+
+    const minPnl = values.length > 0 ? Math.min(...values, 0) : 0;
+    const maxPnl = values.length > 0 ? Math.max(...values, 0) : 0;
     const padding = Math.max(Math.abs(minPnl), Math.abs(maxPnl)) * 0.1; // 10% padding
 
     // Gradient ID for unique referencing
@@ -70,12 +73,12 @@ export const PnlChart: React.FC<PnlChartProps> = ({ data, className }) => {
                                 color: '#f8fafc'
                             }}
                             itemStyle={{ color: '#94a3b8' }}
-                            formatter={(value: number | undefined) => [
-                                <span className={value && value >= 0 ? "text-emerald-400" : "text-rose-400"}>
-                                    ₹{(value ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                                </span>,
-                                'P&L'
-                            ]}
+                            formatter={(value: number | null | undefined) => {
+                                const formatted = value == null
+                                    ? '-'
+                                    : `₹${value.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+                                return [formatted, 'P&L'];
+                            }}
                             labelStyle={{ color: '#94a3b8', marginBottom: '4px' }}
                         />
                         <Area
