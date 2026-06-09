@@ -105,6 +105,12 @@ class SocketService {
         };
     }
 
+    connect() {
+        if (!this.socket.connected) {
+            this.socket.connect();
+        }
+    }
+
     on(event: string, callback: (data: any) => void) {
         this.socket.on(event, callback);
     }
