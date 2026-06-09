@@ -47,6 +47,7 @@ interface StrategyState {
         profitTime: number; // Start timestamp
         lossTime: number;   // Start timestamp
         adjustments: Record<string, number>; // token -> start timestamp
+        adjusted: Record<string, boolean>; // token -> already handled once
     };
     nextAction: string; // "Exit at 12:45 PM", "Target Hit", etc.
     engineActivity: string; // "Watching Spikes", "Waiting for Expiry", etc.
@@ -89,7 +90,8 @@ class StrategyEngine {
         monitoring: {
             profitTime: 0,
             lossTime: 0,
-            adjustments: {}
+            adjustments: {},
+            adjusted: {}
         },
         nextAction: 'Daily 9 AM Evaluation',
         engineActivity: 'Initializing',
@@ -164,6 +166,7 @@ class StrategyEngine {
                         : String(savedState.telegramChatId || '');
                 }
                 if (this.state.telegramToken && this.state.telegramChatId) {
+                     console.log('Restoring Telegram credentials from saved state');
                     telegramService.setCredentials(this.state.telegramToken, this.state.telegramChatId);
                 }
 
@@ -566,8 +569,10 @@ class StrategyEngine {
         if (settings.isVirtual !== undefined) this.state.isVirtual = settings.isVirtual;
 
         if (this.state.telegramToken && this.state.telegramChatId) {
+             console.log('Updating Telegram credentials from settings update');
             telegramService.setCredentials(this.state.telegramToken, this.state.telegramChatId);
         } else {
+             console.log('Clearing Telegram credentials due to missing token/chatId in settings update');
             telegramService.setCredentials('', '');
         }
 
@@ -1257,6 +1262,7 @@ class StrategyEngine {
 
         // Prevent duplicate adjustments if already handled
         if (leg.isAdjusted) return;
+        if (this.state.monitoring.adjusted[leg.token]) return;
 
         const now = Date.now();
         if (leg.ltp > 100) {
@@ -1280,7 +1286,11 @@ class StrategyEngine {
         //console.log(`[Adjustment] Triggered for ${triggeredLeg.symbol} (Stayed > 100 for 10s)`);
 
         // Mark as adjusted immediately to prevent race conditions/double firing
+        if (triggeredLeg.isAdjusted || this.state.monitoring.adjusted[triggeredLeg.token]) {
+            return;
+        }
         triggeredLeg.isAdjusted = true;
+        this.state.monitoring.adjusted[triggeredLeg.token] = true;
 
         // Find the next OTM hedge (50 points further)
         try {
@@ -1757,7 +1767,8 @@ class StrategyEngine {
         this.state.monitoring = {
             profitTime: 0,
             lossTime: 0,
-            adjustments: {}
+            adjustments: {},
+            adjusted: {}
         };
 
         await this.syncToDb(true);

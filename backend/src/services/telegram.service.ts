@@ -7,6 +7,7 @@ class TelegramService {
     private chatId: string = '';
 
     setCredentials(token: string, chatId: string) {
+         console.log('Setting Telegram credentials:', { token: !!token, chatId: !!chatId });
         this.token = token ? String(token).trim() : '';
         this.chatId = chatId ? String(chatId).trim() : '';
     }
