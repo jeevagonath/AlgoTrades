@@ -694,7 +694,7 @@ const Dashboard = ({ onLogout, onShowApiDocs }: { onLogout: () => void, onShowAp
         <div className="min-h-screen bg-background text-foreground flex flex-col font-sans transition-colors duration-300">
             {/* Minimalist Top Navigation */}
             <nav className="sticky top-0 z-50 bg-card/80 backdrop-blur-md border-b border-border transition-colors duration-300">
-                <div className="max-w-[1600px] mx-auto px-6 h-16 flex items-center justify-between">
+                <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-8">
                         <div className="flex items-center gap-2.5">
                             <div className="p-1 bg-card border border-border rounded-lg shadow-sm overflow-hidden transition-colors">
@@ -1001,7 +1001,7 @@ const Dashboard = ({ onLogout, onShowApiDocs }: { onLogout: () => void, onShowAp
                 </div>
             )}
 
-            <main className="flex-1 max-w-[1600px] mx-auto w-full p-6 space-y-6 relative z-10">
+            <main className="flex-1 max-w-7xl mx-auto w-full p-6 space-y-6 relative z-10">
                 {/* Header Info Row with Metrics */}
                 <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
                     <div className="flex flex-col">
