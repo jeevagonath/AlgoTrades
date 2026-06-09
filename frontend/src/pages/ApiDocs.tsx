@@ -152,7 +152,7 @@ export default function ApiDocs({ onBack }: { onBack: () => void }) {
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-6">
-            <div className="max-w-7xl mx-auto space-y-6">
+            <div className="max-w-6xl mx-auto space-y-6">
 
                 {/* Header */}
                 <div className="flex items-center justify-between bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
