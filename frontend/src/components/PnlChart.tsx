@@ -52,6 +52,7 @@ export const PnlChart: React.FC<PnlChartProps> = ({ data, className }) => {
                             tickLine={false}
                             axisLine={false}
                             minTickGap={30}
+                            interval="preserveStartEnd"
                         />
                         <YAxis
                             stroke="#64748b"
