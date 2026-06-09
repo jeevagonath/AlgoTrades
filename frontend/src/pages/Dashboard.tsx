@@ -131,125 +131,6 @@ const PositionRow = ({ leg }: { leg: LegState }) => {
     );
 };
 
-const EngineWorkflow = ({ status, activity }: { status: string, activity: string }) => {
-    const steps = [
-        { id: 'EVAL', label: 'Daily Evaluation', desc: '9:00 AM Check', icon: '🔍', color: 'blue' },
-        { id: 'WAIT', label: 'Waiting for Expiry', desc: 'Non-expiry Day', icon: '⏳', color: 'amber' },
-        { id: 'EXIT', label: 'Square-off', desc: 'Exit Time', icon: '🚪', color: 'orange' },
-        { id: 'SELECT', label: 'Strike Selection', desc: 'Strike Picker', icon: '🎯', color: 'purple' },
-        { id: 'ENTRY', label: 'Strategy Entry', desc: 'Order Placement', icon: '📝', color: 'indigo' },
-        { id: 'ACTIVE', label: 'Monitoring PnL', desc: 'Active Trade', icon: '📊', color: 'green' },
-    ];
-
-    let currentStepIndex = -1;
-    const lowerActivity = activity.toLowerCase();
-
-    if (lowerActivity.includes('9 am') || lowerActivity.includes('evaluat')) currentStepIndex = 0;
-    else if (status === 'IDLE' && lowerActivity.includes('waiting for expiry')) currentStepIndex = 1;
-    else if (status === 'WAITING_FOR_EXPIRY') currentStepIndex = 1;
-    else if (status === 'EXIT_DONE' || lowerActivity.includes('exting') || lowerActivity.includes('square-off')) currentStepIndex = 2;
-    else if (lowerActivity.includes('select') || lowerActivity.includes('picker')) currentStepIndex = 3;
-    else if (status === 'ENTRY_DONE' || lowerActivity.includes('plac') || lowerActivity.includes('entry')) {
-        if (status === 'ACTIVE') currentStepIndex = 5;
-        else currentStepIndex = 4;
-    }
-    else if (status === 'ACTIVE') currentStepIndex = 5;
-
-    const getStepColor = (color: string, type: 'bg' | 'border' | 'text' | 'ring') => {
-        const colors: any = {
-            blue: { bg: 'bg-blue-500', border: 'border-blue-500', text: 'text-blue-600', ring: 'ring-blue-100' },
-            amber: { bg: 'bg-amber-500', border: 'border-amber-500', text: 'text-amber-600', ring: 'ring-amber-100' },
-            orange: { bg: 'bg-orange-500', border: 'border-orange-500', text: 'text-orange-600', ring: 'ring-orange-100' },
-            purple: { bg: 'bg-purple-500', border: 'border-purple-500', text: 'text-purple-600', ring: 'ring-purple-100' },
-            indigo: { bg: 'bg-indigo-500', border: 'border-indigo-500', text: 'text-indigo-600', ring: 'ring-indigo-100' },
-            green: { bg: 'bg-green-500', border: 'border-green-500', text: 'text-green-600', ring: 'ring-green-100' },
-        };
-        return colors[color]?.[type] || colors.blue[type];
-    };
-
-    return (
-        <div className="bg-gradient-to-br from-card to-background border border-border rounded-xl p-6 shadow-sm flex flex-col h-full transition-colors duration-300">
-            <div className="flex items-center justify-between mb-6 border-b border-border pb-3">
-                <h3 className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
-                    Engine Workflow
-                </h3>
-                <div className="text-[9px] font-bold px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 uppercase tracking-wide">
-                    {status}
-                </div>
-            </div>
-
-            <div className="space-y-5 flex-1">
-                {steps.map((step, idx) => {
-                    const isDone = idx < currentStepIndex;
-                    const isCurrent = idx === currentStepIndex;
-                    const isPending = idx > currentStepIndex;
-
-                    return (
-                        <div key={step.id} className={`flex items-start gap-3 relative transition-all duration-300 ${isCurrent ? 'scale-105' : ''}`}>
-                            {idx !== steps.length - 1 && (
-                                <div className={`absolute left-[13px] top-7 w-[2px] h-5 transition-all duration-500 ${isDone ? 'bg-gradient-to-b from-emerald-500 to-emerald-400' :
-                                    isCurrent ? 'bg-gradient-to-b from-blue-500 to-blue-300' :
-                                        'bg-slate-200 dark:bg-slate-800'
-                                    }`} />
-                            )}
-
-                            <div className={`mt-0.5 w-7 h-7 rounded-full border-2 flex items-center justify-center z-10 transition-all duration-500 text-sm ${isDone ? 'bg-emerald-500 border-emerald-500 shadow-md shadow-emerald-200 dark:shadow-none' :
-                                isCurrent ? `bg-background dark:bg-card ${getStepColor(step.color, 'border')} ring-4 ${getStepColor(step.color, 'ring')} shadow-md` :
-                                    'bg-background dark:bg-card border-slate-200 dark:border-slate-800'
-                                }`}>
-                                {isDone ? (
-                                    <CheckCircle2 className="w-4 h-4 text-white" />
-                                ) : isCurrent ? (
-                                    <span className="animate-pulse">{step.icon}</span>
-                                ) : (
-                                    <span className="opacity-30">{step.icon}</span>
-                                )}
-                            </div>
-
-                            <div className="flex-1 pt-0.5">
-                                <div className={`text-xs font-bold leading-tight transition-colors duration-300 ${isCurrent ? getStepColor(step.color, 'text') :
-                                    isDone ? 'text-foreground' :
-                                        'text-slate-400 dark:text-slate-500'
-                                    }`}>
-                                    {step.label}
-                                </div>
-
-                                <div className={`text-[10px] font-medium mt-1 leading-tight ${isCurrent ? 'text-slate-600 dark:text-slate-400' : 'text-slate-400 dark:text-slate-500'
-                                    }`}>
-                                    {isCurrent ? (
-                                        <div className="flex items-center gap-1">
-                                            <div className="w-1 h-1 rounded-full bg-blue-500 animate-ping"></div>
-                                            <span className="font-semibold">{activity}</span>
-                                        </div>
-                                    ) : (
-                                        step.desc
-                                    )}
-                                </div>
-
-                                {isCurrent && (
-                                    <div className="mt-2">
-                                        <div className="h-1 bg-slate-200 rounded-full overflow-hidden">
-                                            <div className={`h-full ${getStepColor(step.color, 'bg')} animate-pulse`} style={{ width: '60%' }}></div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {isDone && (
-                                    <div className="mt-1 text-[9px] text-emerald-600 font-semibold flex items-center gap-1">
-                                        <CheckCircle2 className="w-3 h-3" />
-                                        Completed
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-        </div>
-    );
-};
-
 const TaskTimer = ({ taskText }: { taskText: string }) => {
     const [timeLeft, setTimeLeft] = useState<string | null>(null);
 
@@ -1253,81 +1134,86 @@ const Dashboard = ({ onLogout, onShowApiDocs }: { onLogout: () => void, onShowAp
                     </div>
                 </div>
 
-                {/* Row 1: Engine & Margins & Nifty */}
-                {/* Row 1: Engine & Margins & Nifty */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-                    {/* 1. Status Console (Engine + Next Task) */}
-                    <div className="bg-card border border-border rounded-xl p-4 shadow-sm flex flex-col divide-y divide-border justify-center h-full gap-4">
-                        {/* Top: Engine Activity */}
-                        <div className="flex flex-col justify-center pb-1">
-                            <div className="flex items-center justify-between mb-1">
-                                <div className="flex items-center gap-2">
-                                    <Activity className="w-3.5 h-3.5 text-blue-500" />
-                                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Engine Activity</span>
+                <div className="grid grid-cols-1 xl:grid-cols-[1.9fr_1fr] gap-6">
+                    {/* Left Column: Chart + Engine Workflow + Margins + Nifty */}
+                    <div className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {/* 1. Status Console (Engine + Next Task) */}
+                            <div className="bg-card border border-border rounded-xl p-4 shadow-sm flex flex-col divide-y divide-border justify-center h-full gap-4">
+                                {/* Top: Engine Activity */}
+                                <div className="flex flex-col justify-center pb-1">
+                                    <div className="flex items-center justify-between mb-1">
+                                        <div className="flex items-center gap-2">
+                                            <Activity className="w-3.5 h-3.5 text-blue-500" />
+                                            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Engine Activity</span>
+                                        </div>
+                                        <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md border border-border ${socketStatus.connected ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400'}`}>
+                                            <div className={`w-1 h-1 rounded-full ${socketStatus.connected ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`}></div>
+                                            <span className="text-[8px] font-black uppercase tracking-tighter">
+                                                {socketStatus.connected ? `${socketStatus.subscribedCount} LIVE` : 'OFFLINE'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="text-sm font-bold text-slate-700 dark:text-slate-300 truncate" title={engineActivity}>{engineActivity || 'Ready'}</div>
                                 </div>
-                                <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md border border-border ${socketStatus.connected ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400'}`}>
-                                    <div className={`w-1 h-1 rounded-full ${socketStatus.connected ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`}></div>
-                                    <span className="text-[8px] font-black uppercase tracking-tighter">
-                                        {socketStatus.connected ? `${socketStatus.subscribedCount} LIVE` : 'OFFLINE'}
-                                    </span>
+
+                                {/* Bottom: Next Task */}
+                                <div className="flex flex-col justify-center pt-3">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <Clock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+                                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Next Task</span>
+                                    </div>
+                                    <div className="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2 truncate">
+                                        <span className="truncate" title={nextAction}>{nextAction || 'Pending'}</span>
+                                        <TaskTimer taskText={nextAction} />
+                                    </div>
                                 </div>
                             </div>
-                            <div className="text-sm font-bold text-slate-700 dark:text-slate-300 truncate" title={engineActivity}>{engineActivity || 'Ready'}</div>
+
+                            {/* 2. Margin Console (Required + Available) */}
+                            <div className="bg-card border border-border rounded-xl p-4 shadow-sm flex flex-col divide-y divide-border justify-center h-full gap-4">
+                                {/* Top: Required Margin */}
+                                <div className="flex flex-col justify-center pb-1">
+                                    <div className="flex items-center justify-between mb-0.5">
+                                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Required Margin</span>
+                                        <Shield className="w-3.5 h-3.5 text-blue-500" />
+                                    </div>
+                                    <div className="text-2xl font-black tracking-tighter text-foreground">
+                                        <AnimatedValueText value={requiredMargin} className="" fractionDigits={2} />
+                                    </div>
+                                </div>
+
+                                {/* Bottom: Available Margin */}
+                                <div className="flex flex-col justify-center pt-3">
+                                    <div className="flex items-center justify-between mb-0.5">
+                                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Available Margin</span>
+                                        <CheckCircle2 className={`w-3.5 h-3.5 ${availableMargin < requiredMargin ? 'text-rose-500' : 'text-emerald-500'}`} />
+                                    </div>
+                                    <div className={`text-2xl font-black tracking-tighter ${availableMargin < requiredMargin ? 'text-rose-600 dark:text-rose-400' : 'text-foreground'}`}>
+                                        <AnimatedValueText value={availableMargin} className="" fractionDigits={2} />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* 3. Indices Widget (Nifty 50 + VIX) */}
+                            <IndicesWidget />
                         </div>
 
-                        {/* Bottom: Next Task */}
-                        <div className="flex flex-col justify-center pt-3">
-                            <div className="flex items-center gap-2 mb-1">
-                                <Clock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
-                                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Next Task</span>
+                        {/* Cumulative P&L Intraday Chart */}
+                        <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden transition-colors">
+                            <div className="p-4 border-b border-border flex items-center justify-between bg-background/50">
+                                <h2 className="font-bold text-xs uppercase tracking-wider flex items-center gap-2 text-foreground">
+                                    <BarChart3 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                    Intraday P&L Chart
+                                </h2>
+                                <span className="text-[10px] uppercase tracking-widest text-slate-500 dark:text-slate-400">Real-time</span>
                             </div>
-                            <div className="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2 truncate">
-                                <span className="truncate" title={nextAction}>{nextAction || 'Pending'}</span>
-                                <TaskTimer taskText={nextAction} />
-                            </div>
+                            <PnlChart data={intradayPnl} className="h-[300px] w-full" />
                         </div>
                     </div>
 
-                    {/* 2. Margin Console (Required + Available) */}
-                    <div className="bg-card border border-border rounded-xl p-4 shadow-sm flex flex-col divide-y divide-border justify-center h-full gap-4">
-                        {/* Top: Required Margin */}
-                        <div className="flex flex-col justify-center pb-1">
-                            <div className="flex items-center justify-between mb-0.5">
-                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Required Margin</span>
-                                <Shield className="w-3.5 h-3.5 text-blue-500" />
-                            </div>
-                            <div className="text-2xl font-black tracking-tighter text-foreground">
-                                <AnimatedValueText value={requiredMargin} className="" fractionDigits={2} />
-                            </div>
-                        </div>
-
-                        {/* Bottom: Available Margin */}
-                        <div className="flex flex-col justify-center pt-3">
-                            <div className="flex items-center justify-between mb-0.5">
-                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Available Margin</span>
-                                <CheckCircle2 className={`w-3.5 h-3.5 ${availableMargin < requiredMargin ? 'text-rose-500' : 'text-emerald-500'}`} />
-                            </div>
-                            <div className={`text-2xl font-black tracking-tighter ${availableMargin < requiredMargin ? 'text-rose-600 dark:text-rose-400' : 'text-foreground'}`}>
-                                <AnimatedValueText value={availableMargin} className="" fractionDigits={2} />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* 3. Indices Widget (Already Stacked) */}
-                    <IndicesWidget />
-                </div>
-
-
-                {/* Cumulative P&L Intraday Chart */}
-                <div className="w-full">
-                    <PnlChart data={intradayPnl} className="h-[300px] w-full" />
-                </div>
-
-                {/* Main Content Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Main Content Area */}
-                    <div className="lg:col-span-2 space-y-6">
+                    {/* Right Column: Active Tab Content and Positions */}
+                    <div className="space-y-6">
                         <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden transition-colors">
                             <div className="p-4 border-b border-border flex items-center justify-between bg-background/50">
                                 <h2 className="font-bold text-xs uppercase tracking-wider flex items-center gap-2 text-foreground">
@@ -1571,11 +1457,6 @@ const Dashboard = ({ onLogout, onShowApiDocs }: { onLogout: () => void, onShowAp
                                 </div>
                             ) : null}
                         </div>
-                    </div>
-
-                    {/* Sidebar: Workflow & Logs */}
-                    <div className="lg:col-span-1 space-y-4">
-                        <EngineWorkflow status={status} activity={engineActivity} />
                     </div>
                 </div>
             </main >

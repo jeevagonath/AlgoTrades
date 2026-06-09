@@ -119,6 +119,7 @@ class StrategyEngine {
     private reEntryTimer: NodeJS.Timeout | null = null; // Timer for re-entry scheduling
     private cachedUid: string | undefined;
     private isExiting: boolean = false;
+    private isPlacingOrder: boolean = false;
 
     constructor() {
         this.initScheduler();
@@ -943,6 +944,7 @@ class StrategyEngine {
             }
         }
 
+        this.isPlacingOrder = true;
         try {
             const longs = this.state.selectedStrikes.filter(s => s.side === 'BUY');
             const shorts = this.state.selectedStrikes.filter(s => s.side === 'SELL');
@@ -982,6 +984,8 @@ class StrategyEngine {
         } catch (err) {
             console.error('Failure during sequence placement:', err);
             throw err;
+        } finally {
+            this.isPlacingOrder = false;
         }
     }
 
@@ -1399,6 +1403,11 @@ class StrategyEngine {
             totalPnL += (currentPrice - leg.entryPrice) * leg.quantity * multiplier;
         }
         this.state.pnl = totalPnL;
+
+        // Do not update peak values while we are still placing the order sequence.
+        // Partial entry state can create misleading temporary PnL readings.
+        if (this.isPlacingOrder) return;
+
         if (totalPnL > this.state.peakProfit) this.state.peakProfit = totalPnL;
         if (totalPnL < this.state.peakLoss) this.state.peakLoss = totalPnL;
     }
