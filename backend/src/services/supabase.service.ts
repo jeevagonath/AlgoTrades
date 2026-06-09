@@ -663,9 +663,11 @@ export const db = {
 
     async getIntradayPnl(uid?: string) {
         try {
-            // Get today's date in UTC (start of day)
+            // Determine start of today's date in IST and convert to UTC ISO for querying Supabase
             const now = new Date();
-            const startOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0)).toISOString();
+            const istNow = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+            const startOfIstDay = new Date(istNow.getFullYear(), istNow.getMonth(), istNow.getDate(), 0, 0, 0);
+            const startOfDay = new Date(startOfIstDay.toLocaleString('en-US', { timeZone: 'UTC' })).toISOString();
 
             let query = supabase
                 .from('pnl_snapshots')
@@ -689,8 +691,15 @@ export const db = {
                 pnl: d.pnl
             }));
 
-            if (formattedData.length === 0 || formattedData[0].time > '09:00') {
-                formattedData.unshift({ time: '09:00', pnl: 0 });
+            // If there are no snapshots yet, return a single 09:00 point with pnl 0.
+            if (formattedData.length === 0) {
+                return [{ time: '09:00', pnl: 0 }];
+            }
+
+            // If the first snapshot occurs after 09:00 IST, insert a baseline at 09:00
+            // using the first available PnL so the chart doesn't show a misleading jump to zero.
+            if (formattedData[0].time > '09:00') {
+                formattedData.unshift({ time: '09:00', pnl: formattedData[0].pnl || 0 });
             }
 
             return formattedData;
