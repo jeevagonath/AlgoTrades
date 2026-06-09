@@ -1276,7 +1276,7 @@ const Dashboard = ({ onLogout, onShowApiDocs }: { onLogout: () => void, onShowAp
                         {/* Bottom: Available Margin */}
                         <div className="flex flex-col justify-center pt-3">
                             <div className="flex items-center justify-between mb-0.5">
-                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Available Margin</span>
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Original Margin</span>
                                 <CheckCircle2 className={`w-3.5 h-3.5 ${availableMargin < requiredMargin ? 'text-rose-500' : 'text-emerald-500'}`} />
                             </div>
                             <div className={`text-2xl font-black tracking-tighter ${availableMargin < requiredMargin ? 'text-rose-600 dark:text-rose-400' : 'text-foreground'}`}>

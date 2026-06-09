@@ -609,22 +609,38 @@ class StrategyEngine {
         telegramChatId?: string,
         isVirtual?: boolean
     }) {
-        if (settings.entryTime) this.state.entryTime = settings.entryTime;
-        if (settings.exitTime) this.state.exitTime = settings.exitTime;
-        if (settings.reEntryCutoffTime) this.state.reEntryCutoffTime = settings.reEntryCutoffTime;
-        if (settings.targetPnl !== undefined) this.state.targetPnl = settings.targetPnl;
-        if (settings.stopLossPnl !== undefined) this.state.stopLossPnl = settings.stopLossPnl;
-        if (settings.telegramToken !== undefined) {
+        // Log incoming settings for traceability
+        this.addLog(`⚙️ [Settings] Incoming update: ${JSON.stringify(settings)}`);
+
+        // Use explicit property presence checks to allow falsy values (e.g., empty strings)
+        if (Object.prototype.hasOwnProperty.call(settings, 'entryTime')) {
+            this.state.entryTime = String(settings.entryTime || '12:59');
+        }
+        if (Object.prototype.hasOwnProperty.call(settings, 'exitTime')) {
+            this.state.exitTime = String(settings.exitTime || '15:15');
+        }
+        if (Object.prototype.hasOwnProperty.call(settings, 'reEntryCutoffTime')) {
+            this.state.reEntryCutoffTime = String(settings.reEntryCutoffTime || '13:45');
+        }
+        if (Object.prototype.hasOwnProperty.call(settings, 'targetPnl')) {
+            this.state.targetPnl = Number(settings.targetPnl) || this.state.targetPnl;
+        }
+        if (Object.prototype.hasOwnProperty.call(settings, 'stopLossPnl')) {
+            this.state.stopLossPnl = Number(settings.stopLossPnl) || this.state.stopLossPnl;
+        }
+        if (Object.prototype.hasOwnProperty.call(settings, 'telegramToken')) {
             this.state.telegramToken = typeof settings.telegramToken === 'string'
                 ? settings.telegramToken.trim()
                 : '';
         }
-        if (settings.telegramChatId !== undefined) {
+        if (Object.prototype.hasOwnProperty.call(settings, 'telegramChatId')) {
             this.state.telegramChatId = typeof settings.telegramChatId === 'string'
                 ? settings.telegramChatId.trim()
                 : '';
         }
-        if (settings.isVirtual !== undefined) this.state.isVirtual = settings.isVirtual;
+        if (Object.prototype.hasOwnProperty.call(settings, 'isVirtual')) {
+            this.state.isVirtual = Boolean(settings.isVirtual);
+        }
 
         if (this.state.telegramToken && this.state.telegramChatId) {
              console.log('Updating Telegram credentials from settings update');
