@@ -684,10 +684,16 @@ export const db = {
                 return [];
             }
 
-            return (data || []).map(d => ({
+            const formattedData = (data || []).map(d => ({
                 time: new Date(d.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' }),
                 pnl: d.pnl
             }));
+
+            if (formattedData.length === 0 || formattedData[0].time > '09:00') {
+                formattedData.unshift({ time: '09:00', pnl: 0 });
+            }
+
+            return formattedData;
         } catch (err) {
             console.error('Failed to load intraday PnL:', err);
             return [];
