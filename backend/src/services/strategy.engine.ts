@@ -228,11 +228,20 @@ class StrategyEngine {
             if (positions.length > 0) {
                 if (isExpiry) {
                     // Logic for Expiry Day recovery
+                    const hasTodayExpiryPositions = await this.isPositionExpiryToday();
+
                     if (currentMinutes >= entryMinutes) {
                         if (exitMinutes > entryMinutes && currentMinutes >= exitMinutes) {
-                            // Past BOTH, and Exit was latest. Be flat.
-                            this.addLog('⏰ [Recovery] Startup is past both entry and exit time. Squaring off...');
-                            await this.exitAllPositions('Late Expiry Square-off');
+                            if (hasTodayExpiryPositions) {
+                                // Past BOTH, and Exit was latest. Be flat.
+                                this.addLog('⏰ [Recovery] Startup is past both entry and exit time. Squaring off today expiry positions...');
+                                await this.exitAllPositions('Late Expiry Square-off');
+                            } else {
+                                this.addLog('⏰ [Recovery] Startup is past both entry and exit time, but current positions are for a later expiry. Keeping positions active.');
+                                this.state.status = 'ACTIVE';
+                                this.state.engineActivity = 'Monitoring Iron Condor';
+                                this.state.nextAction = `Daily Exit at ${this.state.exitTime} `;
+                            }
                         } else {
                             // Past Entry time. Should be in the trade or rolling over.
                             // If we have positions, we check status.
@@ -240,7 +249,12 @@ class StrategyEngine {
                             // Treat ENTRY_DONE as ACTIVE — server may have crashed during the 5-second
                             // transition between ENTRY_DONE and ACTIVE. Triggering rollover here would
                             // incorrectly exit live positions and re-enter, causing a double trade.
-                            if (currentStatus !== 'ACTIVE' && currentStatus !== 'ENTRY_DONE') {
+                            if (!hasTodayExpiryPositions && this.state.selectedStrikes.length > 0) {
+                                this.addLog('⏰ [Recovery] Current positions are for a later expiry. Keeping them active instead of rerolling.');
+                                this.state.status = 'ACTIVE';
+                                this.state.engineActivity = 'Monitoring Iron Condor';
+                                this.state.nextAction = `Daily Exit at ${this.state.exitTime} `;
+                            } else if (currentStatus !== 'ACTIVE' && currentStatus !== 'ENTRY_DONE') {
                                 this.addLog('⏰ [Recovery] Startup past entry time but not active. Triggering Rollover...');
                                 await this.executeRolloverSequence();
                             } else {
@@ -251,12 +265,22 @@ class StrategyEngine {
                         }
                     } else if (currentMinutes >= exitMinutes) {
                         // Past Exit, but not yet at Entry.
-                        this.addLog('⏰ [Recovery] Startup past exit time. Squaring off old positions...');
-                        await this.exitAllPositions('Late Week Exit');
-                        // After exit, we should be waiting for entry
-                        this.state.status = 'WAITING_FOR_EXPIRY';
-                        this.state.engineActivity = 'Waiting for Entry Time';
-                        this.state.nextAction = `Entry at ${this.state.entryTime} `;
+                        if (hasTodayExpiryPositions) {
+                            this.addLog('⏰ [Recovery] Startup past exit time. Squaring off today expiry positions...');
+                            await this.exitAllPositions('Late Week Exit');
+                        } else {
+                            this.addLog('⏰ [Recovery] Startup past exit time, but current positions are for a later expiry. Keeping them active.');
+                        }
+                        // After exit or skip, we should be waiting for entry if there are no current today positions
+                        if (!hasTodayExpiryPositions) {
+                            this.state.status = 'ACTIVE';
+                            this.state.engineActivity = 'Monitoring Iron Condor';
+                            this.state.nextAction = `Daily Exit at ${this.state.exitTime} `;
+                        } else {
+                            this.state.status = 'WAITING_FOR_EXPIRY';
+                            this.state.engineActivity = 'Waiting for Entry Time';
+                            this.state.nextAction = `Entry at ${this.state.entryTime} `;
+                        }
                     } else {
                         // Before both. Monitor old positions.
                         this.state.status = 'ACTIVE';
@@ -394,6 +418,32 @@ class StrategyEngine {
         return today.toDateString() === expiryDate.toDateString();
     }
 
+    private parseExpiryFromSymbol(symbol: string): string | null {
+        const match = symbol.match(/(\d{1,2}[A-Z]{3}\d{2})/i);
+        if (!match) return null;
+        const raw = match[1].toUpperCase();
+        const day = raw.slice(0, raw.length - 5).padStart(2, '0');
+        const month = raw.slice(-5, -2);
+        const year = `20${raw.slice(-2)}`;
+
+        if (!/^\d{2}$/.test(day) || !/^[A-Z]{3}$/.test(month) || !/^\d{4}$/.test(year)) {
+            return null;
+        }
+
+        return `${day}-${month}-${year}`;
+    }
+
+    private getPositionExpiry(): string | null {
+        if (!this.state.selectedStrikes || this.state.selectedStrikes.length === 0) return null;
+        return this.parseExpiryFromSymbol(this.state.selectedStrikes[0].symbol);
+    }
+
+    private async isPositionExpiryToday(): Promise<boolean> {
+        const expiry = this.getPositionExpiry();
+        if (!expiry) return false;
+        return this.isToday(expiry);
+    }
+
     // Helper: Check if today is expiry day
     private async isExpiryDay(): Promise<boolean> {
         const expiries = await this.getAvailableExpiries();
@@ -488,6 +538,13 @@ class StrategyEngine {
         // 2. Daily Exit at exitTime (On Expiry Day Only)
         const [exitH, exitM] = this.state.exitTime.split(':').map(Number);
         this.schedulers.push(cron.schedule(`${exitM} ${exitH} * * *`, async () => {
+            if (this.state.selectedStrikes.length > 0) {
+                const isSameExpiry = await this.isPositionExpiryToday();
+                if (!isSameExpiry) {
+                    this.addLog(`⏰ [System] Exit time reached (${this.state.exitTime}) but current positions are for a later expiry. Skipping same-day expiry exit.`);
+                    return;
+                }
+            }
             this.addLog(`⏰ [System] Daily Exit Time reached (${this.state.exitTime}). Squaring off...`);
             await this.exitAllPositions(`Daily Exit Time reached`);
         }, tzOption));
