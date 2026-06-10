@@ -1482,12 +1482,20 @@ class StrategyEngine {
             const multiplier = leg.side === 'BUY' ? 1 : -1;
             totalPnL += (currentPrice - leg.entryPrice) * leg.quantity * multiplier;
         }
-        this.state.pnl = totalPnL;
+        // Avoid PnL/peaks spikes during entry/transition.
+        // During entry, entryPrice/ltp can temporarily mismatch until orders/fills stabilize.
+        const shouldUpdatePnl = this.state.status === 'ACTIVE' && !this.isPlacingOrder;
 
-        // Do not update peak values while we are still placing the order sequence.
-        // Partial entry state can create misleading temporary PnL readings.
+        if (shouldUpdatePnl) {
+            this.state.pnl = totalPnL;
+        }
+
+        // Only track peaks in ACTIVE mode (leg prices are expected to be stable then).
+        if (this.state.status !== 'ACTIVE') return;
         if (this.isPlacingOrder) return;
 
+        // Keep pnl synced before peak comparison
+        this.state.pnl = totalPnL;
         if (totalPnL > this.state.peakProfit) this.state.peakProfit = totalPnL;
         if (totalPnL < this.state.peakLoss) this.state.peakLoss = totalPnL;
     }
