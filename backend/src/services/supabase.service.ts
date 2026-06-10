@@ -121,7 +121,8 @@ export const db = {
                 price: order.price,
                 quantity: order.quantity,
                 status: order.status,
-                order_type: order.isVirtual ? 'VIRTUAL' : 'REAL'
+                order_type: order.isVirtual ? 'VIRTUAL' : 'REAL',
+                order_action: order.action || 'ENTRY'
             })
             .select()
             .single();
@@ -147,7 +148,8 @@ export const db = {
         if (error) console.error('Supabase Orders Load Error:', error);
         return (data || []).map(o => ({
             ...o,
-            token: o.instrument_token
+            token: o.instrument_token,
+            action: o.order_action || 'ENTRY'
         }));
     },
 

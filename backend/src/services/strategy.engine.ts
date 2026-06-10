@@ -1217,7 +1217,13 @@ class StrategyEngine {
         if (this.state.isVirtual) {
             // Virtual execution
             await new Promise(r => setTimeout(r, 100));
-            await db.logOrder({ ...leg, price: leg.entryPrice, status: 'COMPLETE', isVirtual: true }, this.getUid());
+            await db.logOrder({
+                ...leg,
+                price: leg.entryPrice,
+                status: 'COMPLETE',
+                isVirtual: true,
+                action: 'ENTRY'
+            }, this.getUid());
             this.addLog(`[VIRTUAL] ${leg.side} ${leg.symbol} @ ₹${leg.entryPrice}`);
         } else {
             // Real order execution
@@ -1234,7 +1240,8 @@ class StrategyEngine {
                         price: fillPrice,
                         status: 'COMPLETE',
                         isVirtual: false,
-                        orderId: result.norenordno
+                        orderId: result.norenordno,
+                        action: 'ENTRY'
                     }, this.getUid());
 
                     this.addLog(`[LIVE] ${leg.side} ${leg.symbol} @ ₹${fillPrice} | Order ID: ${result.norenordno}`);
@@ -1536,6 +1543,7 @@ class StrategyEngine {
 
             // Loop and Place Exit Orders
             for (const leg of legsToExit) {
+                const exitSide = leg.side === 'BUY' ? 'SELL' : 'BUY';
                 if (!this.state.isVirtual) {
                     try {
                         const exitOrder = {
@@ -1545,27 +1553,68 @@ class StrategyEngine {
                             discloseqty: '0',
                             price: '0',
                             product_type: 'M',
-                            buy_or_sell: leg.side === 'BUY' ? 'S' : 'B', // Reverse side
+                            buy_or_sell: exitSide === 'BUY' ? 'B' : 'S',
                             price_type: 'MKT',
                             trigger_price: '0',
                             retention: 'DAY',
                             remarks: `EXIT_${reason.replace(/\s+/g, '_').toUpperCase()}`.substring(0, 20) // Truncate if needed
                         };
 
-                        this.addLog(`🔄 Exiting ${leg.symbol} (${exitOrder.buy_or_sell})...`);
+                        this.addLog(`🔄 Exiting ${leg.symbol} (${exitSide})...`);
                         const res: any = await shoonya.placeOrder(exitOrder);
 
                         if (res && res.stat === 'Ok') {
+                            await db.logOrder({
+                                token: leg.token,
+                                symbol: leg.symbol,
+                                side: exitSide,
+                                price: 0,
+                                quantity: leg.quantity,
+                                status: 'COMPLETE',
+                                isVirtual: false,
+                                orderId: res.norenordno,
+                                action: 'EXIT'
+                            }, this.getUid());
                             this.addLog(`✅ Exit Order Sent: ${leg.symbol} | ID: ${res.norenordno}`);
                         } else {
                             this.addLog(`❌ Exit Failed: ${leg.symbol} | ${res.emsg || 'Unknown'}`);
+                            await db.logOrder({
+                                token: leg.token,
+                                symbol: leg.symbol,
+                                side: exitSide,
+                                price: 0,
+                                quantity: leg.quantity,
+                                status: 'FAILED',
+                                isVirtual: false,
+                                action: 'EXIT'
+                            }, this.getUid());
                         }
                     } catch (e: any) {
                         this.addLog(`❌ Exit Exception: ${leg.symbol} | ${e.message}`);
                         console.error('Exit Order Error:', e);
+                        await db.logOrder({
+                            token: leg.token,
+                            symbol: leg.symbol,
+                            side: exitSide,
+                            price: 0,
+                            quantity: leg.quantity,
+                            status: 'FAILED',
+                            isVirtual: false,
+                            action: 'EXIT'
+                        }, this.getUid());
                     }
                 } else {
-                    this.addLog(`[VIRTUAL] Exited ${leg.symbol} (${leg.side === 'BUY' ? 'SELL' : 'BUY'})`);
+                    await db.logOrder({
+                        token: leg.token,
+                        symbol: leg.symbol,
+                        side: exitSide,
+                        price: leg.ltp || leg.entryPrice,
+                        quantity: leg.quantity,
+                        status: 'COMPLETE',
+                        isVirtual: true,
+                        action: 'EXIT'
+                    }, this.getUid());
+                    this.addLog(`[VIRTUAL] Exited ${leg.symbol} (${exitSide})`);
                 }
             }
 

@@ -375,6 +375,7 @@ export async function strategyRoutes(app: FastifyInstance) {
                         price: o.avgprc || o.prc || 0,
                         quantity: o.qty || 0,
                         status: o.status || 'Unknown',
+                        action: 'UNKNOWN',
                         created_at: isoTime
                     };
                 });
