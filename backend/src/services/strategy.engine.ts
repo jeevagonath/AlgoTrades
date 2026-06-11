@@ -161,17 +161,9 @@ class StrategyEngine {
                 this.state.pnl = savedState.pnl || 0;
                 this.state.peakProfit = savedState.peakProfit || 0;
                 this.state.peakLoss = savedState.peakLoss || 0;
+                this.state.telegramToken = savedState.telegramToken;
+                this.state.telegramChatId = savedState.telegramChatId;
 
-                if (savedState.telegramToken !== undefined) {
-                    this.state.telegramToken = typeof savedState.telegramToken === 'string'
-                        ? savedState.telegramToken.trim()
-                        : String(savedState.telegramToken || '');
-                }
-                if (savedState.telegramChatId !== undefined) {
-                    this.state.telegramChatId = typeof savedState.telegramChatId === 'string'
-                        ? savedState.telegramChatId.trim()
-                        : String(savedState.telegramChatId || '');
-                }
                 if (this.state.telegramToken && this.state.telegramChatId) {
                      console.log('Restoring Telegram credentials from saved state');
                     telegramService.setCredentials(this.state.telegramToken, this.state.telegramChatId);
