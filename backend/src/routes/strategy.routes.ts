@@ -463,5 +463,40 @@ export async function strategyRoutes(app: FastifyInstance) {
             return reply.status(500).send({ status: 'error', message: err.message });
         }
     });
+
+    app.post('/test-telegram', async (request, reply) => {
+        try {
+            const { telegramToken, telegramChatId } = request.body as { telegramToken: string; telegramChatId: string };
+
+            if (!telegramToken || !telegramChatId) {
+                return reply.status(400).send({ status: 'error', message: 'Both Telegram Bot Token and Chat ID are required.' });
+            }
+
+            const message = encodeURIComponent(
+                `✅ <b>AlgoTrades – Test Message</b>\n\nYour Telegram integration is working correctly! 🚀`
+            );
+            const url = `https://api.telegram.org/bot${telegramToken}/sendMessage?chat_id=${telegramChatId}&text=${message}&parse_mode=HTML`;
+
+            const https = await import('https');
+            const result = await new Promise<{ ok: boolean; description?: string }>((resolve, reject) => {
+                https.get(url, (res) => {
+                    let data = '';
+                    res.on('data', (chunk) => (data += chunk));
+                    res.on('end', () => {
+                        try { resolve(JSON.parse(data)); }
+                        catch { reject(new Error('Invalid Telegram API response')); }
+                    });
+                }).on('error', reject);
+            });
+
+            if (result.ok) {
+                return { status: 'success', message: 'Test message sent successfully! Check your Telegram.' };
+            } else {
+                return reply.status(400).send({ status: 'error', message: result.description || 'Telegram API returned an error.' });
+            }
+        } catch (err: any) {
+            return reply.status(500).send({ status: 'error', message: err.message });
+        }
+    });
 }
 

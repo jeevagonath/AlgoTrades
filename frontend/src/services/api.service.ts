@@ -132,6 +132,10 @@ export const strategyApi = {
         const response = await apiClient.get('/analytics/intraday-pnl');
         return response.data;
     },
+    testTelegram: async (telegramToken: string, telegramChatId: string) => {
+        const response = await apiClient.post('/strategy/test-telegram', { telegramToken, telegramChatId });
+        return response.data;
+    },
 };
 
 export default apiClient;

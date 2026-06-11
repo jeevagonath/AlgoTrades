@@ -404,6 +404,7 @@ const Dashboard = ({ onLogout, onShowApiDocs }: { onLogout: () => void, onShowAp
     const [nextAction, setNextAction] = useState<string>('Waiting for data...');
     const [isPaused, setIsPaused] = useState(false);
     const [manualExpiriesText, setManualExpiriesText] = useState('');
+    const [telegramTestStatus, setTelegramTestStatus] = useState<{ type: 'idle' | 'loading' | 'success' | 'error'; message: string }>({ type: 'idle', message: '' });
     // const [niftyData, setNiftyData] = useState<{ price: number, change: number, changePercent: number, prevClose?: number } | null>(null);
     const [clientName, setClientName] = useState('Trade User');
     const [clientDetails, setClientDetails] = useState<any>(null);
@@ -785,6 +786,26 @@ const Dashboard = ({ onLogout, onShowApiDocs }: { onLogout: () => void, onShowAp
         }
     };
 
+    const handleTestTelegram = async () => {
+        if (!settings.telegramToken.trim() || !settings.telegramChatId.trim()) {
+            setTelegramTestStatus({ type: 'error', message: 'Please enter both Token and Chat ID first.' });
+            return;
+        }
+        setTelegramTestStatus({ type: 'loading', message: 'Sending test message...' });
+        try {
+            const res = await strategyApi.testTelegram(settings.telegramToken.trim(), settings.telegramChatId.trim());
+            if (res.status === 'success') {
+                setTelegramTestStatus({ type: 'success', message: res.message || 'Test message sent! Check your Telegram.' });
+            } else {
+                setTelegramTestStatus({ type: 'error', message: res.message || 'Failed to send test message.' });
+            }
+        } catch (err: any) {
+            const msg = err?.response?.data?.message || err.message || 'Failed to send test message.';
+            setTelegramTestStatus({ type: 'error', message: msg });
+        }
+        setTimeout(() => setTelegramTestStatus({ type: 'idle', message: '' }), 5000);
+    };
+
     const handleExecuteOrders = async () => {
         setTesting(true);
         addLog('Executing orders in sequence (Longs -> Shorts)...');
@@ -1079,18 +1100,60 @@ const Dashboard = ({ onLogout, onShowApiDocs }: { onLogout: () => void, onShowAp
                                     <input
                                         type="text"
                                         value={settings.telegramToken}
-                                        onChange={e => setSettings({ ...settings, telegramToken: e.target.value })}
+                                        onChange={e => { setSettings({ ...settings, telegramToken: e.target.value }); setTelegramTestStatus({ type: 'idle', message: '' }); }}
+                                        placeholder="e.g. 123456:ABC-DEF..."
                                         className="w-full bg-background dark:bg-slate-900/50 border border-border rounded-lg px-4 py-2.5 text-xs font-mono text-slate-700 dark:text-slate-300 outline-none focus:border-blue-500 transition-colors"
                                     />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 tracking-wider">Telegram Chat ID</label>
-                                    <input
-                                        type="text"
-                                        value={settings.telegramChatId}
-                                        onChange={e => setSettings({ ...settings, telegramChatId: e.target.value })}
-                                        className="w-full bg-background dark:bg-slate-900/50 border border-border rounded-lg px-4 py-2.5 text-xs font-mono text-slate-700 dark:text-slate-300 outline-none focus:border-blue-500 transition-colors"
-                                    />
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={settings.telegramChatId}
+                                            onChange={e => { setSettings({ ...settings, telegramChatId: e.target.value }); setTelegramTestStatus({ type: 'idle', message: '' }); }}
+                                            placeholder="e.g. 5177480141"
+                                            className="flex-1 bg-background dark:bg-slate-900/50 border border-border rounded-lg px-4 py-2.5 text-xs font-mono text-slate-700 dark:text-slate-300 outline-none focus:border-blue-500 transition-colors"
+                                        />
+                                        <button
+                                            id="btn-test-telegram"
+                                            onClick={handleTestTelegram}
+                                            disabled={telegramTestStatus.type === 'loading'}
+                                            className={`flex-shrink-0 px-4 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 border ${
+                                                telegramTestStatus.type === 'success'
+                                                    ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-400'
+                                                    : telegramTestStatus.type === 'error'
+                                                    ? 'bg-rose-50 dark:bg-rose-900/20 border-rose-300 dark:border-rose-700 text-rose-700 dark:text-rose-400'
+                                                    : telegramTestStatus.type === 'loading'
+                                                    ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400 cursor-not-allowed opacity-80'
+                                                    : 'bg-background dark:bg-slate-800 border-border text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-blue-400 hover:text-blue-600'
+                                            }`}
+                                            title="Send a test Telegram message to verify credentials"
+                                        >
+                                            {telegramTestStatus.type === 'loading' ? (
+                                                <>
+                                                    <svg className="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none">
+                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                                                    </svg>
+                                                    Testing…
+                                                </>
+                                            ) : telegramTestStatus.type === 'success' ? (
+                                                <>✅ Sent!</>
+                                            ) : telegramTestStatus.type === 'error' ? (
+                                                <>❌ Failed</>
+                                            ) : (
+                                                <>📨 Test</>
+                                            )}
+                                        </button>
+                                    </div>
+                                    {telegramTestStatus.message && (
+                                        <p className={`text-[10px] font-medium mt-1 px-1 ${
+                                            telegramTestStatus.type === 'success' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
+                                        }`}>
+                                            {telegramTestStatus.message}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
 
