@@ -164,9 +164,10 @@ class StrategyEngine {
                 this.state.telegramToken = savedState.telegramToken || '';
                 this.state.telegramChatId = savedState.telegramChatId || '';
 
+                // Always sync credentials to telegramService (clears stale state if empty)
+                telegramService.setCredentials(this.state.telegramToken, this.state.telegramChatId);
                 if (this.state.telegramToken && this.state.telegramChatId) {
                      console.log('Restoring Telegram credentials from saved state');
-                    telegramService.setCredentials(this.state.telegramToken, this.state.telegramChatId);
                 }
 
                 this.state.requiredMargin = savedState.requiredMargin || 0;
@@ -354,12 +355,14 @@ class StrategyEngine {
                 }
             }
 
-            // Send startup notification
-            const startupMsg = `🚀 <b>Strategy Engine Resumed </b>\n` +
-                `Status: ${this.state.status}\n` +
-                `Activity: ${this.state.engineActivity}\n` +
-                `Mode: ${this.state.isVirtual ? 'VIRTUAL' : 'LIVE'}`;
-            telegramService.sendMessage(startupMsg);
+            // Send startup notification (only if Telegram credentials are configured)
+            if (this.state.telegramToken && this.state.telegramChatId) {
+                const startupMsg = `🚀 <b>Strategy Engine Resumed </b>\n` +
+                    `Status: ${this.state.status}\n` +
+                    `Activity: ${this.state.engineActivity}\n` +
+                    `Mode: ${this.state.isVirtual ? 'VIRTUAL' : 'LIVE'}`;
+                telegramService.sendMessage(startupMsg);
+            }
 
             // 4. Initial sync, monitoring and scheduler
             this.startMonitoring();

@@ -78,9 +78,6 @@ class TelegramService {
             }).catch(() => { });
 
             // Send to Telegram (OPTIONAL - only if credentials are set)
-            console.log('[Telegram] Sending message to Telegram...');
-            console.log('[Telegram] Message:', message);
-            console.log('[Telegram] Credentials:', { token: !!this.token, chatId: !!this.chatId });
             if (this.token.trim() && this.chatId.trim()) {
                 try {
                     const url = `https://api.telegram.org/bot${this.token}/sendMessage`;
