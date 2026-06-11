@@ -19,7 +19,13 @@ interface LegState {
     quantity: number;
     tier?: number; // 1 or 2
     isAdjusted?: boolean; // Track if adjustment has been executed for this leg
+
+    // If a leg is added dynamically (e.g., adjustment), we may not have websocket ltp yet.
+    // This flag prevents peakProfit/peakLoss from reacting to that transition.
+    isPnLSettling?: boolean;
+    pnlSettlingSince?: number;
 }
+
 
 export type StrategyStatus = 'IDLE' | 'WAITING_FOR_EXPIRY' | 'EXIT_DONE' | 'ENTRY_DONE' | 'ACTIVE' | 'FORCE_EXITED';
 
@@ -1394,9 +1400,10 @@ class StrategyEngine {
             if (targetScrip) {
                 // Fetch latest quotes for target scrip to get dynamic lot size (ls)
                 const quote: any = await shoonya.getQuotes('NFO', targetScrip.token);
-                const lotSize = quote && quote.ls ? parseFloat(quote.ls) : (triggeredLeg.quantity || 75);
+                const lotSize = quote && quote.ls ? parseFloat(quote.ls) : 65;
 
                 const adjustmentLeg: LegState = {
+
                     token: targetScrip.token,
                     symbol: targetScrip.tsym,
                     type: targetScrip.optt as 'CE' | 'PE',
@@ -1405,8 +1412,13 @@ class StrategyEngine {
                     entryPrice: quote.lp, // Market order
                     ltp: 0,
                     quantity: lotSize,
-                    tier: 2 // Adjustments for Tier 2 Sell should maintain Tier 2 monitoring
+                    tier: 2, // Adjustments for Tier 2 Sell should maintain Tier 2 monitoring
+
+                    // New leg added dynamically: give pnl a short settling grace period
+                    isPnLSettling: true,
+                    pnlSettlingSince: Date.now()
                 };
+
 
                 // Margin Check for Adjustment
                 if (!this.state.isVirtual) {
@@ -1494,11 +1506,26 @@ class StrategyEngine {
         if (this.state.status !== 'ACTIVE') return;
         if (this.isPlacingOrder) return;
 
+        // If we just added a new adjustment leg, don't update peaks until pnl has "settled".
+        // This prevents huge peak spikes caused by temporary ltp/entryPrice mismatch.
+        const graceMs = 15_000;
+        const nowTs = Date.now();
+        const hasSettlingLeg = this.state.selectedStrikes.some(l => l.isPnLSettling && l.pnlSettlingSince && (nowTs - l.pnlSettlingSince) < graceMs);
+        if (hasSettlingLeg) return;
+
+        // Clear settling flags when grace has passed.
+        this.state.selectedStrikes.forEach(l => {
+            if (l.isPnLSettling && l.pnlSettlingSince && (nowTs - l.pnlSettlingSince) >= graceMs) {
+                l.isPnLSettling = false;
+            }
+        });
+
         // Keep pnl synced before peak comparison
         this.state.pnl = totalPnL;
         if (totalPnL > this.state.peakProfit) this.state.peakProfit = totalPnL;
         if (totalPnL < this.state.peakLoss) this.state.peakLoss = totalPnL;
     }
+
 
     private async syncToDb(forcePnl: boolean = false) {
         const now = Date.now();
