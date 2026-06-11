@@ -448,8 +448,8 @@ const Dashboard = ({ onLogout, onShowApiDocs }: { onLogout: () => void, onShowAp
                         reEntryCutoffTime: d.reEntryCutoffTime || '13:45',
                         targetPnl: d.targetPnl || 2100,
                         stopLossPnl: d.stopLossPnl || -1500,
-                        telegramToken: d.telegramToken || '8494833053:AAHdVkSIgis5H-TcKnUi-LmOTJm67A8qILc',
-                        telegramChatId: d.telegramChatId || '5177480141',
+                        telegramToken: d.telegramToken || '',
+                        telegramChatId: d.telegramChatId || '',
                         isVirtual: d.isVirtual !== undefined ? d.isVirtual : true
                     });
                     setStatus(d.status || (d.isActive ? 'ACTIVE' : 'IDLE'));
