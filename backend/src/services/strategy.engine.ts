@@ -85,12 +85,12 @@ class StrategyEngine {
         peakProfit: 0,
         peakLoss: 0,
         entryTime: '12:59',
-        exitTime: '15:15',
+        exitTime: '12:45',
         reEntryCutoffTime: '13:45', // Default: 1:45 PM
         targetPnl: 2100,
         stopLossPnl: -1500,
-        telegramToken: '',
-        telegramChatId: '',
+        telegramToken: '8377716331:AAH-9nvlaWFifdf6NT1UZKEzCjc0gZBR57w',
+        telegramChatId: '5177480141',
         requiredMargin: 0,
         availableMargin: 0,
         monitoring: {
@@ -1042,7 +1042,7 @@ class StrategyEngine {
                 await db.syncPositions(this.state.selectedStrikes, this.getUid());
                 await this.syncToDb(true);
 
-                telegramService.sendMessage(`🚀 <b>Trade Placed</b>\nAll 8 legs executed virtually for Iron Condor.`);
+                telegramService.sendMessage(`🚀 <b>Trade Placed</b>\nAll 8 legs executed ${this.state.isVirtual ? 'virtually (VIRTUAL mode)' : 'as LIVE orders'} for Iron Condor.`);
 
                 // Auto-transition to ACTIVE after a short delay for verification
                 setTimeout(async () => {
@@ -1233,8 +1233,8 @@ class StrategyEngine {
                 const result: any = await shoonya.placeOrder(orderParams);
 
                 if (result.stat === 'Ok') {
-                    const fillPrice = parseFloat(result.avgprc || leg.entryPrice);
-                    leg.entryPrice = fillPrice; // Update with actual fill price
+                    const fillPrice = result.avgprc ? parseFloat(result.avgprc) : parseFloat(String(leg.entryPrice)) || 0;
+                    leg.entryPrice = fillPrice; // Update with actual fill price (always a number)
 
                     await db.logOrder({
                         ...leg,
@@ -1404,8 +1404,8 @@ class StrategyEngine {
                     type: targetScrip.optt as 'CE' | 'PE',
                     side: 'BUY',
                     strike: targetScrip.strprc,
-                    entryPrice: quote.lp, // Market order
-                    ltp: 0,
+                    entryPrice: parseFloat(quote.lp) || 0, // Always a number, never raw string
+                    ltp: parseFloat(quote.lp) || 0, // Use live price as initial ltp too
                     quantity: lotSize,
                     tier: 2, // Adjustments for Tier 2 Sell should maintain Tier 2 monitoring
 
@@ -1446,7 +1446,7 @@ class StrategyEngine {
 
         const now = Date.now();
         // Profit Exit: > target for 10s
-        if (this.state.targetPnl && this.state.pnl > this.state.targetPnl) {
+        if (this.state.targetPnl != null && this.state.targetPnl > 0 && this.state.pnl > this.state.targetPnl) {
             if (!this.state.monitoring.profitTime) {
                 this.state.monitoring.profitTime = now;
                 // Log PnL breakdown when timer starts
@@ -1464,7 +1464,7 @@ class StrategyEngine {
         }
 
         // Loss Exit: < stop loss for 10s
-        if (this.state.stopLossPnl && this.state.pnl < -Math.abs(this.state.stopLossPnl)) {
+        if (this.state.stopLossPnl != null && this.state.stopLossPnl !== 0 && this.state.pnl < -Math.abs(this.state.stopLossPnl)) {
             if (!this.state.monitoring.lossTime) {
                 this.state.monitoring.lossTime = now;
                 this.addLog(`⚠️ Stop Loss Timer Started: Current PnL ₹${this.state.pnl.toFixed(2)} < SL ₹${-Math.abs(this.state.stopLossPnl)}`);
@@ -1489,6 +1489,15 @@ class StrategyEngine {
             const multiplier = leg.side === 'BUY' ? 1 : -1;
             totalPnL += (currentPrice - leg.entryPrice) * leg.quantity * multiplier;
         }
+
+        // Sanity cap: reject obviously bad PnL values entirely (> ±5 lakhs)
+        // This prevents false exits from string-type prices or bad WebSocket data
+        const PNL_SANITY_LIMIT = 500000;
+        if (Math.abs(totalPnL) > PNL_SANITY_LIMIT) {
+            console.warn(`[PnL] ⚠️ Sanity cap: totalPnL = ₹${totalPnL.toFixed(2)} exceeds ±₹5L. Discarding entirely.`);
+            return; // Don't update state.pnl at all — no exit trigger, no peak update
+        }
+
         // Avoid PnL/peaks spikes during entry/transition.
         // During entry, entryPrice/ltp can temporarily mismatch until orders/fills stabilize.
         const shouldUpdatePnl = this.state.status === 'ACTIVE' && !this.isPlacingOrder;
@@ -1515,8 +1524,9 @@ class StrategyEngine {
             }
         });
 
-        // Keep pnl synced before peak comparison
+        // Keep pnl synced before peak comparison (sanity already checked above)
         this.state.pnl = totalPnL;
+
         if (totalPnL > this.state.peakProfit) this.state.peakProfit = totalPnL;
         if (totalPnL < this.state.peakLoss) this.state.peakLoss = totalPnL;
     }
@@ -1679,6 +1689,10 @@ class StrategyEngine {
             }, this.state.selectedStrikes, this.getUid());
 
             this.state.selectedStrikes = [];
+            // Reset peaks so they don't bleed into the next trade cycle
+            this.state.peakProfit = 0;
+            this.state.peakLoss = 0;
+            this.state.pnl = 0;
             await db.syncPositions([], this.getUid());
             await this.syncToDb(true);
             socketService.emit('strategy_exit', { reason });
