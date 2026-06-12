@@ -89,8 +89,10 @@ class StrategyEngine {
         reEntryCutoffTime: '13:45', // Default: 1:45 PM
         targetPnl: 2100,
         stopLossPnl: -1500,
-        telegramToken: '8377716331:AAH-9nvlaWFifdf6NT1UZKEzCjc0gZBR57w',
-        telegramChatId: '5177480141',
+        // Telegram credentials must come from DB / settings (no hardcoded defaults)
+        telegramToken: '',
+        telegramChatId: '',
+
         requiredMargin: 0,
         availableMargin: 0,
         monitoring: {
@@ -165,9 +167,13 @@ class StrategyEngine {
                 this.state.telegramChatId = savedState.telegramChatId || '';
 
                 // Always sync credentials to telegramService (clears stale state if empty)
+                console.log('[DEBUG] DB Telegram creds loaded:', {
+                    telegramTokenPresent: !!this.state.telegramToken,
+                    telegramChatIdPresent: !!this.state.telegramChatId
+                });
                 telegramService.setCredentials(this.state.telegramToken, this.state.telegramChatId);
                 if (this.state.telegramToken && this.state.telegramChatId) {
-                     console.log('Restoring Telegram credentials from saved state');
+                    console.log('Restoring Telegram credentials from saved state');
                 }
 
                 this.state.requiredMargin = savedState.requiredMargin || 0;
@@ -1552,6 +1558,8 @@ class StrategyEngine {
                 isPaused: this.state.isPaused,
                 lastHeartbeat: new Date().toISOString(),
                 positionEntryDate: this.state.positionEntryDate, // Persist entry date
+                telegramToken: this.state.telegramToken,
+                telegramChatId: this.state.telegramChatId,
                 reEntry: this.state.reEntry // [NEW] Send re-entry state to frontend
             };
 
