@@ -296,7 +296,18 @@ export const db = {
                         side: l.side,
                         strike: l.strike,
                         entry_price: l.entryPrice,
-                        exit_price: l.ltp, // LTP at time of exit
+                        exit_price: (() => {
+                            // Sanity guard: NFO option premiums cannot exceed ₹5000.
+                            // If ltp is absurdly high (e.g. ~23000, the NIFTY spot price),
+                            // it means a bad tick contaminated this leg's ltp. Fall back to
+                            // entryPrice so the record is at least not wildly wrong.
+                            const rawLtp = l.ltp;
+                            if (typeof rawLtp === 'number' && rawLtp > 5000) {
+                                console.warn(`[saveTradeHistory] ⚠️ Suspicious exit_price ₹${rawLtp} for ${l.symbol}. Likely spot price contamination. Storing entryPrice instead.`);
+                                return l.entryPrice;
+                            }
+                            return rawLtp; // Normal option LTP at time of exit
+                        })(),
                         quantity: l.quantity,
                         tier: l.tier
                     })));

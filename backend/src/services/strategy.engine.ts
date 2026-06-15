@@ -1305,14 +1305,22 @@ class StrategyEngine {
     }
 
     private async handlePriceUpdate(tick: any) {
-        const token = tick.tk;
+        const token = String(tick.tk);
         const ltp = parseFloat(tick.lp);
         if (!token || isNaN(ltp)) return;
 
-        const legIdx = this.state.selectedStrikes.findIndex(s => s.token === token);
+        // Use explicit string comparison to prevent type-mismatch false positives
+        const legIdx = this.state.selectedStrikes.findIndex(s => String(s.token) === token);
 
         // Update position LTP if this is a position token
         if (legIdx !== -1) {
+            // Sanity guard: NFO option premiums are never > ₹5000.
+            // If ltp looks like an index spot price (e.g. 23000+), reject it to
+            // prevent the exit_price being saved as the NIFTY spot instead of the option LTP.
+            if (ltp > 5000) {
+                console.warn(`[PriceUpdate] ⚠️ Suspicious LTP ₹${ltp} for option ${this.state.selectedStrikes[legIdx].symbol} (token ${token}). Ignoring tick — possible spot/index feed contamination.`);
+                return;
+            }
             this.state.selectedStrikes[legIdx].ltp = ltp;
 
             // Perform strategy logic ONLY if ACTIVE
