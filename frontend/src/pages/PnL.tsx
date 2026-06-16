@@ -228,13 +228,31 @@ export default function PnL() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div className="bg-card rounded-xl p-6 border border-border shadow-sm transition-colors">
                             <div className="flex items-center justify-between mb-3">
-                                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Realized P&L</span>
-                                <TrendingUp className={`w-4 h-4 ${summary.totalRealizedPnL >= 0 ? 'text-emerald-500' : 'text-rose-500'}`} />
+                                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                                    Net Realized P&L
+                                </span>
+                                <TrendingUp className={`w-4 h-4 ${netPnL >= 0 ? 'text-emerald-500' : 'text-rose-500'}`} />
                             </div>
-                            <div className={`text-2xl font-black ${summary.totalRealizedPnL >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-                                {fmt(summary.totalRealizedPnL)}
+                            {/* Main value — Net P&L (after charges) */}
+                            <div className={`text-2xl font-black ${netPnL >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                                {fmt(netPnL)}
                             </div>
-                            <div className="text-xs text-slate-400 dark:text-slate-500 mt-1 uppercase font-bold tracking-tighter">
+                            {/* Secondary — Gross P&L */}
+                            <div className="text-xs text-slate-400 dark:text-slate-500 mt-1.5 flex items-center gap-1.5">
+                                <span className="uppercase font-bold tracking-tighter">Gross</span>
+                                <span className={`font-semibold ${grossPnL >= 0 ? 'text-emerald-500/70 dark:text-emerald-400/60' : 'text-rose-500/70 dark:text-rose-400/60'}`}>
+                                    {fmt(grossPnL)}
+                                </span>
+                                {charges && (
+                                    <>
+                                        <span className="text-slate-300 dark:text-slate-600">·</span>
+                                        <span className="text-rose-400/80 dark:text-rose-500/70 font-semibold">
+                                            -{fmtCharge(totalCharges)} charges
+                                        </span>
+                                    </>
+                                )}
+                            </div>
+                            <div className="text-xs text-slate-400 dark:text-slate-500 mt-0.5 uppercase font-bold tracking-tighter">
                                 {summary.totalTrades} trades executed
                             </div>
                         </div>
