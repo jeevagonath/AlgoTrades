@@ -7,7 +7,7 @@ import { CalendarHeatmap } from '@/components/CalendarHeatmap';
 import {
     calculateChargesForTrade,
     aggregateCharges,
-    ChargesBreakdown,
+    type ChargesBreakdown,
     CHARGE_RATES,
 } from '@/utils/chargesCalculator';
 
