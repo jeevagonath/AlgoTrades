@@ -168,7 +168,7 @@ const EngineWorkflow = ({ status, activity }: { status: string, activity: string
     };
 
     return (
-        <div className="bg-gradient-to-br from-card to-background border border-border rounded-xl p-6 shadow-sm flex flex-col h-full transition-colors duration-300">
+        <div className="bg-gradient-to-br from-card to-background border border-border rounded-xl p-6 shadow-sm flex flex-col transition-colors duration-300">
             <div className="flex items-center justify-between mb-6 border-b border-border pb-3">
                 <h3 className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
