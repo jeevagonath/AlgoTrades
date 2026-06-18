@@ -337,6 +337,7 @@ const Dashboard = ({ onLogout, onShowApiDocs }: { onLogout: () => void, onShowAp
     const [isExpiryDay, setIsExpiryDay] = useState(false);
 
     const [activeTab, setActiveTab] = useState<'positions' | 'orders' | 'logs' | 'alerts' | 'pnl' | 'api' | 'option-chain'>('positions');
+    const [showPnlModal, setShowPnlModal] = useState(false);
     const [dailyPnL, setDailyPnL] = useState<any[]>([]);
     const [showPositionModal, setShowPositionModal] = useState(false);
     const [selectedDate, setSelectedDate] = useState('');
@@ -1119,15 +1120,14 @@ const Dashboard = ({ onLogout, onShowApiDocs }: { onLogout: () => void, onShowAp
                                             id="btn-test-telegram"
                                             onClick={handleTestTelegram}
                                             disabled={telegramTestStatus.type === 'loading'}
-                                            className={`flex-shrink-0 px-4 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 border ${
-                                                telegramTestStatus.type === 'success'
+                                            className={`flex-shrink-0 px-4 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 border ${telegramTestStatus.type === 'success'
                                                     ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-400'
                                                     : telegramTestStatus.type === 'error'
-                                                    ? 'bg-rose-50 dark:bg-rose-900/20 border-rose-300 dark:border-rose-700 text-rose-700 dark:text-rose-400'
-                                                    : telegramTestStatus.type === 'loading'
-                                                    ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400 cursor-not-allowed opacity-80'
-                                                    : 'bg-background dark:bg-slate-800 border-border text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-blue-400 hover:text-blue-600'
-                                            }`}
+                                                        ? 'bg-rose-50 dark:bg-rose-900/20 border-rose-300 dark:border-rose-700 text-rose-700 dark:text-rose-400'
+                                                        : telegramTestStatus.type === 'loading'
+                                                            ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400 cursor-not-allowed opacity-80'
+                                                            : 'bg-background dark:bg-slate-800 border-border text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-blue-400 hover:text-blue-600'
+                                                }`}
                                             title="Send a test Telegram message to verify credentials"
                                         >
                                             {telegramTestStatus.type === 'loading' ? (
@@ -1148,9 +1148,8 @@ const Dashboard = ({ onLogout, onShowApiDocs }: { onLogout: () => void, onShowAp
                                         </button>
                                     </div>
                                     {telegramTestStatus.message && (
-                                        <p className={`text-[10px] font-medium mt-1 px-1 ${
-                                            telegramTestStatus.type === 'success' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
-                                        }`}>
+                                        <p className={`text-[10px] font-medium mt-1 px-1 ${telegramTestStatus.type === 'success' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
+                                            }`}>
                                             {telegramTestStatus.message}
                                         </p>
                                     )}
@@ -1252,7 +1251,7 @@ const Dashboard = ({ onLogout, onShowApiDocs }: { onLogout: () => void, onShowAp
                         </div>
 
                         {/* Next Expiry */}
-                        <div className="bg-card shadow-sm rounded-xl p-3 border border-blue-500/30 dark:border-blue-500/20 w-48 transition-colors">
+                        {/* <div className="bg-card shadow-sm rounded-xl p-3 border border-blue-500/30 dark:border-blue-500/20 w-48 transition-colors">
                             <div className="flex flex-col items-start">
                                 <div className="flex items-center gap-2 mb-1">
                                     <span className="text-[10px] font-bold tracking-wider text-slate-500 dark:text-slate-400 uppercase">Next Expiry</span>
@@ -1274,7 +1273,7 @@ const Dashboard = ({ onLogout, onShowApiDocs }: { onLogout: () => void, onShowAp
                                     ) : 'N/A'}
                                 </div>
                             </div>
-                        </div>
+                        </div> */}
 
                         {/* Current Week / Re-entry Info */}
                         <div className={`bg-card shadow-sm rounded-xl p-3 border w-48 transition-colors ${isExpiryDay ? 'border-rose-300 dark:border-rose-800 bg-rose-50/30 dark:bg-rose-900/10' : 'border-border'}`}>
@@ -1380,9 +1379,83 @@ const Dashboard = ({ onLogout, onShowApiDocs }: { onLogout: () => void, onShowAp
 
 
                 {/* Cumulative P&L Intraday Chart */}
-                <div className="w-full">
+                <div className="w-full relative group">
                     <PnlChart data={intradayChartData} className="h-[300px] w-full" />
+                    {/* Expand button overlaid on chart */}
+                    <button
+                        onClick={() => setShowPnlModal(true)}
+                        title="View Cumulative P&L Chart"
+                        className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900/70 dark:bg-slate-100/10 backdrop-blur-sm border border-white/10 text-white text-[10px] font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-slate-800/90 shadow-lg hover:scale-105 active:scale-95 z-10"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+                        </svg>
+                        Expand
+                    </button>
                 </div>
+
+                {/* Cumulative P&L Chart Modal */}
+                {showPnlModal && (
+                    <div
+                        className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-8 bg-slate-950/80 backdrop-blur-md"
+                        style={{ animation: 'fadeIn 0.2s ease-out' }}
+                        onClick={(e) => { if (e.target === e.currentTarget) setShowPnlModal(false); }}
+                    >
+                        <div
+                            className="relative bg-card border border-border rounded-2xl shadow-2xl w-full max-w-5xl overflow-hidden flex flex-col"
+                            style={{ animation: 'zoomIn 0.22s cubic-bezier(0.34,1.56,0.64,1)' }}
+                        >
+                            {/* Modal Header */}
+                            <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-background/60 backdrop-blur-sm">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-lg bg-blue-600/10 dark:bg-blue-500/20 border border-blue-500/20 flex items-center justify-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+                                            <polyline points="16 7 22 7 22 13" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h2 className="text-sm font-black text-foreground uppercase tracking-wider">Cumulative P&amp;L</h2>
+                                        <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">Intraday performance curve · Today's session</p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => setShowPnlModal(false)}
+                                    className="flex items-center justify-center w-8 h-8 rounded-lg border border-border text-slate-400 hover:text-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+                                    title="Close"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                        <line x1="18" y1="6" x2="6" y2="18" />
+                                        <line x1="6" y1="6" x2="18" y2="18" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            {/* Modal Chart Body */}
+                            <div className="p-6 flex-1">
+                                <PnlChart data={intradayChartData} className="h-[420px] w-full" />
+                            </div>
+
+                            {/* Modal Footer */}
+                            <div className="px-6 py-3 border-t border-border bg-background/40 flex items-center justify-between">
+                                <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">
+                                    {intradayChartData.filter(d => d.pnl !== null).length} data points · Updated every 60s
+                                </span>
+                                <button
+                                    onClick={() => setShowPnlModal(false)}
+                                    className="px-4 py-1.5 rounded-lg bg-slate-900 dark:bg-slate-700 text-white text-[10px] font-bold uppercase tracking-wider hover:bg-slate-800 dark:hover:bg-slate-600 transition-all active:scale-95"
+                                >
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+
+                        <style>{`
+                            @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+                            @keyframes zoomIn { from { opacity: 0; transform: scale(0.94) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+                        `}</style>
+                    </div>
+                )}
 
                 {/* Main Content Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
