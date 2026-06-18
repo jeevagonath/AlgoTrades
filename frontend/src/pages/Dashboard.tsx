@@ -1378,21 +1378,38 @@ const Dashboard = ({ onLogout, onShowApiDocs }: { onLogout: () => void, onShowAp
                 </div>
 
 
-                {/* Cumulative P&L Intraday Chart */}
-                <div className="w-full relative group">
-                    <PnlChart data={intradayChartData} className="h-[300px] w-full" />
-                    {/* Expand button overlaid on chart */}
-                    <button
-                        onClick={() => setShowPnlModal(true)}
-                        title="View Cumulative P&L Chart"
-                        className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900/70 dark:bg-slate-100/10 backdrop-blur-sm border border-white/10 text-white text-[10px] font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-slate-800/90 shadow-lg hover:scale-105 active:scale-95 z-10"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
-                        </svg>
-                        Expand
-                    </button>
-                </div>
+                {/* Cumulative P&L — button triggers modal, chart is hidden inline */}
+                <button
+                    onClick={() => setShowPnlModal(true)}
+                    className="w-full group flex items-center justify-between bg-card border border-border hover:border-blue-500/40 dark:hover:border-blue-500/30 rounded-xl px-5 py-4 shadow-sm transition-all duration-200 hover:shadow-md hover:bg-blue-50/30 dark:hover:bg-blue-900/10 active:scale-[0.995]"
+                >
+                    <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-lg bg-blue-600/10 dark:bg-blue-500/20 border border-blue-500/20 flex items-center justify-center flex-shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+                                <polyline points="16 7 22 7 22 13" />
+                            </svg>
+                        </div>
+                        <div className="text-left">
+                            <div className="text-xs font-black text-foreground uppercase tracking-wider">Cumulative P&amp;L</div>
+                            <div className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
+                                {intradayChartData.filter(d => d.pnl !== null).length} data points · Today's intraday curve
+                            </div>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        {/* Live PnL value preview */}
+                        <span className={`text-sm font-black tabular-nums ${realTimePnL >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                            {realTimePnL >= 0 ? '+' : ''}₹{realTimePnL.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600/10 dark:bg-blue-500/20 border border-blue-500/20 text-blue-600 dark:text-blue-400 text-[10px] font-bold uppercase tracking-wider group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-all duration-200">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+                            </svg>
+                            View Chart
+                        </div>
+                    </div>
+                </button>
 
                 {/* Cumulative P&L Chart Modal */}
                 {showPnlModal && (
