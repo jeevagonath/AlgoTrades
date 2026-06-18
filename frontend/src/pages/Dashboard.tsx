@@ -1121,12 +1121,12 @@ const Dashboard = ({ onLogout, onShowApiDocs }: { onLogout: () => void, onShowAp
                                             onClick={handleTestTelegram}
                                             disabled={telegramTestStatus.type === 'loading'}
                                             className={`flex-shrink-0 px-4 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 border ${telegramTestStatus.type === 'success'
-                                                    ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-400'
-                                                    : telegramTestStatus.type === 'error'
-                                                        ? 'bg-rose-50 dark:bg-rose-900/20 border-rose-300 dark:border-rose-700 text-rose-700 dark:text-rose-400'
-                                                        : telegramTestStatus.type === 'loading'
-                                                            ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400 cursor-not-allowed opacity-80'
-                                                            : 'bg-background dark:bg-slate-800 border-border text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-blue-400 hover:text-blue-600'
+                                                ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-400'
+                                                : telegramTestStatus.type === 'error'
+                                                    ? 'bg-rose-50 dark:bg-rose-900/20 border-rose-300 dark:border-rose-700 text-rose-700 dark:text-rose-400'
+                                                    : telegramTestStatus.type === 'loading'
+                                                        ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400 cursor-not-allowed opacity-80'
+                                                        : 'bg-background dark:bg-slate-800 border-border text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-blue-400 hover:text-blue-600'
                                                 }`}
                                             title="Send a test Telegram message to verify credentials"
                                         >
@@ -1377,39 +1377,6 @@ const Dashboard = ({ onLogout, onShowApiDocs }: { onLogout: () => void, onShowAp
                     <IndicesWidget />
                 </div>
 
-
-                {/* Cumulative P&L — button triggers modal, chart is hidden inline */}
-                <button
-                    onClick={() => setShowPnlModal(true)}
-                    className="w-full group flex items-center justify-between bg-card border border-border hover:border-blue-500/40 dark:hover:border-blue-500/30 rounded-xl px-5 py-4 shadow-sm transition-all duration-200 hover:shadow-md hover:bg-blue-50/30 dark:hover:bg-blue-900/10 active:scale-[0.995]"
-                >
-                    <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg bg-blue-600/10 dark:bg-blue-500/20 border border-blue-500/20 flex items-center justify-center flex-shrink-0">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
-                                <polyline points="16 7 22 7 22 13" />
-                            </svg>
-                        </div>
-                        <div className="text-left">
-                            <div className="text-xs font-black text-foreground uppercase tracking-wider">Cumulative P&amp;L</div>
-                            <div className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
-                                {intradayChartData.filter(d => d.pnl !== null).length} data points · Today's intraday curve
-                            </div>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        {/* Live PnL value preview */}
-                        <span className={`text-sm font-black tabular-nums ${realTimePnL >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-                            {realTimePnL >= 0 ? '+' : ''}₹{realTimePnL.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </span>
-                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600/10 dark:bg-blue-500/20 border border-blue-500/20 text-blue-600 dark:text-blue-400 text-[10px] font-bold uppercase tracking-wider group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-all duration-200">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
-                            </svg>
-                            View Chart
-                        </div>
-                    </div>
-                </button>
 
                 {/* Cumulative P&L Chart Modal */}
                 {showPnlModal && (
@@ -1706,6 +1673,39 @@ const Dashboard = ({ onLogout, onShowApiDocs }: { onLogout: () => void, onShowAp
 
                     {/* Sidebar: Workflow & Logs */}
                     <div className="lg:col-span-1 space-y-4">
+
+                        <button
+                            onClick={() => setShowPnlModal(true)}
+                            className="w-full group flex items-center justify-between bg-card border border-border hover:border-blue-500/40 dark:hover:border-blue-500/30 rounded-xl px-5 py-4 shadow-sm transition-all duration-200 hover:shadow-md hover:bg-blue-50/30 dark:hover:bg-blue-900/10 active:scale-[0.995]"
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 rounded-lg bg-blue-600/10 dark:bg-blue-500/20 border border-blue-500/20 flex items-center justify-center flex-shrink-0">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+                                        <polyline points="16 7 22 7 22 13" />
+                                    </svg>
+                                </div>
+                                <div className="text-left">
+                                    <div className="text-xs font-black text-foreground uppercase tracking-wider">Cumulative P&amp;L</div>
+                                    <div className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
+                                        {intradayChartData.filter(d => d.pnl !== null).length} data points · Today's intraday curve
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                {/* Live PnL value preview */}
+                                <span className={`text-sm font-black tabular-nums ${realTimePnL >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                                    {realTimePnL >= 0 ? '+' : ''}₹{realTimePnL.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </span>
+                                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600/10 dark:bg-blue-500/20 border border-blue-500/20 text-blue-600 dark:text-blue-400 text-[10px] font-bold uppercase tracking-wider group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-all duration-200">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+                                    </svg>
+                                    View Chart
+                                </div>
+                            </div>
+                        </button>
+
                         <EngineWorkflow status={status} activity={engineActivity} />
                     </div>
                 </div>
