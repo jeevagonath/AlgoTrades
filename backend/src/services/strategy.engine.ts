@@ -526,7 +526,18 @@ class StrategyEngine {
             await this.initScheduler();
         }, tzOption));
 
-        // 1.5. Automated Expiry Sync from NSE (Hourly from 9:08 AM)
+        // 1.5. Daily 9:15 AM — Fetch NSE nifty-contracts and save expiry dates to DB
+        this.schedulers.push(cron.schedule('15 9 * * *', async () => {
+            this.addLog('🕘 [Scheduler] 9:15 AM — Fetching NSE expiry dates from nifty-contracts...');
+            const success = await this.triggerExpirySync();
+            if (success) {
+                this.addLog('✅ [Scheduler] 9:15 AM expiry sync completed successfully');
+            } else {
+                this.addLog('⚠️ [Scheduler] 9:15 AM expiry sync failed or was skipped');
+            }
+        }, tzOption));
+
+        // 1.6. Automated Expiry Sync from NSE (Hourly from 9:08 AM — backup/refresh)
         this.schedulers.push(cron.schedule('8 9-15 * * *', async () => {
             await this.triggerExpirySync();
         }, tzOption));

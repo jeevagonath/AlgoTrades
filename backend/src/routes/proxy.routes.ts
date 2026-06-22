@@ -1,8 +1,26 @@
 import { FastifyInstance } from 'fastify';
 import { shoonya } from '../services/shoonya.service';
+import { nseService } from '../services/nse.service';
 import axios from 'axios';
 
 export async function proxyRoutes(app: FastifyInstance) {
+    // NSE Nifty contracts proxy — returns raw option-chain-contract-info data
+    // (includes expiryDates, lot size, etc.)
+    app.get('/api/nifty-contracts', async (request: any, reply) => {
+        try {
+            const symbol = (request.query as any).symbol || 'NIFTY';
+            const data = await nseService.getOptionChainData(symbol);
+            return reply.send(data);
+        } catch (err: any) {
+            console.error('[NiftyContracts] Error fetching NSE contract info:', err.message);
+            return reply.status(500).send({
+                status: 'error',
+                message: err.message || 'Failed to fetch NSE contract info'
+            });
+        }
+    });
+
+
     // Generic proxy endpoint for API testing
     app.post('/api/proxy', async (request, reply) => {
         const { url, data } = request.body as { url: string; data: any };

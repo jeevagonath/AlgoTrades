@@ -2,11 +2,15 @@ import axios, { AxiosInstance } from 'axios';
 import { wrapper } from 'axios-cookiejar-support';
 import { CookieJar } from 'tough-cookie';
 
+// How long (ms) to wait before considering a session stale and forcing re-init
+const SESSION_TTL_MS = 25 * 60 * 1000; // 25 minutes
+
 class NseService {
     private baseUrl = 'https://www.nseindia.com';
     private axiosInstance: AxiosInstance;
     private jar: CookieJar;
     private initialized = false;
+    private lastInitTime = 0;
 
     // Cache for expiry dates
     private expiryCache: {
@@ -14,164 +18,137 @@ class NseService {
         fetchedDate: string;
     } | null = null;
 
+    // ── Shared Chrome-like browser headers ────────────────────────────────────
+    private readonly browserHeaders = {
+        'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'DNT': '1',
+        'Connection': 'keep-alive',
+        'Pragma': 'no-cache',
+        'Cache-Control': 'no-cache',
+    };
+
+    private readonly ajaxHeaders = {
+        ...this.browserHeaders,
+        'Accept': 'application/json, text/javascript, */*; q=0.01',
+        'Referer': 'https://www.nseindia.com/option-chain',
+        'Origin': 'https://www.nseindia.com',
+        'X-Requested-With': 'XMLHttpRequest',
+        'Sec-Fetch-Site': 'same-origin',
+        'Sec-Fetch-Mode': 'cors',
+        'Sec-Fetch-Dest': 'empty',
+    };
+
     constructor() {
         this.jar = new CookieJar();
-
-        // Create axios instance with persistent cookies via jar
-        this.axiosInstance = wrapper(axios.create({
-            baseURL: this.baseUrl,
-            jar: this.jar,
-            timeout: 15000,
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-                'Accept-Language': 'en-US,en;q=0.5',
-                'Accept-Encoding': 'gzip, deflate, br',
-                'Connection': 'keep-alive',
-                'DNT': '1',
-                'Upgrade-Insecure-Requests': '1',
-                'Sec-Fetch-Dest': 'document',
-                'Sec-Fetch-Mode': 'navigate',
-                'Sec-Fetch-Site': 'none',
-                'Sec-Fetch-User': '?1',
-                'Pragma': 'no-cache',
-                'Cache-Control': 'no-cache'
-            },
-            withCredentials: true
-        }));
+        this.axiosInstance = wrapper(
+            axios.create({
+                baseURL: this.baseUrl,
+                jar: this.jar,
+                timeout: 20000,
+                withCredentials: true,
+                headers: this.browserHeaders,
+            })
+        );
     }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
 
     private isSameDay(date1: Date, date2: Date): boolean {
         return date1.toDateString() === date2.toDateString();
     }
 
-    private async initSession() {
+    private delay(ms: number): Promise<void> {
+        return new Promise(r => setTimeout(r, ms));
+    }
+
+    /** Returns true if the response body looks like an HTML page (session expired / bot block). */
+    private isHtmlResponse(data: any): boolean {
+        if (typeof data === 'string') {
+            return data.trimStart().startsWith('<!');
+        }
+        return false;
+    }
+
+    private isSessionStale(): boolean {
+        return !this.initialized || Date.now() - this.lastInitTime > SESSION_TTL_MS;
+    }
+
+    // ── Session initialisation ─────────────────────────────────────────────────
+
+    /**
+     * Multi-step warm-up that mimics a real browser navigating to the option chain page.
+     * Step 1 → Homepage  (gets initial cookies)
+     * Step 2 → Small delay
+     * Step 3 → /option-chain page (gets bm_sz / nsit / nseappid cookies)
+     * Step 4 → Small delay
+     * Step 5 → Pre-flight API touch (gets any XSRF / session token cookies)
+     */
+    private async initSession(): Promise<boolean> {
         try {
-            console.log('[NSE] Initializing new session...');
+            console.log('[NSE] Initialising session...');
+            this.initialized = false;
             this.jar.removeAllCookiesSync();
 
-            // Step 1: Visit homepage to get cookies
+            // Step 1: Homepage
             await this.axiosInstance.get('/', {
                 headers: {
+                    ...this.browserHeaders,
+                    'Accept':
+                        'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
                     'Referer': 'https://www.google.com/',
-                    'Sec-Fetch-Site': 'same-origin',
-                }
+                    'Sec-Fetch-Dest': 'document',
+                    'Sec-Fetch-Mode': 'navigate',
+                    'Sec-Fetch-Site': 'cross-site',
+                    'Sec-Fetch-User': '?1',
+                    'Upgrade-Insecure-Requests': '1',
+                },
             });
 
-            // Step 2: Visit option chain page to establish session
+            await this.delay(800 + Math.random() * 400);
+
+            // Step 2: Option-chain page (critical for session cookies)
             await this.axiosInstance.get('/option-chain', {
                 headers: {
+                    ...this.browserHeaders,
+                    'Accept':
+                        'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
                     'Referer': this.baseUrl,
-                    'Origin': this.baseUrl,
-                    'Sec-Fetch-Site': 'same-origin',
+                    'Sec-Fetch-Dest': 'document',
                     'Sec-Fetch-Mode': 'navigate',
-                }
+                    'Sec-Fetch-Site': 'same-origin',
+                    'Sec-Fetch-User': '?1',
+                    'Upgrade-Insecure-Requests': '1',
+                },
             });
 
-            // Small delay to mimic human behavior
-            await new Promise(r => setTimeout(r, 1000));
+            await this.delay(600 + Math.random() * 400);
 
-            // Debug info (optional, can be removed in prod if noisy)
-            // const cookies = await this.jar.getCookies(this.baseUrl);
-            // console.log('[NSE] Cookies initialized:', cookies.length);
+            // Step 3: Light pre-flight to the contract-info endpoint to register intent
+            try {
+                await this.axiosInstance.get(
+                    '/api/option-chain-contract-info?symbol=NIFTY',
+                    { headers: this.ajaxHeaders }
+                );
+            } catch {
+                // Ignore — this is just a warm-up touch
+            }
+
+            await this.delay(300);
 
             this.initialized = true;
-            console.log('[NSE] Session initialized successfully');
+            this.lastInitTime = Date.now();
+            console.log('[NSE] Session initialised successfully');
             return true;
         } catch (error: any) {
-            console.error('[NSE] Failed to initialize session:', error.message);
+            console.error('[NSE] Session init failed:', error.message);
             return false;
         }
     }
 
-    async getExpiries(symbol: string = 'NIFTY'): Promise<string[]> {
-        try {
-            // Check if we have cached data from today
-            const today = new Date();
-            if (this.expiryCache && this.isSameDay(new Date(this.expiryCache.fetchedDate), today)) {
-                return this.expiryCache.data;
-            }
-
-            // Attempt fetch with retry logic
-            return await this.fetchExpiriesWithRetry(symbol);
-
-        } catch (error: any) {
-            console.error('[NSE] Failed to fetch expiries:', error.message);
-
-            // If we have stale cache, return it as fallback
-            if (this.expiryCache) {
-                console.warn('[NSE] Using stale cached data as fallback');
-                return this.expiryCache.data;
-            }
-
-            return [];
-        }
-    }
-
-    private async fetchExpiriesWithRetry(symbol: string, retryCount = 0): Promise<string[]> {
-        if (!this.initialized && retryCount === 0) {
-            await this.initSession();
-        }
-
-        try {
-            const response = await this.axiosInstance.get(
-                `/api/option-chain-contract-info?symbol=${symbol}`,
-                {
-                    headers: {
-                        'Referer': `${this.baseUrl}/option-chain`,
-                        'Origin': this.baseUrl,
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Sec-Fetch-Site': 'same-origin',
-                        'Sec-Fetch-Mode': 'cors',
-                        'Sec-Fetch-Dest': 'empty',
-                        'Accept': 'application/json, text/javascript, */*; q=0.01'
-                    }
-                }
-            );
-
-            if (response.data && response.data.expiryDates) {
-                const expiries = response.data.expiryDates.map((date: string) => {
-                    return date.toUpperCase();
-                });
-
-                // Cache the data
-                this.expiryCache = {
-                    data: expiries,
-                    fetchedDate: new Date().toISOString()
-                };
-
-                return expiries;
-            }
-            // If we got here, response is valid (200) but missing expiryDates.
-            // This might mean session is bad (dummy 200) or logic is bad.
-            // We'll throw to trigger retry if we have retries left.
-            throw new Error('Invalid response structure (missing expiryDates)');
-
-        } catch (error: any) {
-            // Check for 401/403 OR our custom validation error
-            if (retryCount < 2) {
-                console.log(`[NSE] Fetch failed in getExpiries (${error.message}). Re-initializing session...`);
-                await this.initSession();
-                return this.fetchExpiriesWithRetry(symbol, retryCount + 1);
-            }
-            throw error;
-        }
-    }
-
-    async getOptionChainData(symbol: string = 'NIFTY'): Promise<any> {
-        try {
-            // Check if cache is from a different day, if so, re-init. 
-            const today = new Date();
-            if (this.expiryCache && !this.isSameDay(new Date(this.expiryCache.fetchedDate), today)) {
-                this.expiryCache = null;
-            }
-
-            return await this.fetchOptionChainWithRetry(symbol);
-        } catch (error: any) {
-            console.error('[NSE] Failed to fetch option chain data:', error.message);
-            throw error;
-        }
-    }
+    // ── Endpoint selection ─────────────────────────────────────────────────────
 
     private getEndpoint(symbol: string): string {
         const indices = ['NIFTY', 'BANKNIFTY', 'FINNIFTY', 'MIDCPNIFTY'];
@@ -181,75 +158,141 @@ class NseService {
         return '/api/option-chain-equities';
     }
 
-    private async fetchOptionChainWithRetry(symbol: string, retryCount = 0): Promise<any> {
-        if (!this.initialized && retryCount === 0) {
+    // ── Public API ─────────────────────────────────────────────────────────────
+
+    /** Returns expiry dates (uppercased) for the given symbol. Cached per day. */
+    async getExpiries(symbol: string = 'NIFTY'): Promise<string[]> {
+        try {
+            const today = new Date();
+            if (
+                this.expiryCache &&
+                this.isSameDay(new Date(this.expiryCache.fetchedDate), today)
+            ) {
+                return this.expiryCache.data;
+            }
+            return await this.fetchExpiriesWithRetry(symbol);
+        } catch (error: any) {
+            console.error('[NSE] Failed to fetch expiries:', error.message);
+            if (this.expiryCache) {
+                console.warn('[NSE] Returning stale cached expiries as fallback');
+                return this.expiryCache.data;
+            }
+            return [];
+        }
+    }
+
+    private async fetchExpiriesWithRetry(symbol: string, retryCount = 0): Promise<string[]> {
+        if (this.isSessionStale() || retryCount > 0) {
             await this.initSession();
+        }
+
+        try {
+            // Use contract-info endpoint — it returns expiryDates directly at the top level
+            const response = await this.axiosInstance.get(
+                `/api/option-chain-contract-info?symbol=${symbol}`,
+                { headers: this.ajaxHeaders }
+            );
+
+            if (this.isHtmlResponse(response.data)) {
+                throw new Error('Received HTML instead of JSON (session not ready)');
+            }
+
+            if (response.data?.expiryDates) {
+                const expiries = (response.data.expiryDates as string[]).map(d => d.trim().toUpperCase());
+                this.expiryCache = { data: expiries, fetchedDate: new Date().toISOString() };
+                return expiries;
+            }
+
+            // Fallback: try parsing from records (option-chain-indices format)
+            if (response.data?.records?.expiryDates) {
+                const expiries = (response.data.records.expiryDates as string[]).map(d =>
+                    d.trim().toUpperCase()
+                );
+                this.expiryCache = { data: expiries, fetchedDate: new Date().toISOString() };
+                return expiries;
+            }
+
+            throw new Error('No expiryDates field in NSE response');
+        } catch (error: any) {
+            if (retryCount < 2) {
+                console.log(`[NSE] getExpiries attempt ${retryCount + 1} failed (${error.message}) — retrying...`);
+                await this.delay(2000);
+                return this.fetchExpiriesWithRetry(symbol, retryCount + 1);
+            }
+            throw error;
+        }
+    }
+
+    /**
+     * Returns full option-chain data for the given symbol.
+     * Uses /api/option-chain-indices for index symbols, /api/option-chain-equities otherwise.
+     */
+    async getOptionChainData(symbol: string = 'NIFTY'): Promise<any> {
+        try {
+            // Clear stale cache marker (data is re-fetched live, cache only for expiries)
+            const today = new Date();
+            if (
+                this.expiryCache &&
+                !this.isSameDay(new Date(this.expiryCache.fetchedDate), today)
+            ) {
+                this.expiryCache = null;
+            }
+            return await this.fetchOptionChainWithRetry(symbol);
+        } catch (error: any) {
+            console.error('[NSE] Failed to fetch option chain data:', error.message);
+            throw error;
+        }
+    }
+
+    private async fetchOptionChainWithRetry(symbol: string, retryCount = 0): Promise<any> {
+        if (this.isSessionStale() || retryCount > 0) {
+            const ok = await this.initSession();
+            if (!ok && retryCount >= 2) {
+                throw new Error('NSE session could not be established after multiple attempts');
+            }
         }
 
         try {
             const endpoint = this.getEndpoint(symbol);
             const response = await this.axiosInstance.get(
                 `${endpoint}?symbol=${symbol}`,
-                {
-                    headers: {
-                        'Referer': `${this.baseUrl}/option-chain`,
-                        'Origin': this.baseUrl,
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Sec-Fetch-Site': 'same-origin',
-                        'Sec-Fetch-Mode': 'cors',
-                        'Sec-Fetch-Dest': 'empty',
-                        'Accept': 'application/json, text/javascript, */*; q=0.01'
-                    }
-                }
+                { headers: this.ajaxHeaders }
             );
 
-            if (response.data && response.data.records) {
-                return response.data;
-            } else {
-                console.warn(`[NSE] Response missing "records" field from ${endpoint}:`, JSON.stringify(response.data).substring(0, 200));
-                // If records are missing, it might be a session issue, so we SHOULD retry
-                if (retryCount < 2) {
-                    throw new Error('Missing records');
-                }
+            // Detect HTML / bot-block response
+            if (this.isHtmlResponse(response.data)) {
+                throw new Error('NSE returned HTML page instead of JSON — bot block or session expired');
             }
-            return response.data;
+
+            if (response.data?.records) {
+                return response.data;
+            }
+
+            console.warn(
+                `[NSE] Missing "records" from ${endpoint}:`,
+                JSON.stringify(response.data).substring(0, 300)
+            );
+            throw new Error('NSE response missing records field');
 
         } catch (error: any) {
             if (retryCount < 2) {
-                console.log(`[NSE] Fetch failed in getOptionChainData (${error.message}). Re-initializing session...`);
-                await this.initSession();
+                console.log(`[NSE] fetchOptionChain attempt ${retryCount + 1} failed (${error.message}) — re-initialising session and retrying...`);
+                await this.delay(3000 + retryCount * 2000); // progressive back-off
                 return this.fetchOptionChainWithRetry(symbol, retryCount + 1);
             }
             throw error;
         }
     }
 
+    // ── Spot price ─────────────────────────────────────────────────────────────
 
     async getSpotPrice(symbol: string = 'NIFTY'): Promise<number | null> {
         try {
-            return await this.fetchSpotPriceWithRetry(symbol);
+            const data = await this.getOptionChainData(symbol);
+            return data?.records?.underlyingValue ?? data?.underlyingValue ?? null;
         } catch (error: any) {
             console.error('[NSE] Failed to fetch spot price:', error.message);
             return null;
-        }
-    }
-
-    private async fetchSpotPriceWithRetry(symbol: string, retryCount = 0): Promise<number | null> {
-        try {
-            // Use the same logic as getOptionChainData to get the data
-            const data = await this.fetchOptionChainWithRetry(symbol, retryCount);
-
-            if (data && data.records && data.records.underlyingValue) {
-                return data.records.underlyingValue;
-            }
-            if (data && data.underlyingValue) {
-                return data.underlyingValue;
-            }
-
-            return null;
-
-        } catch (error: any) {
-            throw error;
         }
     }
 }
