@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
+import { calculateChargesForTrade, aggregateCharges } from '@/utils/chargesCalculator';
 import { Activity, ListOrdered, History, Bell, LogOut, TrendingUp, TrendingDown, Clock, Play, Pause, Octagon, Power, Search, Shield, Settings, Save, X, BarChart3, CheckCircle2, Circle, RotateCcw, Code, Book } from 'lucide-react';
 import { socketService, type SocketStatus } from '@/services/socket.service';
 import { strategyApi, authApi } from '@/services/api.service';
@@ -645,27 +646,52 @@ const Dashboard = ({ onLogout, onShowApiDocs }: { onLogout: () => void, onShowAp
         if (activeTab === 'pnl') {
             const fetchDailyPnL = async () => {
                 try {
+                    const API_URL = import.meta.env.VITE_API_BASE_URL || 'https://algotradesservice.onrender.com/api';
+
                     // Add 1 day buffer to end date to include today's trades
                     const adjustedEnd = new Date(endDate);
                     adjustedEnd.setDate(adjustedEnd.getDate() + 1);
                     const adjustedEndStr = adjustedEnd.toISOString().split('T')[0];
 
                     console.log('📅 Fetching P&L from:', startDate, 'to:', adjustedEndStr);
-                    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://algotradesservice.onrender.com/api'}/analytics/daily-pnl?startDate=${startDate}&endDate=${adjustedEndStr}`);
-                    console.log('Response status:', res.status);
-                    const data = await res.json();
-                    console.log('API Response:', data);
-                    if (data.status === 'success') {
-                        setDailyPnL(data.data || []);
 
-                        // Calculate summary metrics from filtered data
-                        const totalPnl = (data.data || []).reduce((sum: number, day: any) => sum + (day.pnl || 0), 0);
+                    // Fetch daily P&L and trade history (with position_history_log) in parallel
+                    const [dailyRes, historyRes] = await Promise.all([
+                        fetch(`${API_URL}/analytics/daily-pnl?startDate=${startDate}&endDate=${adjustedEndStr}`),
+                        fetch(`${API_URL}/analytics/trade-history?startDate=${startDate}&endDate=${adjustedEndStr}`)
+                    ]);
+
+                    const [dailyData, historyData] = await Promise.all([
+                        dailyRes.json(),
+                        historyRes.json()
+                    ]);
+
+                    if (dailyData.status === 'success') {
+                        setDailyPnL(dailyData.data || []);
+                        const totalPnl = (dailyData.data || []).reduce((sum: number, day: any) => sum + (day.pnl || 0), 0);
                         console.log('💰 Total P&L for date range:', totalPnl);
+
+                        // Calculate real charges from position_history_log
+                        let totalCharges = 0;
+                        if (historyData.status === 'success' && historyData.data?.length > 0) {
+                            const tradesWithPositions = (historyData.data as any[]).filter(
+                                (t: any) => t.position_history_log?.length > 0
+                            );
+                            if (tradesWithPositions.length > 0) {
+                                const breakdowns = tradesWithPositions.map((t: any) =>
+                                    calculateChargesForTrade(t.position_history_log)
+                                );
+                                const aggregated = aggregateCharges(breakdowns);
+                                totalCharges = aggregated.total;
+                                console.log('📊 Total charges calculated:', totalCharges, 'across', tradesWithPositions.length, 'trades');
+                            }
+                        }
+
                         setPnlSummary({
                             totalPnl,
-                            charges: 0, // TODO: Add from database if tracked
-                            credits: 0, // TODO: Add from database if tracked
-                            netPnl: totalPnl
+                            charges: totalCharges,
+                            credits: 0,
+                            netPnl: totalPnl - totalCharges
                         });
                     }
                 } catch (err) {
@@ -1618,7 +1644,7 @@ const Dashboard = ({ onLogout, onShowApiDocs }: { onLogout: () => void, onShowAp
                                         <div className="bg-card border border-orange-500/30 dark:border-orange-500/20 rounded-xl p-4 shadow-sm">
                                             <div className="text-[10px] font-black text-orange-600 dark:text-orange-400 uppercase tracking-widest mb-1">Charges & taxes</div>
                                             <div className="text-2xl font-black tracking-tight text-orange-600 dark:text-orange-400">
-                                                ₹{pnlSummary.charges}
+                                                -₹{pnlSummary.charges.toFixed(2)}
                                             </div>
                                         </div>
                                         <div className="bg-card border border-purple-500/30 dark:border-purple-500/20 rounded-xl p-4 shadow-sm">
@@ -1630,7 +1656,7 @@ const Dashboard = ({ onLogout, onShowApiDocs }: { onLogout: () => void, onShowAp
                                         <div className="bg-card border border-blue-500/30 dark:border-blue-500/20 rounded-xl p-4 shadow-sm">
                                             <div className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-1">Net Realized P&L</div>
                                             <div className={`text-2xl font-black tracking-tight ${pnlSummary.netPnl >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-rose-600 dark:text-rose-400'}`}>
-                                                {pnlSummary.netPnl >= 0 ? '+' : ''}₹{(pnlSummary.netPnl / 1000).toFixed(2)}k
+                                                {pnlSummary.netPnl >= 0 ? '+' : '-'}₹{(Math.abs(pnlSummary.netPnl) / 1000).toFixed(2)}k
                                             </div>
                                         </div>
                                     </div>
