@@ -169,7 +169,7 @@ export async function strategyRoutes(app: FastifyInstance) {
         }
     });
 
-    app.get('/sync-expiries', async (request, reply) => {
+    app.post('/sync-expiries', async (request, reply) => {
         try {
             const success = await strategyEngine.triggerExpirySync();
             if (success) {
