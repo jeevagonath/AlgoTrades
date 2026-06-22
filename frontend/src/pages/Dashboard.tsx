@@ -1700,32 +1700,43 @@ const Dashboard = ({ onLogout, onShowApiDocs }: { onLogout: () => void, onShowAp
                                     </div>
 
                                     {/* Summary Metrics */}
-                                    <div className="grid grid-cols-4 gap-4">
-                                        <div className="bg-card border border-emerald-500/30 dark:border-emerald-500/20 rounded-xl p-4 shadow-sm">
-                                            <div className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1">Realized P&L</div>
-                                            <div className={`text-2xl font-black tracking-tight ${pnlSummary.totalPnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-                                                {pnlSummary.totalPnl >= 0 ? '+' : ''}₹{(pnlSummary.totalPnl / 1000).toFixed(2)}k
+                                    {(() => {
+                                        // Show full amount below ₹10,00,000; abbreviate above
+                                        const fmtPnl = (v: number) => {
+                                            const abs = Math.abs(v);
+                                            if (abs >= 10_00_000) return `₹${(abs / 1_00_000).toFixed(2)}L`;
+                                            if (abs >= 10_000) return `₹${(abs / 1_000).toFixed(2)}k`;
+                                            return `₹${abs.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                                        };
+                                        return (
+                                        <div className="grid grid-cols-4 gap-4">
+                                            <div className="bg-card border border-emerald-500/30 dark:border-emerald-500/20 rounded-xl p-4 shadow-sm">
+                                                <div className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1">Realized P&L</div>
+                                                <div className={`text-2xl font-black tracking-tight tabular-nums ${pnlSummary.totalPnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                                                    {pnlSummary.totalPnl >= 0 ? '+' : '-'}{fmtPnl(pnlSummary.totalPnl)}
+                                                </div>
+                                            </div>
+                                            <div className="bg-card border border-orange-500/30 dark:border-orange-500/20 rounded-xl p-4 shadow-sm">
+                                                <div className="text-[10px] font-black text-orange-600 dark:text-orange-400 uppercase tracking-widest mb-1">Charges &amp; Taxes</div>
+                                                <div className="text-2xl font-black tracking-tight tabular-nums text-orange-600 dark:text-orange-400">
+                                                    -{fmtPnl(pnlSummary.charges)}
+                                                </div>
+                                            </div>
+                                            <div className="bg-card border border-purple-500/30 dark:border-purple-500/20 rounded-xl p-4 shadow-sm">
+                                                <div className="text-[10px] font-black text-purple-600 dark:text-purple-400 uppercase tracking-widest mb-1">Other Credits &amp; Debits</div>
+                                                <div className="text-2xl font-black tracking-tight tabular-nums text-purple-600 dark:text-purple-400">
+                                                    {pnlSummary.credits >= 0 ? '+' : '-'}{fmtPnl(pnlSummary.credits)}
+                                                </div>
+                                            </div>
+                                            <div className="bg-card border border-blue-500/30 dark:border-blue-500/20 rounded-xl p-4 shadow-sm">
+                                                <div className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-1">Net Realized P&L</div>
+                                                <div className={`text-2xl font-black tracking-tight tabular-nums ${pnlSummary.netPnl >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                                                    {pnlSummary.netPnl >= 0 ? '+' : '-'}{fmtPnl(pnlSummary.netPnl)}
+                                                </div>
                                             </div>
                                         </div>
-                                        <div className="bg-card border border-orange-500/30 dark:border-orange-500/20 rounded-xl p-4 shadow-sm">
-                                            <div className="text-[10px] font-black text-orange-600 dark:text-orange-400 uppercase tracking-widest mb-1">Charges & taxes</div>
-                                            <div className="text-2xl font-black tracking-tight text-orange-600 dark:text-orange-400">
-                                                -₹{pnlSummary.charges.toFixed(2)}
-                                            </div>
-                                        </div>
-                                        <div className="bg-card border border-purple-500/30 dark:border-purple-500/20 rounded-xl p-4 shadow-sm">
-                                            <div className="text-[10px] font-black text-purple-600 dark:text-purple-400 uppercase tracking-widest mb-1">Other credits & debits</div>
-                                            <div className="text-2xl font-black tracking-tight text-purple-600 dark:text-purple-400">
-                                                {pnlSummary.credits >= 0 ? '+' : ''}₹{pnlSummary.credits}
-                                            </div>
-                                        </div>
-                                        <div className="bg-card border border-blue-500/30 dark:border-blue-500/20 rounded-xl p-4 shadow-sm">
-                                            <div className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-1">Net Realized P&L</div>
-                                            <div className={`text-2xl font-black tracking-tight ${pnlSummary.netPnl >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-rose-600 dark:text-rose-400'}`}>
-                                                {pnlSummary.netPnl >= 0 ? '+' : '-'}₹{(Math.abs(pnlSummary.netPnl) / 1000).toFixed(2)}k
-                                            </div>
-                                        </div>
-                                    </div>
+                                        );
+                                    })()}
 
                                     {/* Calendar */}
                                     <CalendarHeatmap
