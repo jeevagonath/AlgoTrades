@@ -1524,44 +1524,110 @@ const Dashboard = ({ onLogout, onShowApiDocs }: { onLogout: () => void, onShowAp
                                         <table className="w-full text-left">
                                             <thead>
                                                 <tr className="border-b border-border bg-background/50">
-                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Time</th>
-                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Symbol</th>
-                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">Side</th>
-                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">Price</th>
-                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">Action</th>
-                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">Qty</th>
-                                                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-right">Status</th>
+                                                    <th className="px-5 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Symbol</th>
+                                                    <th className="px-5 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">Side</th>
+                                                    <th className="px-5 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">Entry Price</th>
+                                                    <th className="px-5 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">Entry Time</th>
+                                                    <th className="px-5 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">Exit Price</th>
+                                                    <th className="px-5 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">Exit Time</th>
+                                                    <th className="px-5 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">Qty</th>
+                                                    <th className="px-5 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-right">P&amp;L</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-border">
-                                                {orders.map((order, i) => (
-                                                    <tr key={i} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
-                                                        <td className="px-6 py-4 font-mono text-xs text-slate-600 dark:text-slate-400">
-                                                            <div className="flex flex-col">
-                                                                <span className="font-bold">{new Date(order.created_at).toLocaleTimeString('en-IN', { hour12: false })}</span>
-                                                                <span className="text-[10px] opacity-60">{new Date(order.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</span>
-                                                            </div>
-                                                        </td>
-                                                        <td className="px-6 py-4 font-bold text-sm text-foreground">{formatOptionSymbol(order.symbol)}</td>
-                                                        <td className="px-6 py-4 text-center">
-                                                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${order.side === 'BUY' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border border-blue-100 dark:border-blue-800' : 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-100 dark:border-amber-800'}`}>
-                                                                {order.side}
-                                                            </span>
-                                                        </td>
-                                                        <td className="px-6 py-4 text-center font-mono text-sm text-slate-800 dark:text-slate-300">₹{order.price}</td>
-                                                        <td className="px-6 py-4 text-center">
-                                                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${order.action === 'EXIT' ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-100 dark:border-amber-800' : 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border border-blue-100 dark:border-blue-800'}`}>
-                                                                {order.action || 'ENTRY'}
-                                                            </span>
-                                                        </td>
-                                                        <td className="px-6 py-4 text-center font-mono text-sm text-slate-600 dark:text-slate-400">{order.quantity}</td>
-                                                        <td className="px-6 py-4 text-right">
-                                                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${order.status === 'COMPLETE' ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800' : 'bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-400 border border-border'}`}>
-                                                                {order.status}
-                                                            </span>
-                                                        </td>
-                                                    </tr>
-                                                ))}
+                                                {(() => {
+                                                    // Sort oldest-first so ENTRY always appears before EXIT
+                                                    const sorted = [...orders].sort(
+                                                        (a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+                                                    );
+
+                                                    // Group by token (or symbol), pairing ENTRY → EXIT
+                                                    const groupMap = new Map<string, { entry: any; exit: any | null }[]>();
+                                                    sorted.forEach((order: any) => {
+                                                        const key = order.token || order.instrument_token || order.symbol;
+                                                        if (!groupMap.has(key)) groupMap.set(key, []);
+                                                        const legs = groupMap.get(key)!;
+                                                        const action = (order.action || 'ENTRY').toUpperCase();
+                                                        if (action === 'ENTRY') {
+                                                            legs.push({ entry: order, exit: null });
+                                                        } else {
+                                                            const unmatched = [...legs].reverse().find(l => l.exit === null);
+                                                            if (unmatched) unmatched.exit = order;
+                                                            else legs.push({ entry: null, exit: order });
+                                                        }
+                                                    });
+
+                                                    // Flatten + sort newest-first for display
+                                                    const rows: { entry: any; exit: any; symbol: string; token: string }[] = [];
+                                                    groupMap.forEach((legs: any[], key: string) => {
+                                                        legs.forEach(leg => {
+                                                            const ref = leg.entry || leg.exit;
+                                                            rows.push({ entry: leg.entry, exit: leg.exit, symbol: ref?.symbol || '', token: key });
+                                                        });
+                                                    });
+                                                    rows.sort((a, b) => {
+                                                        const aT = a.entry?.created_at || a.exit?.created_at || '';
+                                                        const bT = b.entry?.created_at || b.exit?.created_at || '';
+                                                        return new Date(bT).getTime() - new Date(aT).getTime();
+                                                    });
+
+                                                    return rows.map((row: any, i: number) => {
+                                                        const side = row.entry?.side || row.exit?.side || '—';
+                                                        const entryPrice = row.entry ? Number(row.entry.price) : null;
+                                                        const exitPrice = row.exit ? Number(row.exit.price) : null;
+                                                        const qty = row.entry?.quantity || row.exit?.quantity || 0;
+                                                        let legPnl: number | null = null;
+                                                        if (entryPrice !== null && exitPrice !== null) {
+                                                            legPnl = side === 'BUY' ? (exitPrice - entryPrice) * qty : (entryPrice - exitPrice) * qty;
+                                                        }
+                                                        const isComplete = row.entry && row.exit;
+                                                        return (
+                                                            <tr key={i} className={`hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors ${!isComplete ? 'opacity-60' : ''}`}>
+                                                                <td className="px-5 py-3">
+                                                                    <div className="font-bold text-sm text-foreground">{formatOptionSymbol(row.symbol)}</div>
+                                                                    <div className="text-[10px] text-slate-400 dark:text-slate-500 font-mono mt-0.5">{row.token}</div>
+                                                                </td>
+                                                                <td className="px-5 py-3 text-center">
+                                                                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${side === 'BUY' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border border-blue-100 dark:border-blue-800' : 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-100 dark:border-amber-800'}`}>
+                                                                        {side}
+                                                                    </span>
+                                                                </td>
+                                                                <td className="px-5 py-3 text-center">
+                                                                    {entryPrice !== null
+                                                                        ? <span className="font-mono text-sm font-bold text-emerald-600 dark:text-emerald-400">₹{entryPrice.toFixed(2)}</span>
+                                                                        : <span className="text-slate-300 dark:text-slate-700 text-xs">—</span>}
+                                                                </td>
+                                                                <td className="px-5 py-3 text-center font-mono text-xs text-slate-500 dark:text-slate-400">
+                                                                    {row.entry ? (
+                                                                        <div className="flex flex-col items-center">
+                                                                            <span className="font-bold">{new Date(row.entry.created_at).toLocaleTimeString('en-IN', { hour12: false })}</span>
+                                                                            <span className="text-[10px] opacity-60">{new Date(row.entry.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</span>
+                                                                        </div>
+                                                                    ) : <span className="text-slate-300 dark:text-slate-700">—</span>}
+                                                                </td>
+                                                                <td className="px-5 py-3 text-center">
+                                                                    {exitPrice !== null
+                                                                        ? <span className="font-mono text-sm font-bold text-rose-600 dark:text-rose-400">₹{exitPrice.toFixed(2)}</span>
+                                                                        : <span className="inline-flex items-center gap-1 text-[10px] text-amber-500 font-bold"><span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>Open</span>}
+                                                                </td>
+                                                                <td className="px-5 py-3 text-center font-mono text-xs text-slate-500 dark:text-slate-400">
+                                                                    {row.exit ? (
+                                                                        <div className="flex flex-col items-center">
+                                                                            <span className="font-bold">{new Date(row.exit.created_at).toLocaleTimeString('en-IN', { hour12: false })}</span>
+                                                                            <span className="text-[10px] opacity-60">{new Date(row.exit.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</span>
+                                                                        </div>
+                                                                    ) : <span className="text-slate-300 dark:text-slate-700">—</span>}
+                                                                </td>
+                                                                <td className="px-5 py-3 text-center font-mono text-sm text-slate-600 dark:text-slate-400">{qty}</td>
+                                                                <td className="px-5 py-3 text-right">
+                                                                    {legPnl !== null
+                                                                        ? <span className={`font-mono text-sm font-black ${legPnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>{legPnl >= 0 ? '+' : ''}₹{legPnl.toFixed(2)}</span>
+                                                                        : <span className="text-[10px] font-bold text-amber-500 px-2 py-0.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded">OPEN</span>}
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    });
+                                                })()}
                                             </tbody>
                                         </table>
                                     </div>
