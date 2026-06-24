@@ -1806,7 +1806,7 @@ class StrategyEngine {
             this.addLog(`   - Position opened: ${this.state.positionEntryDate} (age: ${positionAge} day(s))`);
             this.addLog(`   - Exit time: ${exitTime.toLocaleTimeString('en-IN')} | Reason: ${exitReason}`);
             this.addLog(`   - Cutoff: ${this.state.reEntryCutoffTime} | Re-entry at: ${reEntryTime.toLocaleTimeString('en-IN')}`);
-            this.addLog(`   - Saved ${this.state.reEntry.originalStrikes.length} original legs for expiry tracking`);
+            this.addLog(`   - Saved ${this.state.reEntry.originalStrikes?.length ?? 0} original legs for expiry tracking`);
 
             this.state.nextAction = `Re-Entry at ${reEntryTime.toLocaleTimeString('en-IN')} (2 min after exit)`;
 
