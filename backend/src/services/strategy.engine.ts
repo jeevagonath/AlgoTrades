@@ -1334,14 +1334,14 @@ class StrategyEngine {
             }
             this.state.selectedStrikes[legIdx].ltp = ltp;
 
+            // Calculate PNL with updated prices
+            this.calculatePnL();
+
             // Perform strategy logic ONLY if ACTIVE
             if (this.state.status === 'ACTIVE' && !this.state.isPaused) {
                 this.checkAdjustments(this.state.selectedStrikes[legIdx]);
                 this.checkExits();
             }
-
-            // Calculate PNL with updated prices
-            this.calculatePnL();
         }
 
         // Emit single consolidated price_update event with all data
@@ -1600,14 +1600,24 @@ class StrategyEngine {
         this.isExiting = true;
         console.log(`Exiting all positions: ${reason}`);
 
-        try {
-            // Sort: Close Shorts (SELL) first, then Longs (BUY)
-            const legsToExit = [...this.state.selectedStrikes].sort((a, b) => {
-                if (a.side === 'SELL' && b.side !== 'SELL') return -1;
-                if (b.side === 'SELL' && a.side !== 'SELL') return 1;
-                return 0;
-            });
+        // IMMEDAITELY clear state to prevent concurrent triggers from loops
+        const legsToExit = [...this.state.selectedStrikes].sort((a, b) => {
+            if (a.side === 'SELL' && b.side !== 'SELL') return -1;
+            if (b.side === 'SELL' && a.side !== 'SELL') return 1;
+            return 0;
+        });
+        
+        // Save original legs for history logging
+        const originalLegs = [...this.state.selectedStrikes];
 
+        // Clear active engine state
+        this.state.selectedStrikes = [];
+        this.state.isActive = false;
+        this.state.isTradePlaced = false;
+        // Temporarily set status to FORCE_EXITED so handlePriceUpdate bypasses logic
+        this.state.status = 'FORCE_EXITED'; 
+        
+        try {
             // Loop and Place Exit Orders
             for (const leg of legsToExit) {
                 const exitSide = leg.side === 'BUY' ? 'SELL' : 'BUY';
@@ -1685,21 +1695,28 @@ class StrategyEngine {
                 }
             }
 
-            this.state.isActive = false;
-            this.state.isTradePlaced = false;
+            // (already cleared above, isActive/isTradePlaced already set to false)
 
             // ========== RE-ENTRY DETECTION LOGIC ==========
-            await this.detectAndScheduleReEntry(reason);
+            // Pass originalLegs so detectAndScheduleReEntry can read expiry from symbols.
+            // this.state.selectedStrikes is already [] at this point (cleared above for safety).
+            await this.detectAndScheduleReEntry(reason, originalLegs);
             // ==============================================
 
-            // Set status based on reason
-            // Check if re-entry is scheduled FIRST
+            // Set final status — re-entry eligibility takes priority over all other reasons
+            // (including Profit / Loss exits, which are still valid re-entry triggers).
             if (this.state.reEntry.isEligible && !this.state.reEntry.hasReEntered && !reason.includes('MANUAL')) {
-                this.state.status = 'IDLE'; // Pending/Waiting state
+                this.state.status = 'IDLE';
                 this.state.engineActivity = 'Waiting for Re-Entry';
-                // nextAction is set in detectAndScheduleReEntry
-                this.addLog('ℹ️ [Status] Keeping engine IDLE for Re-Entry');
-            } else if (reason.includes('Profit') || reason.includes('Loss') || reason.includes('MANUAL')) {
+                // nextAction is already set inside detectAndScheduleReEntry
+                this.addLog('ℹ️ [Status] Keeping engine IDLE — Re-Entry scheduled');
+            } else if (reason.includes('MANUAL')) {
+                // Manual kill switch — never re-enter
+                this.state.status = 'FORCE_EXITED';
+                this.state.engineActivity = 'Strategy Terminated';
+                this.state.nextAction = 'Manual Reset Required';
+            } else if (reason.includes('Profit') || reason.includes('Loss')) {
+                // SL / Target hit but no re-entry eligibility
                 this.state.status = 'FORCE_EXITED';
                 this.state.engineActivity = 'Strategy Terminated';
                 this.state.nextAction = 'Manual Reset Required';
@@ -1708,14 +1725,15 @@ class StrategyEngine {
                 this.state.engineActivity = 'Waiting for Next Cycle';
                 this.state.nextAction = 'Daily 9 AM Evaluation';
             }
+
             console.log("Exit all position state : ", this.state);
-            // Save to history before clearing
+
+            // Save to history
             await db.saveTradeHistory({
                 ...this.state,
                 exitReason: reason
-            }, this.state.selectedStrikes, this.getUid());
+            }, originalLegs, this.getUid());
 
-            this.state.selectedStrikes = [];
             // Reset peaks so they don't bleed into the next trade cycle
             this.state.peakProfit = 0;
             this.state.peakLoss = 0;
@@ -1723,7 +1741,6 @@ class StrategyEngine {
             await db.syncPositions([], this.getUid());
             await this.syncToDb(true);
             socketService.emit('strategy_exit', { reason });
-            console.log("Exit all position state : ", this.state);
             telegramService.sendMessage(`🏁 <b>Strategy Closed</b>\nReason: ${reason}\nFinal PnL: <b>₹${this.state.pnl.toFixed(2)}</b>`);
 
         } finally {
@@ -1733,74 +1750,69 @@ class StrategyEngine {
 
     // ========== RE-ENTRY FEATURE METHODS ==========
 
-    private async detectAndScheduleReEntry(exitReason: string) {
+    private async detectAndScheduleReEntry(exitReason: string, legsAtExit: LegState[] = []) {
         try {
             const exitTime = new Date();
             const exitHour = exitTime.getHours();
             const exitMinute = exitTime.getMinutes();
             const exitDate = exitTime.toISOString().split('T')[0]; // YYYY-MM-DD
 
-            // Parse configurable cutoff time
+            // Parse configurable cutoff time (e.g. "13:45")
             const [cutoffHour, cutoffMinute] = this.state.reEntryCutoffTime.split(':').map(Number);
 
-            // Check if exit is before cutoff time
+            // Rule 1: Exit must be BEFORE the cutoff time
             const isEarlyExit = exitHour < cutoffHour || (exitHour === cutoffHour && exitMinute < cutoffMinute);
-
             if (!isEarlyExit) {
-                this.addLog(`ℹ️ [Re-Entry] Exit after ${this.state.reEntryCutoffTime}, not eligible for re-entry`);
+                this.addLog(`ℹ️ [Re-Entry] Exit at ${exitTime.toLocaleTimeString('en-IN')} is after cutoff ${this.state.reEntryCutoffTime} — not eligible`);
                 return;
             }
 
-            // Calculate position age in days
+            // Rule 2: positionEntryDate must be recorded
             if (!this.state.positionEntryDate) {
-                this.addLog(`ℹ️ [Re-Entry] No entry date recorded, cannot determine position age`);
+                this.addLog(`ℹ️ [Re-Entry] No entry date recorded — cannot determine position age`);
                 return;
             }
 
+            // Rule 3: Position must be opened yesterday (age = 1) OR today (age = 0)
             const entryDate = new Date(this.state.positionEntryDate);
             const exitDateObj = new Date(exitDate);
             const positionAge = Math.floor((exitDateObj.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24));
 
-            // Check if position was taken EXACTLY yesterday (position age = 1)
-            const isYesterdayPosition = positionAge === 1;
-
-            // Check if this is NOT expiry day exit
-            const isNotExpiryDayExit = !exitReason.includes('Expiry');
-
-            // Allow Same Day (Age 0) OR Yesterday (Age 1)
-            const isEligibleAge = positionAge === 0 || positionAge === 1;
-
-            if (isEligibleAge && isNotExpiryDayExit) {
-                // Calculate re-entry time (2 minutes from now)
-                const reEntryTime = new Date(exitTime.getTime() + 2 * 60 * 1000);
-
-                this.state.reEntry.isEligible = true;
-                this.state.reEntry.originalExitTime = exitTime.toISOString();
-                this.state.reEntry.originalExitReason = exitReason;
-                this.state.reEntry.positionAge = positionAge;
-                this.state.reEntry.scheduledReEntryTime = reEntryTime.toISOString();
-
-                this.addLog(`✅ [Re-Entry] Eligible for re-entry in 2 minutes`);
-                this.addLog(`   - Position taken on: ${this.state.positionEntryDate}`);
-                this.addLog(`   - Exited on: ${exitDate} at ${exitTime.toLocaleTimeString('en-IN')}`);
-                this.addLog(`   - Position taken on: ${this.state.positionEntryDate}`);
-                this.addLog(`   - Exited on: ${exitDate} at ${exitTime.toLocaleTimeString('en-IN')}`);
-                this.addLog(`   - Position age: ${positionAge} days`);
-                this.addLog(`   - Exit reason: ${exitReason}`);
-                this.addLog(`   - Scheduled re-entry: ${reEntryTime.toLocaleTimeString('en-IN')}`);
-
-                this.state.nextAction = `Re-Entry at ${reEntryTime.toLocaleTimeString('en-IN')} (2 min after exit)`;
-
-                // Schedule re-entry after 2 minutes
-                this.scheduleReEntry(2 * 60 * 1000); // 2 minutes in milliseconds
-
-                // Save original strikes for restoration/expiry tracking
-                this.state.reEntry.originalStrikes = JSON.parse(JSON.stringify(this.state.selectedStrikes));
-                this.addLog(`💾 [Re-Entry] Saved ${this.state.reEntry.originalStrikes?.length} original legs for restoration.`);
-
-            } else if (positionAge > 1) {
-                this.addLog(`ℹ️ [Re-Entry] Position is ${positionAge} days old, not eligible for re-entry (Max 1 day old allowed)`);
+            if (positionAge > 1) {
+                this.addLog(`ℹ️ [Re-Entry] Position is ${positionAge} days old — max allowed is 1 day. Not eligible.`);
+                return;
             }
+
+            // Rule 4: Must NOT be an expiry-day rollover exit
+            const isNotExpiryDayExit = !exitReason.includes('Expiry');
+            if (!isNotExpiryDayExit) {
+                this.addLog(`ℹ️ [Re-Entry] Expiry rollover exit — re-entry not applicable`);
+                return;
+            }
+
+            // ✅ All checks passed — schedule re-entry
+            const reEntryTime = new Date(exitTime.getTime() + 2 * 60 * 1000);
+
+            this.state.reEntry.isEligible = true;
+            this.state.reEntry.hasReEntered = false;
+            this.state.reEntry.originalExitTime = exitTime.toISOString();
+            this.state.reEntry.originalExitReason = exitReason;
+            this.state.reEntry.positionAge = positionAge;
+            this.state.reEntry.scheduledReEntryTime = reEntryTime.toISOString();
+            // CRITICAL: Save legs from the parameter (selectedStrikes is already [] at this point)
+            this.state.reEntry.originalStrikes = JSON.parse(JSON.stringify(legsAtExit));
+
+            this.addLog(`✅ [Re-Entry] ELIGIBLE — re-entry scheduled in 2 minutes`);
+            this.addLog(`   - Position opened: ${this.state.positionEntryDate} (age: ${positionAge} day(s))`);
+            this.addLog(`   - Exit time: ${exitTime.toLocaleTimeString('en-IN')} | Reason: ${exitReason}`);
+            this.addLog(`   - Cutoff: ${this.state.reEntryCutoffTime} | Re-entry at: ${reEntryTime.toLocaleTimeString('en-IN')}`);
+            this.addLog(`   - Saved ${this.state.reEntry.originalStrikes.length} original legs for expiry tracking`);
+
+            this.state.nextAction = `Re-Entry at ${reEntryTime.toLocaleTimeString('en-IN')} (2 min after exit)`;
+
+            // Schedule re-entry after 2 minutes
+            this.scheduleReEntry(2 * 60 * 1000);
+
         } catch (error: any) {
             this.addLog(`❌ [Re-Entry] Error in detection: ${error.message}`);
         }

@@ -37,6 +37,8 @@ export const db = {
         if (state.availableMargin !== undefined) payload.available_margin = state.availableMargin;
         // Fix: Persist re_entry state object
         if (state.reEntry !== undefined) payload.re_entry = state.reEntry;
+        // Fix: Persist positionEntryDate — critical for next-day re-entry eligibility
+        if (state.positionEntryDate !== undefined) payload.position_entry_date = state.positionEntryDate || null;
 
         //console.log('[DB] Updating state with payload:', JSON.stringify(payload, null, 2));
 
@@ -234,6 +236,7 @@ export const db = {
                 nextAction: data.next_action || '',
                 engineActivity: data.engine_activity || '',
                 reEntryCutoffTime: data.re_entry_cutoff_time || '13:45',
+                positionEntryDate: data.position_entry_date || '', // ← Critical for re-entry
                 reEntry: data.re_entry // Restore reEntry state
             };
         }
