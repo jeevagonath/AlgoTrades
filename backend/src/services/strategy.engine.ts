@@ -2009,21 +2009,12 @@ class StrategyEngine {
             this.addLog(`🔄 [Auto-Sync] Attempt ${attempt}/${maxAttempts}: Fetching latest expiry dates from NSE...`);
 
             try {
-                const data = await nseService.getOptionChainData('NIFTY');
-                // Check for both structures (indices uses records.expiryDates, contract-info uses expiryDates)
-                const expiries = (data && data.records && data.records.expiryDates)
-                    ? data.records.expiryDates
-                    : (data && data.expiryDates)
-                        ? data.expiryDates
-                        : null;
+                const expiries = await nseService.getExpiries('NIFTY');
 
-                if (expiries) {
-                    // Normalize: trim and uppercase so "24-Mar-2026" → "24-MAR-2026"
-                    const formatted = expiries.map((d: string) => d.trim().toUpperCase());
-
-                    const success = await db.setManualExpiries(formatted, this.getUid());
+                if (expiries && expiries.length > 0) {
+                    const success = await db.setManualExpiries(expiries, this.getUid());
                     if (success) {
-                        this.addLog(`✅ [Auto-Sync] Updated DB with ${formatted.length} expiries. Next: ${formatted[0]} → ${formatted[1] || '-'}`);
+                        this.addLog(`✅ [Auto-Sync] Updated DB with ${expiries.length} expiries. Next: ${expiries[0]} → ${expiries[1] || '-'}`);
                         return true;
                     } else {
                         throw new Error('Failed to update DB (setManualExpiries returned false). Check RLS policies?');

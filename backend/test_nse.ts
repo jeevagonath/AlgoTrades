@@ -1,21 +1,25 @@
-
 import { nseService } from './src/services/nse.service';
 
-async function testNseFetch() {
-    console.log('Testing NSE Expiry Fetch...');
+async function test() {
     try {
-        const data = await nseService.getOptionChainData('NIFTY');
-        // console.log('Response Keys:', Object.keys(data));
-        if (data && data.records) {
-            console.log('Records Found:', true);
-            console.log('Expiry Dates:', data.records.expiryDates);
-        } else {
-            console.log('Records Found:', false);
-            console.log('Raw Data:', JSON.stringify(data).substring(0, 200));
+        console.log("Initialising session...");
+        await (nseService as any).initSession();
+        
+        console.log("Fetching contract info...");
+        const response = await (nseService as any).axiosInstance.get(
+            '/api/option-chain-contract-info?symbol=NIFTY',
+            { headers: (nseService as any).ajaxHeaders }
+        );
+        console.log("Contract Info Keys:", Object.keys(response.data));
+        if (response.data.underlyingValue) {
+            console.log("Underlying Value:", response.data.underlyingValue);
         }
-    } catch (error: any) {
-        console.error('Fetch Failed:', error.message);
+        if (response.data.records && response.data.records.underlyingValue) {
+            console.log("Records Underlying Value:", response.data.records.underlyingValue);
+        }
+    } catch (e) {
+        console.error("Test failed:", e);
     }
 }
 
-testNseFetch();
+test();
