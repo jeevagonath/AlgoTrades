@@ -1632,6 +1632,11 @@ class StrategyEngine {
             return;
         }
 
+        if (this.state.selectedStrikes.length === 0) {
+            console.log(`[Strategy] ⚠️ Exit skipped: No active positions to close (Reason: ${reason})`);
+            return;
+        }
+
         this.isExiting = true;
         console.log(`Exiting all positions: ${reason}`);
 
