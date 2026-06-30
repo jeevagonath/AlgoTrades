@@ -40,8 +40,7 @@ export async function strategyRoutes(app: FastifyInstance) {
 
     app.post('/test-selection', async (request, reply) => {
         try {
-            // Guard: block if a live trade is in progress — selectStrikes() calls syncPositions()
-            // which wipes and rewrites the DB positions table, corrupting live position tracking.
+            // Guard: block if a live trade is in progress
             const currentState = strategyEngine.getState();
             if (currentState.status === 'ACTIVE' || currentState.status === 'ENTRY_DONE') {
                 return reply.status(409).send({
@@ -51,6 +50,10 @@ export async function strategyRoutes(app: FastifyInstance) {
             }
             const { expiry } = request.body as { expiry: string };
             const strikes = await strategyEngine.selectStrikes(expiry);
+
+            // Activate the engine in VIRTUAL mode so positions are visible and monitoring works
+            await strategyEngine.activateAfterTestSelection();
+
             return { status: 'success', data: strikes };
         } catch (err: any) {
             return reply.status(500).send({ status: 'error', message: err.message });

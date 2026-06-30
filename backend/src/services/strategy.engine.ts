@@ -1080,6 +1080,41 @@ class StrategyEngine {
         }
     }
 
+    /**
+     * Called after selectStrikes() during a test-selection flow.
+     * Activates the engine (status → ACTIVE), persists positions to DB so the
+     * Positions page shows them, and starts WebSocket monitoring — all without
+     * placing any real or virtual orders.
+     */
+    public async activateAfterTestSelection() {
+        if (this.state.selectedStrikes.length === 0) {
+            this.addLog('⚠️ [Test] activateAfterTestSelection: no strikes selected, skipping activation.');
+            return;
+        }
+
+        // Record entry date (needed for re-entry eligibility)
+        const today = new Date().toISOString().split('T')[0];
+        this.state.positionEntryDate = today;
+
+        // Set engine state to ACTIVE
+        this.state.isTradePlaced = true;
+        this.state.isActive = true;
+        this.state.status = 'ACTIVE';
+        this.state.engineActivity = 'Monitoring Iron Condor (Test)';
+        this.state.nextAction = `Daily Exit at ${this.state.exitTime}`;
+
+        // Persist positions so the UI Positions page can read them
+        await db.syncPositions(this.state.selectedStrikes, this.getUid());
+
+        // Persist full engine state
+        await this.syncToDb(true);
+
+        // Start WebSocket monitoring so LTP and PnL update live
+        this.startMonitoring();
+
+        this.addLog(`✅ [Test] Engine activated. ${this.state.selectedStrikes.length} positions synced to DB. Status → ACTIVE.`);
+    }
+
     public async testPlaceOrder() {
         this.addLog('🧪 STARTING PLACE ORDER TEST (Dry Run)...');
         // Ensure strikes are selected or mock them if needed
@@ -1355,7 +1390,7 @@ class StrategyEngine {
             c: tick.c,
             v: tick.v,
             // Include position-specific data if this is a position token
-            ...(legIdx !== -1 && {
+            ...(legIdx !== -1 && this.state.selectedStrikes[legIdx] && {
                 symbol: this.state.selectedStrikes[legIdx].symbol,
                 pnl: this.state.pnl,
                 peakProfit: this.state.peakProfit,
