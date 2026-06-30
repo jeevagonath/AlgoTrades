@@ -403,8 +403,12 @@ export const db = {
                 return new Date(parseInt(p[2]), months[p[1].toUpperCase()], parseInt(p[0])).getTime();
             };
 
+            const todayStart = new Date();
+            todayStart.setHours(0, 0, 0, 0);
+
             return data
                 .map(d => d.expiry_date)
+                .filter(d => parseDate(d) >= todayStart.getTime())
                 .sort((a, b) => parseDate(a) - parseDate(b));
         } catch (err) {
             console.error('Failed to load manual expiries:', err);
