@@ -792,7 +792,16 @@ class StrategyEngine {
                 try {
                     const q: any = await shoonya.getQuotes('NFO', item.token);
                     if (q && q.lp) {
-                        quotes.push({ ...item, lp: parseFloat(q.lp), ls: q.ls });
+                        const lp = parseFloat(q.lp);
+                        // Sanity guard: NFO option premiums are never >₹5000.
+                        // If lp looks like an index spot price (e.g. 23000+), it is a
+                        // Shoonya API glitch — reject it so it never becomes an entryPrice.
+                        if (lp > 5000) {
+                            console.warn(`[selectStrikes] ⚠️ Suspicious LTP ₹${lp} for ${item.tsym} (token ${item.token}) — skipping (possible spot price contamination)`);
+                            this.addLog(`⚠️ [selectStrikes] Skipped ${item.tsym}: LTP ₹${lp} looks like spot price, not an option premium`);
+                            continue;
+                        }
+                        quotes.push({ ...item, lp, ls: q.ls });
                     }
                 } catch (e) {
                     console.warn(`[Strategy] Failed to fetch quote for ${item.tsym}`);
@@ -870,14 +879,24 @@ class StrategyEngine {
             this.state.peakLoss = 0;
             this.state.pnl = 0;
 
-            // Fetch real-time LTP via GetQuotes API before WebSocket updates
+            // Fetch real-time LTP via GetQuotes API before WebSocket updates.
+            // This also corrects entryPrice if the first fetch returned a bad value (spot contamination).
             try {
                 for (const leg of selectedLegs) {
                     try {
                         const quote: any = await shoonya.getQuotes('NFO', leg.token);
                         if (quote && quote.lp) {
-                            leg.ltp = parseFloat(quote.lp);
-                            this.addLog(`📊 Initial LTP for ${leg.symbol}: ₹${quote.lp} (Entry: ₹${leg.entryPrice})`);
+                            const verifiedLtp = parseFloat(quote.lp);
+                            // Same >5000 guard: if the second call also returns a bad price, keep old value
+                            if (verifiedLtp > 5000) {
+                                console.warn(`[selectStrikes] ⚠️ Verification GetQuotes also returned suspicious LTP ₹${verifiedLtp} for ${leg.symbol} — keeping original entryPrice`);
+                                this.addLog(`⚠️ [selectStrikes] Verification LTP ₹${verifiedLtp} for ${leg.symbol} is suspicious — NOT updating entryPrice`);
+                                continue;
+                            }
+                            // Update BOTH ltp and entryPrice so they are always consistent
+                            leg.ltp = verifiedLtp;
+                            leg.entryPrice = verifiedLtp;
+                            this.addLog(`📊 Initial LTP for ${leg.symbol}: ₹${verifiedLtp} (Entry set to: ₹${verifiedLtp})`);
                         }
                     } catch (quoteErr) {
                         console.error(`[Strategy] GetQuote Error for ${leg.symbol}:`, quoteErr);
@@ -1285,7 +1304,26 @@ class StrategyEngine {
                 const result: any = await shoonya.placeOrder(orderParams);
 
                 if (result.stat === 'Ok') {
-                    const fillPrice = result.avgprc ? parseFloat(result.avgprc) : parseFloat(String(leg.entryPrice)) || 0;
+                    let fillPrice = result.avgprc ? parseFloat(result.avgprc) : 0;
+
+                    // Safety: if avgprc is missing or suspiciously looks like a spot price,
+                    // fetch a fresh quote rather than falling back to a potentially contaminated entryPrice.
+                    if (!fillPrice || fillPrice > 5000) {
+                        this.addLog(`⚠️ [LIVE] avgprc missing or suspicious (₹${fillPrice}) for ${leg.symbol} — fetching live quote as fallback`);
+                        try {
+                            const freshQuote: any = await shoonya.getQuotes('NFO', leg.token);
+                            if (freshQuote && freshQuote.lp) {
+                                const freshLtp = parseFloat(freshQuote.lp);
+                                if (freshLtp > 0 && freshLtp <= 5000) {
+                                    fillPrice = freshLtp;
+                                    this.addLog(`✅ [LIVE] Recovered fill price for ${leg.symbol}: ₹${fillPrice} (from fresh GetQuotes)`);
+                                }
+                            }
+                        } catch (e) {
+                            this.addLog(`⚠️ [LIVE] Could not fetch fresh quote for ${leg.symbol} — recording fill price as 0`);
+                        }
+                    }
+
                     leg.entryPrice = fillPrice; // Update with actual fill price (always a number)
 
                     await db.logOrder({
