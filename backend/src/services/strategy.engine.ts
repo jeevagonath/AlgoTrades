@@ -64,6 +64,7 @@ interface StrategyState {
     reEntry: {
         isEligible: boolean;           // Can we re-enter today?
         hasReEntered: boolean;         // Have we already re-entered today?
+        isReEntryTrade: boolean;       // Is the CURRENT active trade itself a re-entry? Blocks a 2nd re-entry.
         originalExitTime: string;      // When was the original exit
         originalExitReason: string;    // Why did we exit (target/sl/manual)
         positionAge: number;           // Days position was held before exit
@@ -110,6 +111,7 @@ class StrategyEngine {
         reEntry: {
             isEligible: false,
             hasReEntered: false,
+            isReEntryTrade: false,
             originalExitTime: '',
             originalExitReason: '',
             positionAge: 0,
@@ -472,9 +474,14 @@ class StrategyEngine {
             const isExpiry = await this.isExpiryDay();
 
             // Clear re-entry state for new day
+            // NOTE: isReEntryTrade is intentionally preserved here so that if the re-entry
+            // trade carries over into the next day, detectAndScheduleReEntry will still
+            // know it is a re-entry trade and refuse to fire a second re-entry.
+            const wasReEntryTrade = this.state.reEntry.isReEntryTrade;
             this.state.reEntry = {
                 isEligible: false,
                 hasReEntered: false,
+                isReEntryTrade: wasReEntryTrade, // Preserve across the midnight boundary
                 originalExitTime: '',
                 originalExitReason: '',
                 positionAge: 0,
@@ -1073,6 +1080,11 @@ class StrategyEngine {
                 const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
                 this.state.positionEntryDate = today;
                 this.addLog(`📅 [Entry] Position entry date recorded: ${today}`);
+
+                // NOTE: isReEntryTrade is intentionally NOT reset here. executeReEntry() sets it
+                // to true BEFORE calling placeOrder(), so the flag is already correct at this point:
+                //   - Rollover path (executeRolloverSequence → placeOrder): isReEntryTrade stays false ✅
+                //   - Re-entry path (executeReEntry → placeOrder):           isReEntryTrade is already true ✅
 
                 this.startMonitoring();
                 await db.syncPositions(this.state.selectedStrikes, this.getUid());
@@ -1835,6 +1847,13 @@ class StrategyEngine {
             const exitMinute = exitTime.getMinutes();
             const exitDate = exitTime.toISOString().split('T')[0]; // YYYY-MM-DD
 
+            // Rule 0: The closing trade must NOT itself be a re-entry trade.
+            // A re-entry trade is a one-shot second chance — it can never spawn another re-entry.
+            if (this.state.reEntry.isReEntryTrade) {
+                this.addLog(`ℹ️ [Re-Entry] Current trade is itself a re-entry trade — no further re-entry allowed.`);
+                return;
+            }
+
             // Parse configurable cutoff time (e.g. "13:45")
             const [cutoffHour, cutoffMinute] = this.state.reEntryCutoffTime.split(':').map(Number);
 
@@ -1942,10 +1961,12 @@ class StrategyEngine {
 
             this.addLog('🔄 [Re-Entry] Executing scheduled re-entry');
 
-            // Mark as re-entered to prevent multiple attempts
+            // Mark as re-entered to prevent multiple attempts.
+            // Also flag the incoming trade as a re-entry trade so that if it closes
+            // the next day, detectAndScheduleReEntry will refuse to fire again.
             this.state.reEntry.hasReEntered = true;
+            this.state.reEntry.isReEntryTrade = true;
             await this.syncToDb(true);
-
 
             // Execute entry logic
             this.addLog(`🔄 [Re-Entry] executing dynamic strike selection (Spot-based)...`);
